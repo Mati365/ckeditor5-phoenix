@@ -489,6 +489,14 @@ In order to override the default preset or add custom presets, you can add the f
 config :ckeditor5_phoenix,
   presets: %{
     minimal: %{
+      cloud: %{
+        version: "46.0.0",
+        premium: true,
+        translations: ["pl"],
+        ckbox: %{
+          version: "1.0.0"
+        }
+      },
       config: %{
         toolbar: [:bold, :italic, :link],
         plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
