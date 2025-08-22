@@ -109,7 +109,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 
    ```elixir
    defmodule MyAppWeb.LiveView do
-     use Phoenix.LiveView
+     # ... your other uses
      use CKEditor5
    end
    ```
@@ -164,7 +164,7 @@ Load CKEditor 5 directly from CKSource's CDN - no build configuration required. 
 
    ```elixir
    defmodule MyAppWeb.LiveView do
-     use Phoenix.LiveView
+     # ... your other uses
      use CKEditor5
    end
    ```
@@ -175,12 +175,11 @@ Load CKEditor 5 directly from CKSource's CDN - no build configuration required. 
    <%!-- Load CDN assets in <head> (based on `default` preset) --%>
    <.cke_cloud_assets />
 
-   <%!-- or with specific features --%>
-   <.cke_cloud_assets
-     preset="default"
-     translations={["pl", "de", "fr"]}
-     premium
-   />
+   <%!-- or with specific features (overrides `default` preset) --%>
+   <.cke_cloud_assets translations={["pl", "de", "fr"]} premium />
+
+   <%!-- or with specific preset --%>
+   <.cke_cloud_assets preset="inline" />
 
    <%!-- Use editor anywhere in <body> --%>
    <.ckeditor id="editor" type="classic" value="<p>Hello world!</p>" />
