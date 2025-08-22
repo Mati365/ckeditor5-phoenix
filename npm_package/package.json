@@ -14,7 +14,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "test-utils"
   ],
   "scripts": {
     "clean": "rm -rf dist",

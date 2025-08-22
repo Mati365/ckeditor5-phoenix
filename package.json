@@ -1,8 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "typecheck": "npm run npm_package:build && npm run playground:typecheck",
+    "typecheck": "npm run npm_package:typecheck && npm run playground:typecheck",
     "playground:typecheck": "tsc --noEmit --pretty",
+    "npm_package:typecheck": "npm run typecheck --workspace=ckeditor5-phoenix",
     "npm_package:watch": "npm run watch --workspace=ckeditor5-phoenix",
     "npm_package:build": "npm run build --workspace=ckeditor5-phoenix",
     "npm_package:test": "npm run test --workspace=ckeditor5-phoenix",

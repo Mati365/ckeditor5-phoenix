@@ -10,6 +10,11 @@ export default defineConfig({
   plugins: [
     dts({
       insertTypesEntry: true,
+      exclude: ['**/*.test.ts'],
+      include: ['src/**/*.ts'],
+      compilerOptions: {
+        rootDir: 'src/',
+      },
     }),
     tsconfigPaths(),
   ],

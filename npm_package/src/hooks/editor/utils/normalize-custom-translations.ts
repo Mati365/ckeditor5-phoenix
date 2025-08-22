@@ -1,8 +1,8 @@
 import type { Translations } from 'ckeditor5';
 
-import { mapObjectValues } from 'src/shared';
-
 import type { EditorCustomTranslationsDictionary } from '../typings';
+
+import { mapObjectValues } from '../../../shared';
 
 /**
  * This function takes a custom translations object and maps it to the format expected by CKEditor5.

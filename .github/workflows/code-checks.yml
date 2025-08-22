@@ -117,11 +117,11 @@ jobs:
       - name: Run lint
         run: mix assets.lint
 
-      - name: Run typecheck
-        run: mix assets.typecheck
-
       - name: Build assets
         run: mix assets.build
+
+      - name: Run typecheck
+        run: mix assets.typecheck
 
       - name: Run tests
         run: mix assets.test
