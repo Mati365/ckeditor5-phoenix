@@ -13,8 +13,7 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
       put_presets_env(%{"default" => preset})
       html = render_component(&Importmap.render/1, preset: "default")
 
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
@@ -34,8 +33,7 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
       put_presets_env(%{"premium" => preset})
       html = render_component(&Importmap.render/1, preset: "premium")
 
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
@@ -71,9 +69,7 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
       put_presets_env(%{"free" => free_preset})
 
       html = render_component(&Importmap.render/1, preset: "free", premium: true)
-
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
@@ -91,10 +87,9 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
         )
 
       put_presets_env(%{"default" => preset})
-      html = render_component(&Importmap.render/1, preset: "default", translations: ["pl", "de"])
 
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      html = render_component(&Importmap.render/1, preset: "default", translations: ["pl", "de"])
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
@@ -114,8 +109,7 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
       put_presets_env(%{"default" => preset})
       html = render_component(&Importmap.render/1, preset: "default", translations: nil)
 
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
@@ -133,8 +127,7 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
       put_presets_env(%{"default" => preset})
       html = render_component(&Importmap.render/1, preset: "default", translations: [])
 
-      [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
-      importmap = Jason.decode!(importmap_json)
+      importmap = importmap_from_html(html)
 
       expected_imports = %{
         "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js"
@@ -142,5 +135,29 @@ defmodule CKEditor5.Components.Cloud.ImportmapTest do
 
       assert importmap["imports"] == expected_imports
     end
+
+    test "merges extra_imports into generated importmap JSON", %{cloud_license_key: key} do
+      preset = default_preset(key)
+      put_presets_env(%{"default" => preset})
+
+      extra = %{"my-lib" => "https://example.com/my-lib.js"}
+
+      html = render_component(&Importmap.render/1, preset: "default", extra_imports: extra)
+      importmap = importmap_from_html(html)
+
+      expected_imports = %{
+        "ckeditor5" => "https://cdn.ckeditor.com/ckeditor5/40.0.0/ckeditor5.js",
+        "my-lib" => "https://example.com/my-lib.js",
+        "ckeditor5/translations/pl.js" =>
+          "https://cdn.ckeditor.com/ckeditor5/40.0.0/translations/pl.js"
+      }
+
+      assert importmap["imports"] == expected_imports
+    end
+  end
+
+  defp importmap_from_html(html) do
+    [_, importmap_json] = Regex.run(~r/<script type="importmap"[^>]*>(.+)<\/script>/s, html)
+    Jason.decode!(importmap_json)
   end
 end

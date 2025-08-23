@@ -14,6 +14,7 @@ defmodule CKEditor5.Components.Cloud.Importmap do
   import Phoenix.HTML
   import CKEditor5.Components.Cloud.Assigns
 
+  alias CKEditor5.Cloud
   alias CKEditor5.Cloud.AssetPackageBuilder
 
   @doc """
@@ -21,27 +22,41 @@ defmodule CKEditor5.Components.Cloud.Importmap do
   """
   attr :nonce, :string, default: nil, doc: "The CSP nonce to use for the script tag."
 
+  attr :extra_imports, :map,
+    default: %{},
+    doc: "Additional imports to include in the import map."
+
   cloud_build_attrs()
 
   def render(assigns) do
-    assigns = assign_importmap(assigns)
+    imports =
+      importmap_json!(assigns)
+      |> Map.merge(assigns.extra_imports)
+      |> then(&%{imports: &1})
+      |> Jason.encode!()
+
+    assigns = assigns |> Map.put(:imports, imports)
 
     ~H"""
     <script type="importmap" nonce={@nonce}><%= raw(@imports) %></script>
     """
   end
 
-  defp assign_importmap(assigns) do
-    imports =
-      build_cloud!(assigns)
-      |> AssetPackageBuilder.build()
-      |> Map.get(:js)
-      |> Enum.filter(&(&1.type == :esm))
-      |> Enum.map(&{&1.name, &1.url})
-      |> Enum.into(%{})
-      |> then(&%{imports: &1})
-      |> Jason.encode!()
+  @doc """
+  Generates the import map JSON for a given Cloud struct. It can be used when you use the custom
+  `importmap` renderer in your application.
+  """
+  def importmap_json!(%Cloud{} = cloud) do
+    AssetPackageBuilder.build(cloud)
+    |> Map.get(:js)
+    |> Enum.filter(&(&1.type == :esm))
+    |> Enum.map(&{&1.name, &1.url})
+    |> Enum.into(%{})
+  end
 
-    Map.put(assigns, :imports, imports)
+  def importmap_json!(assigns) when is_map(assigns) do
+    assigns
+    |> build_cloud!()
+    |> importmap_json!()
   end
 end

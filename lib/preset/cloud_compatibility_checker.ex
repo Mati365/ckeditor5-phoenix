@@ -26,18 +26,31 @@ defmodule CKEditor5.Preset.CloudCompatibilityChecker do
   end
 
   @doc """
-  Ensures that a preset has Cloud configuration when required.
+  Safe version of `ensure_cloud_configured!/1` which returns `:ok` when the
+  preset is valid for cloud distribution or `{:error, error_struct}` when not.
   """
-  def ensure_cloud_configured!(%Preset{} = preset) do
+  def ensure_cloud_configured(%Preset{} = preset) do
     cond do
       !compatible_cloud_distribution?(preset.license) ->
-        raise Errors.CloudCannotBeUsedWithLicenseKey, preset: preset, license: preset.license
+        {:error, %Errors.CloudCannotBeUsedWithLicenseKey{preset: preset, license: preset.license}}
 
       !configured_cloud?(preset) ->
-        raise Errors.CloudNotConfigured, preset: preset
+        {:error, %Errors.CloudNotConfigured{preset: preset}}
 
       true ->
         :ok
+    end
+  end
+
+  @doc """
+  Bang version kept for backwards compatibility. It delegates to
+  `ensure_cloud_configured/1` and raises the returned error struct when
+  validation fails.
+  """
+  def ensure_cloud_configured!(%Preset{} = preset) do
+    case ensure_cloud_configured(preset) do
+      :ok -> :ok
+      {:error, err} -> raise err
     end
   end
 end
