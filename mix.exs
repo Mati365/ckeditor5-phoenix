@@ -3,7 +3,7 @@ defmodule CKEditor5.MixProject do
 
   @version "1.11.0"
   @source_url "https://github.com/Mati365/ckeditor5-phoenix"
-  @default_cke_version "45.2.1"
+  @default_cke_version "46.1.1"
 
   def project do
     [
@@ -48,9 +48,9 @@ defmodule CKEditor5.MixProject do
     is_dev = Mix.env() == :dev
 
     [
-      {:phoenix, "~> 1.7.21"},
+      {:phoenix, "~> 1.7"},
       {:phoenix_html, "~> 4.1"},
-      {:phoenix_view, "~> 2.0.4", only: [:dev]},
+      {:phoenix_view, "~> 2.0", only: [:dev]},
       {:phoenix_live_view, "~> 1.0"},
       {:norm, "~> 0.13"},
       {:memoize, "~> 1.4"},
@@ -135,7 +135,7 @@ defmodule CKEditor5.MixProject do
     ]
   end
 
-  defp docs() do
+  defp docs do
     [
       main: "readme",
       name: "CKEditor 5",
