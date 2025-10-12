@@ -65,12 +65,6 @@ export type EditorPreset = {
   license: EditorLicense;
 
   /**
-   * Optional height for the editor, if applicable.
-   * This can be used to set a specific height for the editor instance.
-   */
-  editableHeight?: number;
-
-  /**
    * Optional custom translations for the editor.
    * This allows for localization of the editor interface.
    */
