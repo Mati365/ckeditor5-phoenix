@@ -12,7 +12,7 @@ defmodule CKEditor5.License do
   @enforce_keys [:key, :distribution_channel]
   @type t :: %__MODULE__{
           key: String.t(),
-          distribution_channel: String.t()
+          distribution_channel: String.t() | nil
         }
 
   defstruct [:key, :distribution_channel]
