@@ -330,6 +330,10 @@ describe('editor hook', () => {
       vi.useFakeTimers();
     });
 
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('should sync editor data with the input on parent form submit', async () => {
       const initialValue = `<p>Initial content</p>`;
       const hookElement = createEditorHtmlElement({
@@ -362,10 +366,6 @@ describe('editor hook', () => {
 
       // Now input should be synced immediately
       expect(input.value).toBe(newValue);
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
     });
 
     it('should not crash if input is not present', async () => {

@@ -1,4 +1,4 @@
-import type { DecoupledEditor, MultiRootEditor } from 'ckeditor5';
+import type { MultiRootEditor } from 'ckeditor5';
 
 import { ClassHook, debounce, makeHook } from '../shared';
 import { EditorsRegistry } from './editor/editors-registry';
@@ -10,7 +10,7 @@ class EditableHookImpl extends ClassHook {
   /**
    * The name of the hook.
    */
-  private mountedPromise: Promise<void> | null = null;
+  private editorPromise: Promise<MultiRootEditor> | null = null;
 
   /**
    * Attributes for the editable instance.
@@ -41,11 +41,11 @@ class EditableHookImpl extends ClassHook {
     const input = this.el.querySelector<HTMLInputElement>(`#${editableId}_input`);
 
     // If the editor is not registered yet, we will wait for it to be registered.
-    this.mountedPromise = EditorsRegistry.the.execute(editorId, (editor: MultiRootEditor) => {
+    this.editorPromise = EditorsRegistry.the.execute(editorId, (editor: MultiRootEditor) => {
       const { ui, editing, model } = editor;
 
       if (model.document.getRoot(rootName)) {
-        return;
+        return editor;
       }
 
       editor.addRoot(rootName, {
@@ -62,6 +62,8 @@ class EditableHookImpl extends ClassHook {
       if (input) {
         syncEditorRootToInput(input, editor, rootName);
       }
+
+      return editor;
     });
   }
 
@@ -69,24 +71,24 @@ class EditableHookImpl extends ClassHook {
    * Destroys the editable component. Unmounts root from the editor.
    */
   override async destroyed() {
-    const { editorId, rootName } = this.attrs;
+    const { rootName } = this.attrs;
 
     // Let's hide the element during destruction to prevent flickering.
     this.el.style.display = 'none';
 
     // Let's wait for the mounted promise to resolve before proceeding with destruction.
-    await this.mountedPromise;
-    this.mountedPromise = null;
+    const editor = await this.editorPromise;
+    this.editorPromise = null;
 
     // Unmount root from the editor.
-    await EditorsRegistry.the.execute(editorId, (editor: MultiRootEditor | DecoupledEditor) => {
+    if (editor && editor.state !== 'destroyed') {
       const root = editor.model.document.getRoot(rootName);
 
       if (root && 'detachEditable' in editor) {
         editor.detachEditable(root);
         editor.detachRoot(rootName, false);
       }
-    });
+    }
   }
 }
 
