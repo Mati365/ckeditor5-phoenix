@@ -81,20 +81,29 @@ class EditorHookImpl extends ClassHook {
    */
   override async mounted() {
     const { editorId } = this.attrs;
-    this.editorPromise = this.createEditor();
 
-    const editor = await this.editorPromise;
+    EditorsRegistry.the.resetErrors(editorId);
 
-    // Do not even try to broadcast about the registration of the editor
-    // if hook was immediately destroyed.
-    if (!this.isBeingDestroyed()) {
-      EditorsRegistry.the.register(editorId, editor);
+    try {
+      this.editorPromise = this.createEditor();
 
-      editor.once('destroy', () => {
-        if (EditorsRegistry.the.hasItem(editorId)) {
-          EditorsRegistry.the.unregister(editorId);
-        }
-      });
+      const editor = await this.editorPromise;
+
+      // Do not even try to broadcast about the registration of the editor
+      // if hook was immediately destroyed.
+      if (!this.isBeingDestroyed()) {
+        EditorsRegistry.the.register(editorId, editor);
+
+        editor.once('destroy', () => {
+          if (EditorsRegistry.the.hasItem(editorId)) {
+            EditorsRegistry.the.unregister(editorId);
+          }
+        });
+      }
+    }
+    catch (error: any) {
+      this.editorPromise = null;
+      EditorsRegistry.the.error(editorId, error);
     }
 
     return this;
@@ -110,7 +119,12 @@ class EditorHookImpl extends ClassHook {
 
     // Let's wait for the mounted promise to resolve before proceeding with destruction.
     try {
-      const editor = (await this.editorPromise)!;
+      const editor = await this.editorPromise;
+
+      if (!editor) {
+        return;
+      }
+
       const editorContext = unwrapEditorContext(editor);
       const watchdog = unwrapEditorWatchdog(editor);
 

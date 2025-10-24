@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Destructible } from './async-registry';
 
@@ -9,10 +9,6 @@ describe('async registry', () => {
 
   beforeEach(() => {
     registry = new AsyncRegistry<Mockitem>();
-  });
-
-  afterEach(async () => {
-    await registry.destroyAll();
   });
 
   describe('register', () => {
@@ -54,6 +50,41 @@ describe('async registry', () => {
       expect(() => registry.register('item1', item)).toThrow(
         'Item with ID "item1" is already registered.',
       );
+    });
+
+    it('should reset errors when registering an item', () => {
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      let errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+
+      watcher.mockClear();
+
+      const item = createMockItem('item1');
+      registry.register('item1', item);
+
+      registry.watch(watcher);
+      errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.has('item1')).toBe(false);
+    });
+
+    it('should execute pending callbacks when item is registered', async () => {
+      const callback = vi.fn((item: Mockitem) => `executed on ${item.name}`);
+
+      const promise = registry.execute('item1', callback);
+
+      expect(callback).not.toHaveBeenCalled();
+
+      const item = createMockItem('item1');
+      registry.register('item1', item);
+
+      await promise;
+
+      expect(callback).toHaveBeenCalledWith(item);
     });
   });
 
@@ -159,6 +190,48 @@ describe('async registry', () => {
 
       expect(result).toBe('executed on default item1');
     });
+
+    it('should call onError callback if error exists for the item', async () => {
+      const error = new Error('Initialization failed');
+      const onError = vi.fn();
+
+      registry.error('item1', error);
+
+      const promise = registry.execute(
+        'item1',
+        (e: Mockitem) => `executed on ${e.name}`,
+        onError,
+      );
+
+      await expect(promise).rejects.toThrow('Initialization failed');
+      expect(onError).toHaveBeenCalledWith(error);
+    });
+
+    it('should reject promise if error exists and no onError callback provided', async () => {
+      const error = new Error('Initialization failed');
+
+      registry.error('item1', error);
+
+      const promise = registry.execute(
+        'item1',
+        (e: Mockitem) => `executed on ${e.name}`,
+      );
+
+      await expect(promise).rejects.toThrow('Initialization failed');
+    });
+
+    it('should reject promise when error is registered after execute without onError callback', async () => {
+      const error = new Error('Initialization failed');
+
+      const promise = registry.execute(
+        'item1',
+        (e: Mockitem) => `executed on ${e.name}`,
+      );
+
+      registry.error('item1', error);
+
+      await expect(promise).rejects.toThrow('Initialization failed');
+    });
   });
 
   describe('getitems', () => {
@@ -202,7 +275,134 @@ describe('async registry', () => {
     });
   });
 
-  describe('waitForitem', () => {
+  describe('error', () => {
+    it('should register an error for an item', () => {
+      const error = new Error('Initialization failed');
+
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      const errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+    });
+
+    it('should set as default error if this is the first error and no items exist', () => {
+      const error = new Error('Initialization failed');
+
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      const errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+      expect(errorsMap.get(null)).toBe(error);
+    });
+
+    it('should not set as default error if items already exist', () => {
+      const item = createMockItem('item1');
+      registry.register('item1', item);
+
+      const error = new Error('Initialization failed');
+      registry.error('item2', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      const errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item2')).toBe(error);
+      expect(errorsMap.get(null)).toBeUndefined();
+    });
+
+    it('should remove item if it was registered before error', () => {
+      const item = createMockItem('item1');
+      registry.register('item1', item);
+
+      expect(registry.hasItem('item1')).toBe(true);
+
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      expect(registry.hasItem('item1')).toBe(false);
+    });
+
+    it('should notify watchers when error is registered', () => {
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      watcher.mockClear();
+
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      expect(watcher).toHaveBeenCalled();
+    });
+  });
+
+  describe('resetErrors', () => {
+    it('should reset errors for an item', () => {
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      let errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+
+      watcher.mockClear();
+      registry.resetErrors('item1');
+
+      registry.watch(watcher);
+      errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.has('item1')).toBe(false);
+    });
+
+    it('should clear default error if it is the same as the specific error', () => {
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      let errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+      expect(errorsMap.get(null)).toBe(error);
+
+      watcher.mockClear();
+      registry.resetErrors('item1');
+
+      registry.watch(watcher);
+      errorsMap = getErrorsMap(watcher);
+
+      expect(errorsMap.has('item1')).toBe(false);
+      expect(errorsMap.has(null)).toBe(false);
+    });
+
+    it('should be called when registering an item after error', () => {
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      let errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.get('item1')).toBe(error);
+
+      watcher.mockClear();
+
+      const item = createMockItem('item1');
+      registry.register('item1', item);
+
+      registry.watch(watcher);
+      errorsMap = getErrorsMap(watcher);
+      expect(errorsMap.has('item1')).toBe(false);
+    });
+  });
+
+  describe('waitFor', () => {
     it('should return a promise that resolves with the item instance', async () => {
       const item1 = createMockItem('item1');
       registry.register('item1', item1);
@@ -220,9 +420,17 @@ describe('async registry', () => {
 
       expect(await promise).toBe(item1);
     });
+
+    it('should reject if error is registered after waitFor call', async () => {
+      const promise = registry.waitFor('item1');
+
+      registry.error('item1', 'Failed to initialize');
+
+      await expect(promise).rejects.toThrow('Failed to initialize');
+    });
   });
 
-  describe('destroyAllitems', () => {
+  describe('destroyAll', () => {
     it('should destroy all registered items', async () => {
       const item1 = createMockItem('item1');
       const item2 = createMockItem('item2');
@@ -244,6 +452,42 @@ describe('async registry', () => {
 
       expect(registry.getItems()).toHaveLength(0);
     });
+
+    it('should call destroy method on each unique item', async () => {
+      const destroyMock1 = vi.fn().mockResolvedValue(undefined);
+      const destroyMock2 = vi.fn().mockResolvedValue(undefined);
+
+      const item1 = {
+        name: 'item1',
+        destroy: destroyMock1,
+      } as unknown as Mockitem;
+
+      const item2 = {
+        name: 'item2',
+        destroy: destroyMock2,
+      } as unknown as Mockitem;
+
+      registry.register('item1', item1);
+      registry.register('item2', item2);
+
+      await registry.destroyAll();
+
+      expect(destroyMock1).toHaveBeenCalledOnce();
+      expect(destroyMock2).toHaveBeenCalledOnce();
+    });
+
+    it('should call destroy only once for items registered under multiple IDs', async () => {
+      const destroyMock = vi.fn().mockResolvedValue(undefined);
+      const item1 = {
+        name: 'item1',
+        destroy: destroyMock,
+      } as unknown as Mockitem;
+
+      registry.register('item1', item1);
+      await registry.destroyAll();
+
+      expect(destroyMock).toHaveBeenCalledOnce();
+    });
   });
 
   describe('watch/unwatch', () => {
@@ -255,23 +499,26 @@ describe('async registry', () => {
       registry.watch(watcher);
 
       expect(watcher).toHaveBeenCalledOnce();
-      expect(watcher).toHaveBeenCalledWith(expect.any(Map));
+      expect(watcher).toHaveBeenCalledWith(
+        expect.any(Map),
+        expect.any(Map),
+      );
 
-      const callArgs = watcher.mock.calls[0]![0] as Map<string | null, any>;
-      expect(callArgs.get('item1')).toBe(item1);
-      expect(callArgs.get(null)).toBe(item1); // default item
+      const itemsMap = getItemsMap(watcher);
+      expect(itemsMap.get('item1')).toBe(item1);
+      expect(itemsMap.get(null)).toBe(item1);
     });
 
     it('should call watcher when item is registered', () => {
       const watcher = vi.fn();
       registry.watch(watcher);
 
-      expect(watcher).toHaveBeenCalledTimes(1); // Initial call
+      expect(watcher).toHaveBeenCalledTimes(1);
 
       const item1 = createMockItem('item1');
       registry.register('item1', item1);
 
-      expect(watcher).toHaveBeenCalledTimes(3); // Initial + register + default register
+      expect(watcher).toHaveBeenCalledTimes(3);
     });
 
     it('should call watcher when item is unregistered', () => {
@@ -281,8 +528,7 @@ describe('async registry', () => {
       const watcher = vi.fn();
       registry.watch(watcher);
 
-      watcher.mockClear(); // Clear initial call
-
+      watcher.mockClear();
       registry.unregister('item1');
 
       expect(watcher).toHaveBeenCalledTimes(2); // Unregister + default unregister
@@ -297,14 +543,11 @@ describe('async registry', () => {
       const watcher = vi.fn();
       registry.watch(watcher);
 
-      watcher.mockClear(); // Clear initial call
-
+      watcher.mockClear();
       await registry.destroyAll();
 
       expect(watcher).toHaveBeenCalledOnce();
-
-      const callArgs = watcher.mock.calls[0]![0] as Map<string | null, any>;
-      expect(callArgs.size).toBe(0);
+      expect(getItemsMap(watcher).size).toBe(0);
     });
 
     it('should allow multiple watchers', () => {
@@ -328,11 +571,7 @@ describe('async registry', () => {
       const watcher = vi.fn();
       registry.watch(watcher);
 
-      const receivedMap = watcher.mock.calls[0]![0] as Map<string | null, any>;
-
-      // Modifying the received map should not affect the internal state
-      receivedMap.clear();
-
+      getItemsMap(watcher).clear();
       expect(registry.getItems()).toHaveLength(2); // Still has item1 and default
     });
 
@@ -367,6 +606,35 @@ describe('async registry', () => {
 
       expect(() => registry.unwatch(watcher)).not.toThrow();
     });
+
+    it('should call watcher with errors map when error is registered', () => {
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      watcher.mockClear();
+
+      const error = new Error('Initialization failed');
+      registry.error('item1', error);
+
+      expect(watcher).toHaveBeenCalled();
+      expect(getErrorsMap(watcher).get('item1')).toBe(error);
+    });
+
+    it('should provide a copy of errors map to watchers', () => {
+      const error = new Error('Test error');
+      registry.error('item1', error);
+
+      const watcher = vi.fn();
+      registry.watch(watcher);
+
+      getErrorsMap(watcher).clear();
+
+      watcher.mockClear();
+      registry.error('item2', new Error('Another error'));
+
+      expect(watcher).toHaveBeenCalled();
+      expect(getErrorsMap(watcher).has('item1')).toBe(true);
+    });
   });
 });
 
@@ -379,4 +647,12 @@ function createMockItem(name: string): Mockitem {
     name,
     destroy: () => {},
   } as unknown as Mockitem;
+}
+
+function getItemsMap(watcher: ReturnType<typeof vi.fn>): Map<string | null, any> {
+  return watcher.mock.calls[0]![0];
+}
+
+function getErrorsMap(watcher: ReturnType<typeof vi.fn>): Map<string | null, Error> {
+  return watcher.mock.calls[0]![1];
 }

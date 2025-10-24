@@ -160,10 +160,9 @@ describe('editor hook', () => {
         });
 
         document.body.appendChild(hookElement);
+        EditorHook.mounted.call({ el: hookElement });
 
-        await expect(() =>
-          EditorHook.mounted.call({ el: hookElement }),
-        ).rejects.toThrow(/No "main" editable found for editor with ID/);
+        await expect(waitForTestEditor).rejects.toThrow(/No "main" editable found for editor with ID/);
       });
 
       it('if the initial value is specified on the editable, it should ignore initial value set on the editor', async () => {
@@ -321,6 +320,22 @@ describe('editor hook', () => {
 
       EditorHook.destroyed.call({ el: hookElement });
 
+      expect(hookElement.style.display).toBe('none');
+    });
+
+    it('should not throw if destroyed editor with failed initialization', async () => {
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('decoupled'),
+        initialValue: null,
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      // It'll fail, as it has no editable.
+      await waitForTestEditor().catch(() => {});
+
+      EditorHook.destroyed.call({ el: hookElement });
       expect(hookElement.style.display).toBe('none');
     });
   });
