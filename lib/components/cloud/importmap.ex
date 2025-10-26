@@ -38,7 +38,7 @@ defmodule CKEditor5.Components.Cloud.Importmap do
     assigns = assigns |> Map.put(:imports, imports)
 
     ~H"""
-    <script type="importmap" nonce={@nonce}><%= raw(@imports) %></script>
+    <script type="importmap" crossorigin="anonymous" nonce={@nonce}><%= raw(@imports) %></script>
     """
   end
 

@@ -27,7 +27,7 @@ defmodule CKEditor5.Components.Cloud.UmdScripts do
 
     ~H"""
     <%= for src <- @scripts do %>
-      <script src={src} nonce={@nonce}></script>
+      <script src={src} crossorigin="anonymous" nonce={@nonce}></script>
     <% end %>
     """
   end
