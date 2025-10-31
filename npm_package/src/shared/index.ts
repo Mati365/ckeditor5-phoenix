@@ -4,6 +4,7 @@ export * from './debounce';
 export * from './deep-camel-case-keys';
 export * from './hook';
 export * from './is-empty-object';
+export * from './is-nil';
 export * from './is-plain-object';
 export * from './map-object-values';
 export * from './once';

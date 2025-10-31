@@ -515,7 +515,6 @@ describe('editor hook', () => {
 
     it('should not push event to the server if `push events` is not enabled', async () => {
       const hookElement = createEditorHtmlElement();
-
       const pushSpy = vi.fn();
 
       document.body.appendChild(hookElement);
@@ -536,7 +535,7 @@ describe('editor hook', () => {
       expect(pushSpy).not.toHaveBeenCalled();
     });
 
-    it('should handle incoming data from the server', async () => {
+    it('should handle incoming data from the server (missing `editorId`)', async () => {
       const hookElement = createEditorHtmlElement({
         changeEvent: true,
       });
@@ -556,6 +555,46 @@ describe('editor hook', () => {
       handleEventSpy.mock.calls[0]![1]({ data: { main: dataFromServer } });
 
       expect(editor.getData()).toBe(dataFromServer);
+    });
+
+    it('should handle incoming data from the server (matching `editorId`)', async () => {
+      const firstEditorElement = createEditorHtmlElement({
+        id: 'unique-editor',
+        changeEvent: true,
+      });
+
+      const secondEditorElement = createEditorHtmlElement({
+        id: 'unique-editor-2',
+        changeEvent: true,
+      });
+
+      const handleEventSpy = vi.fn();
+
+      document.body.appendChild(firstEditorElement);
+      document.body.appendChild(secondEditorElement);
+
+      EditorHook.mounted.call({
+        el: firstEditorElement,
+        handleEvent: handleEventSpy,
+      });
+
+      EditorHook.mounted.call({
+        el: secondEditorElement,
+        handleEvent: handleEventSpy,
+      });
+
+      const editor = await waitForTestEditor('unique-editor');
+      const secondEditor = await waitForTestEditor('unique-editor-2');
+
+      const dataFromServer = '<p>Content from server</p>';
+
+      handleEventSpy.mock.calls[0]![1]({
+        editorId: 'unique-editor',
+        data: { main: dataFromServer },
+      });
+
+      expect(editor.getData()).toBe(dataFromServer);
+      expect(secondEditor.getData()).not.toBe(dataFromServer);
     });
 
     it('should push focus event to the server when editor gains focus', async () => {

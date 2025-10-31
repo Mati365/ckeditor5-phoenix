@@ -23,4 +23,12 @@ defmodule Playground.Live.Classic do
   def handle_event("ckeditor5:blur", %{"data" => data}, socket) do
     {:noreply, assign(socket, editor_value: data["main"], editor_focused?: false)}
   end
+
+  def handle_event("set_data", _, socket) do
+    new_data = "<p>New content set at #{DateTime.utc_now() |> DateTime.to_string()}</p>"
+
+    {:noreply,
+     socket
+     |> push_event("ckeditor5:set-data", %{editorId: "editor", data: new_data})}
+  end
 end

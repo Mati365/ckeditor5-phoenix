@@ -6,6 +6,7 @@ import type { EditorCreator } from './utils';
 import {
   debounce,
   isEmptyObject,
+  isNil,
   mapObjectValues,
   parseIntIfNotNull,
 } from '../../shared';
@@ -228,8 +229,10 @@ class EditorHookImpl extends ClassHook {
     }
 
     // Handle incoming data from the server.
-    this.handleEvent('ckeditor5:set-data', ({ data }) => {
-      editor.setData(data);
+    this.handleEvent('ckeditor5:set-data', ({ editorId, data }) => {
+      if (isNil(editorId) || editorId === this.attrs.editorId) {
+        editor.setData(data);
+      }
     });
 
     if (isSingleEditingLikeEditor(type)) {

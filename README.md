@@ -32,6 +32,9 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
       - [Disabling the watchdog 🚫](#disabling-the-watchdog-)
     - [With LiveView Sync 🔄](#with-liveview-sync-)
       - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
+  - [Two-way Communication 🔄](#two-way-communication-)
+    - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
+    - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
   - [Editor Types 🖊️](#editor-types-️)
     - [Classic editor 📝](#classic-editor-)
     - [Multiroot editor 🌳](#multiroot-editor-)
@@ -238,29 +241,6 @@ Enable real-time synchronization between the editor and your LiveView. Content c
 
 ![CKEditor 5 Live Sync example](docs/live-sync.gif)
 
-```heex
-<.ckeditor
-  id="editor"
-  value={@content}
-  save_debounce_ms={500}  # Optional debounce for performance
-  change_event
-/>
-```
-
-Handle content changes in your LiveView:
-
-```elixir
-def handle_event("ckeditor5:change", %{"data" => data}, socket) do
-  {:noreply, assign(socket, content: data["main"])}
-end
-```
-
-**Event details:**
-
-- Events are sent automatically when content changes
-- `save_debounce_ms` controls the delay between changes and events (default: 300ms)
-- Higher debounce values improve performance for large content or frequent changes
-
 #### Focus and blur events 👁️‍🗨️
 
 To handle focus and blur events, you can use the `focus_event` and `blur_event` attributes in the component. This allows you to capture when the editor gains or loses focus, which can be useful for tracking user interactions or saving content.
@@ -285,6 +265,95 @@ end
 ```
 
 These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
+
+## Two-way Communication 🔄
+
+CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. This allows you to both receive updates from the editor and programmatically control it from your Elixir code.
+
+### From JavaScript to Phoenix (Client → Server) 📤
+
+The editor automatically sends events to your LiveView when content changes, focus changes, or other interactions occur. These events are handled in your LiveView module using standard `handle_event/3` callbacks.
+
+```heex
+<.ckeditor
+  id="editor"
+  value={@content}
+  change_event
+/>
+```
+
+```elixir
+defmodule MyAppWeb.EditorLive do
+  use MyAppWeb, :live_view
+  use CKEditor5
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, content: "<p>Initial content</p>", focused?: false)}
+  end
+
+  # Receive content updates from editor
+  def handle_event("ckeditor5:change", %{"data" => data}, socket) do
+    {:noreply, assign(socket, content: data["main"])}
+  end
+end
+```
+
+### From Phoenix to JavaScript (Server → Client) 📥
+
+You can programmatically update the editor content from your LiveView by pushing events to the client. This is useful for scenarios like:
+
+```heex
+<.ckeditor
+  id="editor"
+  value={@content}
+  change_event
+/>
+
+<button phx-click="load_template">Load Template</button>
+<button phx-click="reset_content">Reset</button>
+```
+
+```elixir
+defmodule MyAppWeb.EditorLive do
+  use MyAppWeb, :live_view
+  use CKEditor5
+
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, content: "<p>Initial content</p>")}
+  end
+
+  # Update editor content from server
+  def handle_event("load_template", _params, socket) do
+    template_content = """
+    <h1>Article Template</h1>
+    <p>Start writing your article here...</p>
+    <h2>Section 1</h2>
+    <p>Content goes here.</p>
+    """
+
+    {:noreply,
+     socket
+     |> push_event("ckeditor5:set-data", %{
+       editorId: "editor",
+       data: template_content
+     })}
+  end
+
+  def handle_event("reset_content", _params, socket) do
+    {:noreply,
+     socket
+     |> push_event("ckeditor5:set-data", %{
+       editorId: "editor",
+       data: "<p>Reset to empty state</p>"
+     })}
+  end
+
+  # Still handle incoming changes from editor
+  def handle_event("ckeditor5:change", %{"data" => data}, socket) do
+    {:noreply, assign(socket, content: data["main"])}
+  end
+end
+```
 
 ## Editor Types 🖊️
 
