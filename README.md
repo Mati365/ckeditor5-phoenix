@@ -32,9 +32,9 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
       - [Disabling the watchdog 🚫](#disabling-the-watchdog-)
     - [With LiveView Sync 🔄](#with-liveview-sync-)
       - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
-  - [Two-way Communication 🔄](#two-way-communication-)
-    - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
-    - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
+      - [Two-way Communication 🔄](#two-way-communication-)
+        - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
+        - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
   - [Editor Types 🖊️](#editor-types-️)
     - [Classic editor 📝](#classic-editor-)
     - [Multiroot editor 🌳](#multiroot-editor-)
@@ -266,11 +266,11 @@ end
 
 These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
 
-## Two-way Communication 🔄
+#### Two-way Communication 🔄
 
 CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. This allows you to both receive updates from the editor and programmatically control it from your Elixir code.
 
-### From JavaScript to Phoenix (Client → Server) 📤
+##### From JavaScript to Phoenix (Client → Server) 📤
 
 The editor automatically sends events to your LiveView when content changes, focus changes, or other interactions occur. These events are handled in your LiveView module using standard `handle_event/3` callbacks.
 
@@ -298,7 +298,7 @@ defmodule MyAppWeb.EditorLive do
 end
 ```
 
-### From Phoenix to JavaScript (Server → Client) 📥
+##### From Phoenix to JavaScript (Server → Client) 📥
 
 You can programmatically update the editor content from your LiveView by pushing events to the client. This is useful for scenarios like:
 
