@@ -3,7 +3,7 @@ defmodule CKEditor5.MixProject do
 
   @version "1.15.0"
   @source_url "https://github.com/Mati365/ckeditor5-phoenix"
-  @default_cke_version "47.0.0"
+  @default_cke_version "47.2.0"
 
   def project do
     [
