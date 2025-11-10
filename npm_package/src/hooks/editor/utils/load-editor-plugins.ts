@@ -20,7 +20,7 @@ export async function loadEditorPlugins(plugins: EditorPlugin[]): Promise<Loaded
     // Let's first try to load the plugin from the base package.
     // Coverage is disabled due to Vitest issues with mocking dynamic imports.
 
-    // If the plugin is not found in the base package, try custom plugins.
+    // Try custom plugins before checking packages.
     const customPlugin = await CustomEditorPluginsRegistry.the.get(plugin);
 
     if (customPlugin) {
