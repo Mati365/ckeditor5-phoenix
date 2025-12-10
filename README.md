@@ -363,12 +363,6 @@ CKEditor 5 Phoenix supports four distinct editor types, each designed for specif
 
 Traditional WYSIWYG editor with a fixed toolbar above the editing area. Best for standard content editing scenarios like blog posts, articles, or forms.
 
-**Features:**
-
-- Fixed toolbar with all editing tools
-- Familiar interface similar to desktop word processors
-- Works well in forms and modal dialogs
-
 ![CKEditor 5 Classic Editor in Elixir Phoenix application with Menubar](docs/classic-editor-with-toolbar.png)
 
 ```heex
@@ -386,12 +380,6 @@ Traditional WYSIWYG editor with a fixed toolbar above the editing area. Best for
 ### Multiroot editor 🌳
 
 Advanced editor supporting multiple independent editable areas within a single editor instance. Perfect for complex layouts like page builders, newsletters, or multi-section content management.
-
-**Features:**
-
-- Multiple editable areas with shared toolbar
-- Each area can have different content
-- Ideal for CMS and page builder applications
 
 ![CKEditor 5 Multiroot Editor in Elixir Phoenix application](docs/multiroot-editor.png)
 
@@ -429,12 +417,6 @@ Advanced editor supporting multiple independent editable areas within a single e
 
 Minimalist editor that appears directly within content when clicked. Ideal for in-place editing scenarios where the editing interface should be invisible until needed.
 
-**Features:**
-
-- No visible toolbar until content is focused
-- Seamless integration with existing layouts
-- Great for editing headings, captions, or short content
-
 ![CKEditor 5 Inline Editor in Elixir Phoenix application](docs/inline-editor.png)
 
 ```heex
@@ -454,12 +436,6 @@ Minimalist editor that appears directly within content when clicked. Ideal for i
 ### Decoupled editor 🌐
 
 Flexible editor where toolbar and editing area are completely separated. Provides maximum layout control for custom interfaces and complex applications.
-
-**Features:**
-
-- Complete separation of toolbar and content area
-- Custom positioning and styling of UI elements
-- Full control over editor layout and appearance
 
 ![CKEditor 5 Decoupled Editor in Elixir Phoenix application](docs/decoupled-editor.png)
 
