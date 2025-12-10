@@ -213,15 +213,7 @@ Create a basic editor with default toolbar and features. Perfect for simple cont
 
 ### Watchdog prop 🐶
 
-By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users.
-
-#### How it works ⚙️
-
-- If the editor crashes, it is automatically restarted without requiring a page reload.
-- The editor's content is periodically saved in the browser's memory.
-- After a restart, the last saved content is automatically restored.
-
-This feature is especially useful in applications where reliability and data safety are important.
+By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users. 
 
 #### Disabling the watchdog 🚫
 
