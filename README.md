@@ -46,7 +46,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
   - [Configuration ⚙️](#configuration-️)
     - [Custom Presets 🧩](#custom-presets-)
     - [Dynamic presets 🎯](#dynamic-presets-)
-    - [Use Custom Preset 🧩](#use-custom-preset-)
     - [Providing the License Key 🗝️](#providing-the-license-key-️)
     - [Referencing DOM Elements in Config 🏷️](#referencing-dom-elements-in-config-️)
       - [How to use 🛠️](#how-to-use-️)
@@ -555,6 +554,12 @@ config :ckeditor5_phoenix,
   }
 ```
 
+In template:
+
+```heex
+<.ckeditor preset="minimal" value="<p>Simple editor</p>" />
+```
+
 ### Dynamic presets 🎯
 
 You can also create dynamic presets that can be modified at runtime. This is useful if you want to change the editor configuration based on user input or other conditions.
@@ -579,17 +584,11 @@ defmodule MyApp.PageLive do
 end
 ```
 
+In template:
+
 ```heex
 <.ckeditor preset={@preset} />
 ````
-
-### Use Custom Preset 🧩
-
-To use a custom preset, pass the `preset` keyword argument to the `ckeditor` component. For example, to use the `minimal` preset defined above:
-
-```heex
-<.ckeditor preset="minimal" value="<p>Simple editor</p>" />
-```
 
 ### Providing the License Key 🗝️
 
