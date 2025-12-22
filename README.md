@@ -898,6 +898,9 @@ Looking for similar projects or inspiration? Check out these repositories:
 - [ckeditor5-livewire](https://github.com/Mati365/ckeditor5-livewire)
   Plug-and-play CKEditor 5 solution for Laravel + Livewire applications. Fully compatible with Blade forms. Includes JavaScript hooks, flexible configuration, and easy customization.
 
+- [ckeditor5-symfony](https://github.com/Mati365/ckeditor5-symfony)
+  Native CKEditor 5 integration for Symfony. Works with Symfony 6.x+, standard forms and Twig. Supports custom builds, multiple editor configurations, asset management, and localization. Designed to be simple, predictable, and framework-native.
+
 ## Trademarks 📜
 
 Information about CKEditor® trademarks and licensing. Clarifies the relationship between this package and CKSource.
