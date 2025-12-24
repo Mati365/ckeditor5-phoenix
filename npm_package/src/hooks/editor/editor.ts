@@ -4,15 +4,14 @@ import type { EditorId, EditorType } from './typings';
 import type { EditorCreator } from './utils';
 
 import {
-  debounce,
   isEmptyObject,
-  isNil,
   mapObjectValues,
   parseIntIfNotNull,
 } from '../../shared';
 import { ClassHook, makeHook } from '../../shared/hook';
 import { ContextsRegistry, getNearestContextParentPromise } from '../context';
 import { EditorsRegistry } from './editors-registry';
+import { createSyncEditorWithInputPlugin, createSyncEditorWithPhoenixPlugin } from './plugins';
 import {
   createEditorInContext,
   isSingleEditingLikeEditor,
@@ -179,6 +178,25 @@ class EditorHookImpl extends ClassHook {
 
     const { loadedPlugins, hasPremium } = await loadEditorPlugins(plugins);
 
+    if (isSingleEditingLikeEditor(type)) {
+      loadedPlugins.push(
+        await createSyncEditorWithInputPlugin({
+          editorId,
+          saveDebounceMs,
+        }),
+      );
+    }
+
+    loadedPlugins.push(
+      await createSyncEditorWithPhoenixPlugin({
+        editorId,
+        saveDebounceMs,
+        events,
+        pushEvent: this.pushEvent.bind(this),
+        handleEvent: this.handleEvent.bind(this),
+      }),
+    );
+
     // Mix custom translations with loaded translations.
     const loadedTranslations = await loadAllEditorTranslations(language, hasPremium);
     const mixedTranslations = [
@@ -216,126 +234,12 @@ class EditorHookImpl extends ClassHook {
       return result.editor;
     })();
 
-    if (events.change) {
-      this.setupTypingContentPush(editorId, editor, saveDebounceMs);
-    }
-
-    if (events.blur) {
-      this.setupEventPush(editorId, editor, 'blur');
-    }
-
-    if (events.focus) {
-      this.setupEventPush(editorId, editor, 'focus');
-    }
-
-    // Handle incoming data from the server.
-    this.handleEvent('ckeditor5:set-data', ({ editorId, data }) => {
-      if (isNil(editorId) || editorId === this.attrs.editorId) {
-        editor.setData(data);
-      }
-    });
-
-    if (isSingleEditingLikeEditor(type)) {
-      const input = document.getElementById(`${editorId}_input`) as HTMLInputElement | null;
-
-      if (input) {
-        syncEditorToInput(input, editor, saveDebounceMs);
-      }
-
-      if (editableHeight) {
-        setEditorEditableHeight(editor, editableHeight);
-      }
+    if (isSingleEditingLikeEditor(type) && editableHeight) {
+      setEditorEditableHeight(editor, editableHeight);
     }
 
     return editor;
   };
-
-  /**
-   * Setups the content push event for the editor.
-   */
-  private setupTypingContentPush(editorId: EditorId, editor: Editor, saveDebounceMs: number) {
-    const pushContentChange = () => {
-      this.pushEvent(
-        'ckeditor5:change',
-        {
-          editorId,
-          data: getEditorRootsValues(editor),
-        },
-      );
-    };
-
-    editor.model.document.on('change:data', debounce(saveDebounceMs, pushContentChange));
-    pushContentChange();
-  }
-
-  /**
-   * Setups the event push for the editor.
-   */
-  private setupEventPush(editorId: EditorId, editor: Editor, eventType: 'focus' | 'blur') {
-    const pushEvent = () => {
-      const { isFocused } = editor.ui.focusTracker;
-      const currentType = isFocused ? 'focus' : 'blur';
-
-      if (currentType !== eventType) {
-        return;
-      }
-
-      this.pushEvent(
-        `ckeditor5:${eventType}`,
-        {
-          editorId,
-          data: getEditorRootsValues(editor),
-        },
-      );
-    };
-
-    editor.ui.focusTracker.on('change:isFocused', pushEvent);
-  }
-}
-
-/**
- * Gets the values of the editor's roots.
- *
- * @param editor The CKEditor instance.
- * @returns An object mapping root names to their content.
- */
-function getEditorRootsValues(editor: Editor) {
-  const roots = editor.model.document.getRootNames();
-
-  return roots.reduce<Record<string, string>>((acc, rootName) => {
-    acc[rootName] = editor.getData({ rootName });
-    return acc;
-  }, Object.create({}));
-}
-
-/**
- * Synchronizes the editor's content with a hidden input field.
- *
- * @param input The input element to synchronize with the editor.
- * @param editor The CKEditor instance.
- */
-function syncEditorToInput(input: HTMLInputElement, editor: Editor, saveDebounceMs: number) {
-  const sync = () => {
-    const newValue = editor.getData();
-
-    input.value = newValue;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
-  editor.model.document.on('change:data', debounce(saveDebounceMs, sync));
-  getParentFormElement(input)?.addEventListener('submit', sync);
-
-  sync();
-}
-
-/**
- * Gets the parent form element of the given HTML element.
- *
- * @param element The HTML element to find the parent form for.
- * @returns The parent form element or null if not found.
- */
-function getParentFormElement(element: HTMLElement) {
-  return element.closest('form') as HTMLFormElement | null;
 }
 
 /**
