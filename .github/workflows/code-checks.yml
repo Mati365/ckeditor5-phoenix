@@ -21,7 +21,7 @@ jobs:
         id: beam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.19.4'
+          elixir-version: 1.19.4
           otp-version: '26.2'
 
       - name: Restore dependencies cache
@@ -98,7 +98,7 @@ jobs:
         id: beam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.19.4'
+          elixir-version: 1.19.4
           otp-version: '26.2'
 
       - name: Restore dependencies cache
