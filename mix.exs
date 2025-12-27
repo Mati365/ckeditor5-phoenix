@@ -21,7 +21,18 @@ defmodule CKEditor5.MixProject do
       package: package(),
       aliases: aliases(),
       dialyzer: dialyzer(),
-      test_coverage: [tool: ExCoveralls],
+      test_coverage: [tool: ExCoveralls]
+    ]
+  end
+
+  def application do
+    [
+      extra_applications: extra_apps(Mix.env())
+    ]
+  end
+
+  def cli do
+    [
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
@@ -31,13 +42,6 @@ defmodule CKEditor5.MixProject do
         "coveralls.cobertura": :test,
         "test.watch": :test
       ]
-    ]
-  end
-
-  def application do
-    [
-      extra_applications: extra_apps(Mix.env()),
-      preferred_cli_env: [format: :dev]
     ]
   end
 
