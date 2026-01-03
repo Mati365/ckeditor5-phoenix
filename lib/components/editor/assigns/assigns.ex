@@ -10,7 +10,7 @@ defmodule CKEditor5.Components.Editor.Assigns do
     ValueNormalizer
   }
 
-  alias CKEditor5.Components.FormAttrs
+  alias CKEditor5.Components.{AssignStyles, FormAttrs}
   alias CKEditor5.Helpers
 
   @doc """
@@ -24,5 +24,6 @@ defmodule CKEditor5.Components.Editor.Assigns do
     |> AttributeValidator.validate_for_editor_type()
     |> ValueNormalizer.normalize_values()
     |> LanguageHandler.assign_language()
+    |> AssignStyles.assign_styles(%{position: "relative"})
   end
 end

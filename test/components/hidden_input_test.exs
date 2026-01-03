@@ -14,7 +14,7 @@ defmodule CKEditor5.Components.HiddenInputTest do
         required: true
       )
 
-    assert html =~ ~s(type="hidden")
+    refute html =~ ~s(type="hidden")
     assert html =~ ~s(id="input1")
     assert html =~ ~s(name="hidden")
     assert html =~ ~s(value="abc")

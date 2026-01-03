@@ -32,12 +32,12 @@ defmodule CKEditor5.Components.EditorTest do
     assert html =~ ~s(id="editor1")
     assert html =~ ~s(cke-initial-value="Hello")
     assert html =~ ~s(<div id="editor1_editor"></div>)
-    assert html =~ ~s(<input)
+    assert html =~ ~s(<textarea)
   end
 
   test "renders editor without name (no hidden input)" do
     html = render_component(&Editor.render/1, id: "editor3", value: "No input")
-    refute html =~ ~s(<input)
+    refute html =~ ~s(<textarea)
   end
 
   test "it is possible to pass CSS class to component" do
@@ -53,11 +53,33 @@ defmodule CKEditor5.Components.EditorTest do
     assert html =~ ~s(phx-hook="CKEditor5")
   end
 
-  test "it is possible to pass CSS styles to component" do
+  test "it is possible to merge CSS styles with component styles " do
     html =
       render_component(&Editor.render/1, id: "editor1", name: "content", style: "color: red;")
 
-    assert html =~ ~s(style="color: red;")
+    assert html =~ ~s(style="position: relative; color: red;")
+  end
+
+  test "it is possible to pass CSS object styles to component" do
+    html =
+      render_component(&Editor.render/1,
+        id: "editor1",
+        name: "content",
+        style: %{"color" => "red", "height" => "500px"}
+      )
+
+    assert html =~ ~s(style="position: relative; color: red; height: 500px;")
+  end
+
+  test "it should ignore CSS style if has no separator" do
+    html =
+      render_component(&Editor.render/1,
+        id: "editor1",
+        name: "content",
+        style: "colorred"
+      )
+
+    assert html =~ ~s(style="position: relative;")
   end
 
   describe "preset type handling" do
@@ -248,7 +270,7 @@ defmodule CKEditor5.Components.EditorTest do
       html =
         render_component(&Editor.render/1, id: "editor_form1", name: "my_content", value: "abc")
 
-      assert html =~ ~s(<input)
+      assert html =~ ~s(<textarea)
       assert html =~ ~s(name="my_content")
     end
 
@@ -275,13 +297,13 @@ defmodule CKEditor5.Components.EditorTest do
 
       html = render_component(&Editor.render/1, id: "editor_form2", field: field)
 
-      assert html =~ ~s(<input)
+      assert html =~ ~s(<textarea)
       assert html =~ ~s(name="f[body]")
     end
 
     test "does not render hidden input if no name, field or form is given" do
       html = render_component(&Editor.render/1, id: "editor_form4", value: "noinput")
-      refute html =~ ~s(<input)
+      refute html =~ ~s(<textarea)
     end
   end
 

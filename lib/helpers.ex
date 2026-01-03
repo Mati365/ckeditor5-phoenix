@@ -22,6 +22,16 @@ defmodule CKEditor5.Helpers do
   end
 
   @doc """
+  Maps all keys in a map to strings.
+  """
+  def map_keys_to_strings(map) when is_map(map) do
+    Enum.map(map, fn {key, value} ->
+      {to_string(key), value}
+    end)
+    |> Map.new()
+  end
+
+  @doc """
   Serializes a map of styles into a CSS string.
   Converts a map of styles into a string suitable for inline CSS.
   Example: %{color: "red", "font-size": "16px"} becomes "color: red; font-size: 16px".
@@ -32,12 +42,22 @@ defmodule CKEditor5.Helpers do
   end
 
   @doc """
-  Maps all keys in a map to strings.
+  Parses a style string into a map.
   """
-  def map_keys_to_strings(map) when is_map(map) do
-    Enum.map(map, fn {key, value} ->
-      {to_string(key), value}
+  def parse_style(nil), do: %{}
+
+  def parse_style(style) when is_binary(style) do
+    style
+    |> String.split(";")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.reduce(%{}, fn rule, acc ->
+      case String.split(rule, ":", parts: 2) do
+        [key, value] -> Map.put(acc, String.trim(key), String.trim(value))
+        _ -> acc
+      end
     end)
-    |> Map.new()
   end
+
+  def parse_style(style), do: style
 end

@@ -8,7 +8,7 @@ defmodule CKEditor5.Components.Editable do
 
   import CKEditor5.Components.FormAttrs
 
-  alias CKEditor5.Components.HiddenInput
+  alias CKEditor5.Components.{AssignStyles, HiddenInput}
   alias CKEditor5.Helpers
 
   # Default root name for decoupled editors, while optional in multiroot editors.
@@ -44,11 +44,13 @@ defmodule CKEditor5.Components.Editable do
     assigns =
       assigns
       |> Helpers.assign_id_if_missing("cke-editable")
+      |> AssignStyles.assign_styles(%{position: "relative"})
       |> assign_form_fields()
 
     ~H"""
     <div
       id={@id}
+      style={@style}
       phx-hook="CKEditable"
       phx-update="ignore"
       data-cke-editor-id={@editor_id}

@@ -17,16 +17,18 @@ defmodule CKEditor5.Components.HiddenInput do
   """
   def render(assigns) do
     ~H"""
-    <input
+    <textarea
       id={@id}
       name={@name}
       value={@value}
       required={@required}
-      type="hidden"
       style={
         Helpers.serialize_styles_map(%{
+          position: "absolute",
+          left: "50%",
+          bottom: "0",
           display: "flex",
-          width: "100%",
+          width: "1px",
           height: "1px",
           opacity: "0",
           "pointer-events": "none",

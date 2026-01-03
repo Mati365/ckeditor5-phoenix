@@ -21,7 +21,7 @@ defmodule CKEditor5.Components.EditableTest do
     assert html =~ ~s(data-cke-editable-root-name="main")
     assert html =~ ~s(data-cke-editable-initial-value="Hello")
     assert html =~ ~s(data-cke-editable-required)
-    assert html =~ ~s(<input)
+    assert html =~ ~s(<textarea)
     assert html =~ ~s(name="content")
     assert html =~ ~s(value="Hello")
     assert html =~ ~s(required)
