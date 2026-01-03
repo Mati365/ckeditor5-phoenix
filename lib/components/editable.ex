@@ -20,6 +20,16 @@ defmodule CKEditor5.Components.Editable do
     `editor_id` and `name` attributes.
     """
 
+  attr :class, :string,
+    required: false,
+    default: "",
+    doc: "Additional CSS classes to apply to the editable container."
+
+  attr :style, :string,
+    required: false,
+    default: nil,
+    doc: "Custom CSS styles to apply to the editable container."
+
   attr :root, :string,
     required: false,
     default: @default_root,
@@ -51,6 +61,7 @@ defmodule CKEditor5.Components.Editable do
     <div
       id={@id}
       style={@style}
+      class={@class}
       phx-hook="CKEditable"
       phx-update="ignore"
       data-cke-editor-id={@editor_id}
