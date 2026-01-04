@@ -5,6 +5,8 @@ defmodule CKEditor5.Installer do
 
   alias CKEditor5.Installer.NPMRegistry
 
+  @default_editor_version Mix.Project.config()[:cke][:default_editor_version]
+
   @doc """
   Installs CKEditor 5 packages.
   ## Options
@@ -31,26 +33,14 @@ defmodule CKEditor5.Installer do
   end
 
   defp install_package(package_name, opts) do
-    case get_version(opts, package_name) do
-      {:ok, version} ->
-        NPMRegistry.install_package(
-          package_name,
-          version,
-          "deps/#{package_name}",
-          &modify_package/1
-        )
+    version = Keyword.get(opts, :version, @default_editor_version)
 
-      {:error, reason} ->
-        IO.puts("Failed to get version of #{package_name}: #{reason}")
-    end
-  end
-
-  defp get_version(opts, package_name) do
-    if version = Keyword.get(opts, :version) do
-      {:ok, version}
-    else
-      NPMRegistry.get_latest_version(package_name)
-    end
+    NPMRegistry.install_package(
+      package_name,
+      version,
+      "deps/#{package_name}",
+      &modify_package/1
+    )
   end
 
   defp modify_package(path) do

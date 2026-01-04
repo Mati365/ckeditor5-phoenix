@@ -5,7 +5,7 @@ defmodule CKEditor5.CloudTest do
   alias CKEditor5.Cloud.CKBox
   alias CKEditor5.Errors
 
-  @default_editor_version Mix.Project.config()[:cke][:default_cloud_editor_version]
+  @default_editor_version Mix.Project.config()[:cke][:default_editor_version]
 
   test "returns the default cloud configuration" do
     defaults = %Cloud{}

@@ -8,27 +8,6 @@ defmodule CKEditor5.Installer.NPMRegistry do
   @registry "https://registry.npmjs.org/"
 
   @doc """
-  Fetches the latest version of an NPM package.
-  """
-  def get_latest_version(package_name) do
-    ensure_deps_started()
-
-    url = "#{@registry}#{package_name}"
-    Logger.info("Fetching latest version for #{package_name} from #{url}")
-
-    case fetch_json(url) do
-      {:ok, metadata} ->
-        case get_in(metadata, ["dist-tags", "latest"]) do
-          nil -> {:error, "Could not find latest version for #{package_name}"}
-          version -> {:ok, version}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @doc """
   Downloads and unpacks an NPM package from the registry.
 
   ## Arguments
