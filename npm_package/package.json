@@ -1,6 +1,6 @@
 {
   "name": "ckeditor5-phoenix",
-  "version": "1.15.3",
+  "version": "1.15.4",
   "description": "CKEditor 5 integration for Phoenix Framework",
   "exports": {
     ".": {
