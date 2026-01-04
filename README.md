@@ -23,7 +23,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 - [CKEditor 5 Phoenix Integration ✨](#ckeditor-5-phoenix-integration-)
   - [Table of Contents](#table-of-contents)
   - [Installation 🚀](#installation-)
-    - [🏠 Self-hosted via NPM](#-self-hosted-via-npm)
+    - [🏠 Self-hosted](#-self-hosted)
     - [📡 CDN Distribution](#-cdn-distribution)
   - [Basic Usage 🏁](#basic-usage-)
     - [Simple Editor ✏️](#simple-editor-️)
@@ -68,9 +68,9 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 
 Choose between two installation methods based on your needs. Both approaches provide the same functionality but differ in how CKEditor 5 assets are loaded and managed.
 
-### 🏠 Self-hosted via NPM
+### 🏠 Self-hosted
 
-Bundle CKEditor 5 with your application for full control over assets, custom builds, and offline support. This method is recommended for advanced users or production applications with specific requirements.
+Bundle CKEditor 5 with your application for full control over assets, custom builds, and offline support. This method is recommended for advanced users or production applications with specific requirements. It's also GPL-compliant.
 
 **Complete setup:**
 
@@ -84,13 +84,19 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    end
    ```
 
-2. **Install CKEditor 5 via NPM:**
+2. **Install CKEditor 5**
 
    ```bash
-   npm install ckeditor5
+   mix ckeditor5.install # --premium --version 47.3.0
    ```
 
-3. **Register JavaScript hook** in your `app.js`:
+3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`**
+
+   ```elixir
+   "assets.setup": ["ckeditor5.install", ..., "esbuild.install --if-missing"]
+   ```
+
+4. **Register JavaScript hook** in your `app.js`:
 
    ```javascript
    import { Hooks } from 'ckeditor5_phoenix';
@@ -100,22 +106,22 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    });
    ```
 
-4. **Import styles** in your `app.css`:
+5. **Import styles** in your `app.css`:
 
    ```css
    @import "ckeditor5/ckeditor5.css";
    ```
 
-5. **Adjust LiveView**
+6. **Import CKEditor 5 module in View**
 
    ```elixir
-   defmodule MyAppWeb.LiveView do
+   defmodule MyAppWeb.PageHTML do
      # ... your other uses
      use CKEditor5
    end
    ```
 
-6. **Use in templates** (no CDN assets needed):
+7. **Use in templates** (no CDN assets needed):
 
    ```heex
    <.ckeditor id="editor" type="classic" value="<p>Hello world!</p>" />
@@ -161,10 +167,10 @@ Load CKEditor 5 directly from CKSource's CDN - no build configuration required. 
 
 4. **Add license key** (see [Providing the License Key 🗝️](#providing-the-license-key-️) section)
 
-5. **Adjust LiveView**
+5. **Import CKEditor 5 module in View**
 
    ```elixir
-   defmodule MyAppWeb.LiveView do
+   defmodule MyAppWeb.PageHTML do
      # ... your other uses
      use CKEditor5
    end

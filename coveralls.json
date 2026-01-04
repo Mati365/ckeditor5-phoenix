@@ -1,7 +1,9 @@
 {
   "skip_files": [
     "playground/",
-    "test/support/"
+    "test/support/",
+    "lib/mix/tasks/",
+    "lib/installer/"
   ],
   "coverage_options": {
     "output_dir": "cover/",
