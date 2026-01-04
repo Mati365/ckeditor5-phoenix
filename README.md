@@ -93,7 +93,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`**
 
    ```elixir
-   "assets.setup": ["ckeditor5.install", ..., "esbuild.install --if-missing"]
+   "assets.setup": ["ckeditor5.install", ... ]
    ```
 
 4. **Register JavaScript hook** in your `app.js`:
@@ -106,13 +106,13 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    });
    ```
 
-5. **Import styles** in your `app.css`:
+5. **Import styles** in your `assets/css/app.css`:
 
    ```css
-   @import "ckeditor5/ckeditor5.css";
+   @import "../../deps/ckeditor5/dist/ckeditor5.css";
    ```
 
-6. **Import CKEditor 5 module in View**
+6. **Import module in View**
 
    ```elixir
    defmodule MyAppWeb.PageHTML do
@@ -167,7 +167,7 @@ Load CKEditor 5 directly from CKSource's CDN - no build configuration required. 
 
 4. **Add license key** (see [Providing the License Key 🗝️](#providing-the-license-key-️) section)
 
-5. **Import CKEditor 5 module in View**
+5. **Import module in View**
 
    ```elixir
    defmodule MyAppWeb.PageHTML do
