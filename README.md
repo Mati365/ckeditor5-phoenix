@@ -87,13 +87,13 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 2. **Install CKEditor 5**
 
    ```bash
-   mix ckeditor5.install # --premium --version 47.3.0
+   mix ckeditor5.install --version 47.3.0 # --premium 
    ```
 
 3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`**
 
    ```elixir
-   "assets.setup": ["ckeditor5.install", ..., "esbuild.install --if-missing"]
+   "assets.setup": ["ckeditor5.install --version 47.3.0", ..., "esbuild.install --if-missing"]
    ```
 
 4. **Register JavaScript hook** in your `app.js`:
