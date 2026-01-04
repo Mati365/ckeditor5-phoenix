@@ -88,9 +88,10 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 
    ```bash
    mix ckeditor5.install # --premium --version 47.3.0
+   # or via NPM: npm install ckeditor5 --prefix assets
    ```
 
-3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`**
+3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`** (if using Mix installer):
 
    ```elixir
    "assets.setup": ["ckeditor5.install", ... ]
@@ -110,6 +111,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 
    ```css
    @import "../../deps/ckeditor5/dist/ckeditor5.css";
+   /* ... or via NPM: @import "../node_modules/ckeditor5/dist/ckeditor5.css"; */
    ```
 
 6. **Import module in View**
