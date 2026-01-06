@@ -66,15 +66,31 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
       }, Object.create({}))
   );
 
-  const rootEditorElement = document.getElementById(`${editorId}_editor`);
+  const rootEditorElement = document.querySelector<HTMLElement>(`[phx-hook="CKEditor5"][id="${editorId}"]`);
 
-  if (rootEditorElement) {
-    const initialRootEditableValue = (rootEditorElement.parentElement!.getAttribute('cke-initial-value') ?? '') as string;
+  if (!rootEditorElement) {
+    return acc;
+  }
 
+  const initialRootEditableValue = rootEditorElement.getAttribute('cke-initial-value') || '';
+  const contentElement = rootEditorElement.querySelector<HTMLElement>(`#${editorId}_editor `);
+  const currentMain = acc['main'];
+
+  if (currentMain) {
     return {
       ...acc,
       main: {
-        content: rootEditorElement,
+        ...currentMain,
+        initialValue: currentMain.initialValue || initialRootEditableValue,
+      },
+    };
+  }
+
+  if (contentElement) {
+    return {
+      ...acc,
+      main: {
+        content: contentElement,
         initialValue: initialRootEditableValue,
       },
     };

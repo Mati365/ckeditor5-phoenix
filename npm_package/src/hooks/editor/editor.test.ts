@@ -127,7 +127,7 @@ describe('editor hook', () => {
         const editor = await waitForTestEditor();
 
         expect(editor).toBeInstanceOf(DecoupledEditor);
-        expect(editor.getData()).toBe('');
+        expect(editor.getData()).toBe('<p>Test content</p>');
 
         expect(isEditorShown()).toBe(true);
       });
