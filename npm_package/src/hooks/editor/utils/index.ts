@@ -1,5 +1,5 @@
 export * from './create-editor-in-context';
-export * from './is-single-editing-like-editor';
+export * from './is-single-root-editor';
 export * from './load-editor-constructor';
 export * from './load-editor-plugins';
 export * from './load-editor-translations';

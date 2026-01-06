@@ -112,7 +112,9 @@ defmodule CKEditor5.Components.Editor do
       cke-watchdog={@watchdog}
       cke-context-id={@context_id}
     >
-      <div id={"#{@id}_editor"}></div>
+      <%= if @preset.type not in [:multiroot, :decoupled] do %>
+        <div id={"#{@id}_editor"}></div>
+      <% end %>
       <%= if @name do %>
         <HiddenInput.render
           id={"#{@id}_input"}

@@ -1,12 +1,12 @@
 import type { Editor } from 'ckeditor5';
 
-import type { EditorId, EditorType } from './typings';
+import type { EditorId } from './typings';
 import type { EditorCreator } from './utils';
 
 import {
   isEmptyObject,
-  mapObjectValues,
   parseIntIfNotNull,
+  waitFor,
 } from '../../shared';
 import { ClassHook, makeHook } from '../../shared/hook';
 import { ContextsRegistry, getNearestContextParentPromise } from '../context';
@@ -14,12 +14,13 @@ import { EditorsRegistry } from './editors-registry';
 import { createSyncEditorWithInputPlugin, createSyncEditorWithPhoenixPlugin } from './plugins';
 import {
   createEditorInContext,
-  isSingleEditingLikeEditor,
+  isSingleRootEditor,
   loadAllEditorTranslations,
   loadEditorConstructor,
   loadEditorPlugins,
   normalizeCustomTranslations,
-  queryAllEditorEditables,
+  queryEditablesElements,
+  queryEditablesSnapshotContent,
   readPresetOrThrow,
   resolveEditorConfigElementReferences,
   setEditorEditableHeight,
@@ -178,7 +179,7 @@ class EditorHookImpl extends ClassHook {
 
     const { loadedPlugins, hasPremium } = await loadEditorPlugins(plugins);
 
-    if (isSingleEditingLikeEditor(type)) {
+    if (isSingleRootEditor(type)) {
       loadedPlugins.push(
         await createSyncEditorWithInputPlugin({
           editorId,
@@ -206,27 +207,54 @@ class EditorHookImpl extends ClassHook {
       .filter(translations => !isEmptyObject(translations));
 
     // Let's query all elements, and create basic configuration.
-    const sourceElementOrData = getInitialRootsContentElements(editorId, type);
-    const parsedConfig = {
-      ...resolveEditorConfigElementReferences(config),
-      initialData: getInitialRootsValues(editorId, type),
-      licenseKey: license.key,
-      plugins: loadedPlugins,
-      language,
-      ...mixedTranslations.length && {
-        translations: mixedTranslations,
-      },
-    };
+    let initialData: string | Record<string, string> = queryEditablesSnapshotContent(editorId);
+
+    if (isSingleRootEditor(type)) {
+      initialData = initialData['main'] || '';
+    }
 
     // Depending of the editor type, and parent lookup for nearest context or initialize it without it.
     const editor = await (async () => {
-      if (!context || !(sourceElementOrData instanceof HTMLElement)) {
-        return Constructor.create(sourceElementOrData as any, parsedConfig);
+      let sourceElements: HTMLElement | Record<string, HTMLElement> = queryEditablesElements(editorId);
+
+      // Handle special case when user specified `initialData` of several root elements, but editable components
+      // are not yet present in the DOM. In other words - editor is initialized before attaching root elements.
+      if (!(sourceElements instanceof HTMLElement) && !('main' in sourceElements)) {
+        const requiredRoots = (
+          type === 'decoupled'
+            ? ['main']
+            : Object.keys(initialData as Record<string, string>)
+        );
+
+        if (!checkIfAllRootsArePresent(sourceElements, requiredRoots)) {
+          sourceElements = await waitForAllRootsToBePresent(editorId, requiredRoots);
+          initialData = queryEditablesSnapshotContent(editorId);
+        }
+      }
+
+      // If single root editor, unwrap the element from the object.
+      if (isSingleRootEditor(type) && 'main' in sourceElements) {
+        sourceElements = sourceElements['main'];
+      }
+
+      const parsedConfig = {
+        ...resolveEditorConfigElementReferences(config),
+        initialData,
+        licenseKey: license.key,
+        plugins: loadedPlugins,
+        language,
+        ...mixedTranslations.length && {
+          translations: mixedTranslations,
+        },
+      };
+
+      if (!context || !(sourceElements instanceof HTMLElement)) {
+        return Constructor.create(sourceElements as any, parsedConfig);
       }
 
       const result = await createEditorInContext({
         context,
-        element: sourceElementOrData,
+        element: sourceElements,
         creator: Constructor,
         config: parsedConfig,
       });
@@ -234,7 +262,7 @@ class EditorHookImpl extends ClassHook {
       return result.editor;
     })();
 
-    if (isSingleEditingLikeEditor(type) && editableHeight) {
+    if (isSingleRootEditor(type) && editableHeight) {
       setEditorEditableHeight(editor, editableHeight);
     }
 
@@ -243,76 +271,45 @@ class EditorHookImpl extends ClassHook {
 }
 
 /**
- * Gets the initial root elements for the editor based on its type.
+ * Checks if all required root elements are present in the elements object.
  *
- * @param editorId The editor's ID.
- * @param type The type of the editor.
- * @returns The root element(s) for the editor.
+ * @param elements The elements object mapping root IDs to HTMLElements.
+ * @param requiredRoots The list of required root IDs.
+ * @returns True if all required roots are present, false otherwise.
  */
-function getInitialRootsContentElements(editorId: EditorId, type: EditorType) {
-  // While the `decoupled` editor is a single editing-like editor, it has a different structure
-  // and requires special handling to get the main editable.
-  if (type === 'decoupled') {
-    const { content } = queryDecoupledMainEditableOrThrow(editorId);
-
-    return content;
-  }
-
-  if (isSingleEditingLikeEditor(type)) {
-    return document.getElementById(`${editorId}_editor`)!;
-  }
-
-  const editables = queryAllEditorEditables(editorId);
-
-  return mapObjectValues(editables, ({ content }) => content);
+function checkIfAllRootsArePresent(elements: Record<string, HTMLElement>, requiredRoots: string[]): boolean {
+  return requiredRoots.every(rootId => elements[rootId]);
 }
 
 /**
- * Gets the initial data for the roots of the editor. If the editor is a single editing-like editor,
- * it retrieves the initial value from the element's attribute. Otherwise, it returns an object mapping
- * editable names to their initial values.
+ * Waits for all required root elements to be present in the DOM.
  *
  * @param editorId The editor's ID.
- * @param type The type of the editor.
- * @returns The initial values for the editor's roots.
+ * @param requiredRoots The list of required root IDs.
+ * @returns A promise that resolves to the record of root elements.
  */
-function getInitialRootsValues(editorId: EditorId, type: EditorType) {
-  // While the `decoupled` editor is a single editing-like editor, it has a different structure
-  // and requires special handling to get the main editable.
-  if (type === 'decoupled') {
-    const { initialValue } = queryDecoupledMainEditableOrThrow(editorId);
+async function waitForAllRootsToBePresent(
+  editorId: EditorId,
+  requiredRoots: string[],
+): Promise<Record<string, HTMLElement>> {
+  return waitFor(
+    () => {
+      const elements = queryEditablesElements(editorId) as unknown as Record<string, HTMLElement>;
 
-    // If initial value is not set, then pick it from the editor element.
-    if (initialValue) {
-      return initialValue;
-    }
-  }
+      if (!checkIfAllRootsArePresent(elements, requiredRoots)) {
+        throw new Error(
+          'It looks like not all required root elements are present yet.\n'
+          + '* If you want to wait for them, ensure they are registered before editor initialization.\n'
+          + '* If you want lazy initialize roots, consider removing root values from the `initialData` config '
+          + 'and assign initial data in editable components.\n'
+          + `Missing roots: ${requiredRoots.filter(rootId => !elements[rootId]).join(', ')}.`,
+        );
+      }
 
-  // Let's check initial value assigned to the editor element.
-  if (isSingleEditingLikeEditor(type)) {
-    const initialValue = document.getElementById(editorId)?.getAttribute('cke-initial-value') || '';
-
-    return initialValue;
-  }
-
-  const editables = queryAllEditorEditables(editorId);
-
-  return mapObjectValues(editables, ({ initialValue }) => initialValue);
-}
-
-/**
- * Queries the main editable for a decoupled editor and throws an error if not found.
- *
- * @param editorId The ID of the editor to query.
- */
-function queryDecoupledMainEditableOrThrow(editorId: EditorId) {
-  const mainEditable = queryAllEditorEditables(editorId)['main'];
-
-  if (!mainEditable) {
-    throw new Error(`No "main" editable found for editor with ID "${editorId}".`);
-  }
-
-  return mainEditable;
+      return elements;
+    },
+    { timeOutAfter: 2000, retryAfter: 100 },
+  );
 }
 
 /**

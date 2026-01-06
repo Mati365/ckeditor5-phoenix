@@ -475,4 +475,21 @@ defmodule CKEditor5.Components.EditorTest do
       refute html =~ ~s(cke-context-id)
     end
   end
+
+  describe "editor container rendering" do
+    test "renders editor container for classic editor" do
+      html = render_component(&Editor.render/1, id: "editor_classic", type: :classic)
+      assert html =~ ~s(<div id="editor_classic_editor"></div>)
+    end
+
+    test "does not render editor container for multiroot editor" do
+      html = render_component(&Editor.render/1, id: "editor_multiroot", type: :multiroot)
+      refute html =~ ~s(<div id="editor_multiroot_editor"></div>)
+    end
+
+    test "does not render editor container for decoupled editor" do
+      html = render_component(&Editor.render/1, id: "editor_decoupled", type: :decoupled)
+      refute html =~ ~s(<div id="editor_decoupled_editor"></div>)
+    end
+  end
 end

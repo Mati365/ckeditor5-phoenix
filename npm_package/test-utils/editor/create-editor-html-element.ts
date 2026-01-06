@@ -61,7 +61,7 @@ export function createEditorHtmlElement(
       },
       ...hookAttrs,
     },
-    html.div({ id: `${id}_editor` }),
+    !['multiroot', 'decoupled'].includes(preset.type) && html.div({ id: `${id}_editor` }),
     withInput && html.input({
       type: 'hidden',
       id: `${id}_input`,

@@ -16,6 +16,7 @@ import {
   waitForTestEditor,
 } from '~/test-utils';
 
+import { timeout } from '../../shared';
 import { CustomEditorPluginsRegistry } from './custom-editor-plugins';
 import { EditorHook } from './editor';
 import { EditorsRegistry } from './editors-registry';
@@ -126,7 +127,7 @@ describe('editor hook', () => {
         const editor = await waitForTestEditor();
 
         expect(editor).toBeInstanceOf(DecoupledEditor);
-        expect(editor.getData()).toBe('<p>Test content</p>');
+        expect(editor.getData()).toBe('');
 
         expect(isEditorShown()).toBe(true);
       });
@@ -162,7 +163,30 @@ describe('editor hook', () => {
         document.body.appendChild(hookElement);
         EditorHook.mounted.call({ el: hookElement });
 
-        await expect(waitForTestEditor).rejects.toThrow(/No "main" editable found for editor with ID/);
+        await expect(waitForTestEditor).rejects.toThrow(/It looks like not all required root elements are present yet/);
+      });
+
+      it('should not raise exception if editable was added later', async () => {
+        const hookElement = createEditorHtmlElement({
+          preset: createEditorPreset('decoupled'),
+          initialValue: null,
+        });
+
+        document.body.appendChild(hookElement);
+        EditorHook.mounted.call({ el: hookElement });
+
+        await timeout(500);
+
+        document.body.appendChild(
+          createEditableHtmlElement({
+            initialValue: '<p>Editable lazy initial value</p>',
+          }),
+        );
+
+        const editor = await waitForTestEditor();
+
+        expect(editor).toBeInstanceOf(DecoupledEditor);
+        expect(editor.getData()).toBe('<p>Editable lazy initial value</p>');
       });
 
       it('if the initial value is specified on the editable, it should ignore initial value set on the editor', async () => {
@@ -265,15 +289,15 @@ describe('editor hook', () => {
         document.body.appendChild(hookElement);
         document.body.appendChild(
           createEditableHtmlElement({
-            name: 'main',
-            initialValue: '<p>Main root</p>',
+            name: 'second',
+            initialValue: '<p>Second root</p>',
           }),
         );
 
         document.body.appendChild(
           createEditableHtmlElement({
-            name: 'second',
-            initialValue: '<p>Second root</p>',
+            name: 'third',
+            initialValue: '<p>Third root</p>',
           }),
         );
 
@@ -282,9 +306,11 @@ describe('editor hook', () => {
         const editor = await waitForTestEditor();
 
         expect(editor).toBeInstanceOf(MultiRootEditor);
-        expect(editor.getData({ rootName: 'main' })).toBe('<p>Main root</p>');
-        expect(editor.getData({ rootName: 'second' })).toBe(
-          '<p>Second root</p>',
+
+        expect(editor.model.document.getRootNames()).toEqual(['second', 'third']);
+        expect(editor.getData({ rootName: 'second' })).toBe('<p>Second root</p>');
+        expect(editor.getData({ rootName: 'third' })).toBe(
+          '<p>Third root</p>',
         );
       });
     });

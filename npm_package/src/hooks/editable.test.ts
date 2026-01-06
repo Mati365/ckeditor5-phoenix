@@ -130,6 +130,7 @@ describe('editable hook', () => {
       const initialValue = '<p>Test content</p>';
       const editableElement = createEditableHtmlElement({
         initialValue,
+        name: 'second',
         withInput: true,
       });
 
@@ -164,6 +165,7 @@ describe('editable hook', () => {
       const initialValue = '<p>Initial content</p>';
       const editableElement = createEditableHtmlElement({
         initialValue,
+        name: 'second',
         withInput: true,
       });
 
@@ -173,7 +175,7 @@ describe('editable hook', () => {
       const editor = await waitForTestEditor();
       const input = editableElement.querySelector<HTMLInputElement>(`#${editableElement.id}_input`);
 
-      editor.setData('<p>Updated content</p>');
+      editor.setData({ second: '<p>Updated content</p>' });
 
       // Test if sync is debounced
       expect(input!.value).toBe(initialValue);
