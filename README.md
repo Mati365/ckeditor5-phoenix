@@ -581,6 +581,7 @@ The package includes a ready-to-use `CKEditor5.Upload.Controller` that handles l
    ```elixir
    config :ckeditor5_phoenix, :uploads,
      folder: "priv/static/uploads",
+     api_url: "/api/ckeditor5/uploads",
      url: "/uploads" # Base URL for serving files
    ```
 
