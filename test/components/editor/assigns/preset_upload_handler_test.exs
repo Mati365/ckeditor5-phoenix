@@ -1,7 +1,7 @@
-defmodule CKEditor5.Components.Editor.PresetHandlerTest do
+defmodule CKEditor5.Components.Editor.PresetUploadHandlerTest do
   use ExUnit.Case, async: false
 
-  alias CKEditor5.Components.Editor.PresetHandler
+  alias CKEditor5.Components.Editor.PresetUploadHandler
   alias CKEditor5.Preset
 
   defp basic_preset do
@@ -13,7 +13,7 @@ defmodule CKEditor5.Components.Editor.PresetHandlerTest do
     }
   end
 
-  describe "process_preset/1 with upload_url" do
+  describe "override_upload_url/1" do
     test "injects phoenixUpload config when upload_url is provided in assigns" do
       assigns = %{
         preset: basic_preset(),
@@ -21,7 +21,7 @@ defmodule CKEditor5.Components.Editor.PresetHandlerTest do
         upload_url: "/custom/upload/path"
       }
 
-      processed = PresetHandler.process_preset(assigns)
+      processed = PresetUploadHandler.override_upload_url(assigns)
       config = processed.preset.config
 
       assert config.phoenixUpload == %{url: "/custom/upload/path"}
@@ -45,7 +45,7 @@ defmodule CKEditor5.Components.Editor.PresetHandlerTest do
         upload_url: "/upload"
       }
 
-      processed = PresetHandler.process_preset(assigns)
+      processed = PresetUploadHandler.override_upload_url(assigns)
       plugins = processed.preset.config.plugins
 
       refute "SimpleUploadAdapter" in plugins
@@ -71,7 +71,7 @@ defmodule CKEditor5.Components.Editor.PresetHandlerTest do
         type: nil
       }
 
-      processed = PresetHandler.process_preset(assigns)
+      processed = PresetUploadHandler.override_upload_url(assigns)
       config = processed.preset.config
 
       assert config.phoenixUpload == %{url: "/global/upload/url"}
@@ -94,10 +94,25 @@ defmodule CKEditor5.Components.Editor.PresetHandlerTest do
         type: nil
       }
 
-      processed = PresetHandler.process_preset(assigns)
+      processed = PresetUploadHandler.override_upload_url(assigns)
       config = processed.preset.config
 
       assert config.phoenixUpload == %{url: "/global/upload/url"}
+    end
+
+    test "adds Base64UploadAdapter and removes SimpleUploadAdapter when upload_url is 'base64'" do
+      assigns = %{
+        preset: basic_preset(),
+        type: nil,
+        upload_url: "base64"
+      }
+
+      processed = PresetUploadHandler.override_upload_url(assigns)
+      plugins = processed.preset.config.plugins
+
+      assert "Base64UploadAdapter" in plugins
+      refute "SimpleUploadAdapter" in plugins
+      refute Map.has_key?(processed.preset.config, :phoenixUpload)
     end
   end
 end

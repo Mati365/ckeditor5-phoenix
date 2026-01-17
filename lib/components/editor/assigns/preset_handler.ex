@@ -3,8 +3,9 @@ defmodule CKEditor5.Components.Editor.PresetHandler do
   Handles preset loading and type overriding for the Editor component.
   """
 
+  alias CKEditor5.Components.Editor.PresetUploadHandler
   alias CKEditor5.Errors.Error
-  alias CKEditor5.{Config, Preset}
+  alias CKEditor5.Preset
   alias CKEditor5.Preset.EditorType
 
   @doc """
@@ -14,7 +15,7 @@ defmodule CKEditor5.Components.Editor.PresetHandler do
     assigns
     |> load_preset()
     |> override_preset_type()
-    |> override_upload_url()
+    |> PresetUploadHandler.override_upload_url()
   end
 
   # Loads the preset configuration from the preset name
@@ -42,32 +43,5 @@ defmodule CKEditor5.Components.Editor.PresetHandler do
     else
       raise Error, "Invalid editor type provided: #{type}"
     end
-  end
-
-  # Overrides the upload URL if provided in the assigns or config
-  defp override_upload_url(assigns) do
-    config = Config.uploads_config()
-    url = assigns[:upload_url] || config[:api_url] || config[:url]
-
-    if url do
-      apply_upload_config(assigns, url)
-    else
-      assigns
-    end
-  end
-
-  defp apply_upload_config(%{preset: preset} = assigns, url) do
-    plugins_to_remove = ["SimpleUploadAdapter", "Base64UploadAdapter"]
-
-    new_config =
-      preset.config
-      |> Map.put(:phoenixUpload, %{url: url})
-      |> Map.update(:plugins, [], fn plugins ->
-        Enum.reject(plugins, fn plugin -> to_string(plugin) in plugins_to_remove end)
-      end)
-
-    new_preset = %{preset | config: new_config}
-
-    Map.put(assigns, :preset, new_preset)
   end
 end

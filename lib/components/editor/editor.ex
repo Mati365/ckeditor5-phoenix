@@ -89,7 +89,7 @@ defmodule CKEditor5.Components.Editor do
     default: nil,
     doc:
       "The URL endpoint for image uploads. If not provided, the default upload endpoint will be used if configured in the application config. " <>
-        "Set to false to disable upload functionality."
+        "Set to \"base64\" to use Base64 upload adapter."
 
   slot :inner_block,
     required: false,

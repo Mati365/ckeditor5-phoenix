@@ -44,6 +44,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [LiveView Handler ⚡](#liveview-handler-)
   - [Image Upload 🖼️](#image-upload-️)
     - [Enabling uploads 🚀](#enabling-uploads-)
+    - [Base64 Uploads 🖼️](#base64-uploads-️)
     - [Backend Handling 📥](#backend-handling-)
       - [Using Built-in Controller 📦](#using-built-in-controller-)
       - [Custom Controller 🛠️](#custom-controller-️)
@@ -551,6 +552,20 @@ When `upload_url` is configured (either via prop or globally), the editor will a
 1. Enable the `PhoenixUploadAdapter` plugin.
 2. Disable conflicting adapters (like `SimpleUploadAdapter` or `Base64UploadAdapter`).
 3. Send upload requests to the specified URL.
+
+### Base64 Uploads 🖼️
+
+If you prefer to store images as Base64 strings directly in the content (not recommended for production due to performance impact), you can set `upload_url` to `"base64"`.
+
+```heex
+<.ckeditor
+  id="editor"
+  upload_url="base64"
+  value="<p>Content with images</p>"
+/>
+```
+
+This will enable the `Base64UploadAdapter` and disable other upload adapters. It's default behavior if no `upload_url` is provided nor global configuration exists.
 
 ### Backend Handling 📥
 
