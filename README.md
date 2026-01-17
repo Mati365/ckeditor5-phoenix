@@ -612,7 +612,7 @@ The package includes a ready-to-use `CKEditor5.Upload.Controller` that handles l
 
 #### Custom Controller 🛠️
 
-If you need custom logic (e.g., uploading to S3), create your own controller:
+If you need custom logic (e.g., uploading to S3), create your own controller. The `folder` and `url` config options are not needed in this case. However, make sure `api_url` is set correctly.
 
 ```elixir
 defmodule MyAppWeb.UploadController do
