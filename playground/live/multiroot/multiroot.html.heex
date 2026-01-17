@@ -1,24 +1,27 @@
-<.back_to_home />
+<div class="mx-auto p-8 max-w-4xl">
+  <.back_to_home />
+  <h1 class="mb-6 font-bold text-3xl">Multi-root Editor Demo</h1>
 
-<.ckeditor type="multiroot" />
+  <.ckeditor type="multiroot" />
 
-<.cke_ui_part name="toolbar" class="mb-4" />
+  <.cke_ui_part name="toolbar" class="mb-4" />
 
-<div class="flex flex-col gap-4">
-  <.cke_editable
-    root="header"
-    name="header"
-    value="<h1>Main Header</h1>"
-    class="border border-gray-300"
-  />
-  <.cke_editable
-    root="content"
-    value="<p>Main content area</p>"
-    class="border border-gray-300"
-  />
-  <.cke_editable
-    root="sidebar"
-    value="<p>Sidebar content</p>"
-    class="border border-gray-300"
-  />
+  <div class="flex flex-col gap-4">
+    <.cke_editable
+      root="header"
+      name="header"
+      value="<h1>Main Header</h1>"
+      class="border border-gray-300"
+    />
+    <.cke_editable
+      root="content"
+      value="<p>Main content area</p>"
+      class="border border-gray-300"
+    />
+    <.cke_editable
+      root="sidebar"
+      value="<p>Sidebar content</p>"
+      class="border border-gray-300"
+    />
+  </div>
 </div>

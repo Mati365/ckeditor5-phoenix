@@ -30,6 +30,11 @@ defmodule Playground.Endpoint do
     from: Path.expand("./priv/static", __DIR__),
     gzip: false
 
+  plug Plug.Static,
+    at: "/uploads",
+    from: Path.expand("./priv/static/uploads", __DIR__),
+    gzip: false
+
   if code_reloading? do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader

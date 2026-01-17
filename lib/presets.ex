@@ -112,10 +112,13 @@ defmodule CKEditor5.Presets do
         },
         image: %{
           toolbar: [
+            "imageStyle:inline",
+            "imageStyle:block",
+            "imageStyle:wrapText",
+            :|,
+            :toggleImageCaption,
             :imageTextAlternative,
-            :imageStyle,
-            :imageResize,
-            :imageInsertViaUrl
+            :imageResize
           ]
         }
       }

@@ -1,14 +1,17 @@
-<.back_to_home />
+<div class="mx-auto p-8 max-w-4xl">
+  <.back_to_home />
+  <h1 class="mb-6 font-bold text-3xl">Dynamic Preset Demo</h1>
 
-<.ckeditor
-  id="editor"
-  value={@editor_value}
-  preset={@preset}
-  focus_event
-  blur_event
-/>
+  <.ckeditor
+    id="editor"
+    value={@editor_value}
+    preset={@preset}
+    focus_event
+    blur_event
+  />
 
-<div class="bg-gray-50 mt-8 p-4 border border-gray-300">
-  <h2 class="mb-2 font-bold">Current editor value:</h2>
-  <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
+  <div class="bg-gray-50 mt-8 p-4 border border-gray-300">
+    <h2 class="mb-2 font-bold">Current editor value:</h2>
+    <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
+  </div>
 </div>

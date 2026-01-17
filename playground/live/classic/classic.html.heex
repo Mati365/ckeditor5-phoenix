@@ -1,28 +1,31 @@
-<.back_to_home />
+<div class="mx-auto p-8 max-w-4xl">
+  <.back_to_home />
+  <h1 class="mb-6 font-bold text-3xl">Classic Editor Demo</h1>
 
-<.ckeditor
-  id="editor"
-  value={@editor_value}
-  change_event
-  focus_event
-  blur_event
-/>
+  <.ckeditor
+    id="editor"
+    value={@editor_value}
+    change_event
+    focus_event
+    blur_event
+  />
 
-<div class="mt-4">
-  <button
-    phx-click="set_data"
-    class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white"
+  <div class="mt-4">
+    <button
+      phx-click="set_data"
+      class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white"
+    >
+      Set New Data
+    </button>
+  </div>
+
+  <div
+    class={[
+      "bg-gray-50 mt-8 p-4 border border-gray-300",
+      if(@editor_focused?, do: "ring-2 ring-blue-500")
+    ]}
   >
-    Set New Data
-  </button>
-</div>
-
-<div
-  class={[
-    "bg-gray-50 mt-8 p-4 border border-gray-300",
-    if(@editor_focused?, do: "ring-2 ring-blue-500")
-  ]}
->
-  <h2 class="mb-2 font-bold">Current editor value:</h2>
-  <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
+    <h2 class="mb-2 font-bold">Current editor value:</h2>
+    <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
+  </div>
 </div>

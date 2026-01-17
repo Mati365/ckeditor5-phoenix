@@ -9,7 +9,7 @@ export function createEditorPreset(
   customTranslations?: object,
 ) {
   const defaultConfig: EditorConfig = {
-    plugins: ['Essentials', 'Paragraph', 'Bold', 'Italic', 'Undo'],
+    plugins: ['Essentials', 'Paragraph', 'Bold', 'Italic', 'Undo', 'Image', 'ImageUpload'],
     toolbar: ['undo', 'redo', '|', 'bold', 'italic'],
   };
 

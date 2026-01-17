@@ -38,6 +38,10 @@ config :ckeditor5_phoenix, Playground.Endpoint,
   ]
 
 config :ckeditor5_phoenix,
+  uploads: [
+    folder: "playground/priv/static/uploads",
+    url: "/uploads"
+  ],
   contexts: %{
     "custom" => %{
       config: %{

@@ -16,8 +16,20 @@ defmodule CKEditor5.Config do
     Application.get_env(@app, :presets, %{})
   end
 
+  @doc """
+  Returns the raw contexts configuration from the application environment.
+  It's unprocessed raw configuration.
+  """
   @spec raw_contexts() :: map()
   def raw_contexts do
     Application.get_env(@app, :contexts, %{})
+  end
+
+  @doc """
+  Returns the uploads configuration from the application environment.
+  """
+  @spec uploads_config() :: map()
+  def uploads_config do
+    Application.get_env(@app, :uploads, %{})
   end
 end

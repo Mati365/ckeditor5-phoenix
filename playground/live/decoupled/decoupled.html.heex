@@ -1,20 +1,23 @@
-<.back_to_home />
+<div class="mx-auto p-8 max-w-4xl">
+  <.back_to_home />
+  <h1 class="mb-6 font-bold text-3xl">Decoupled Editor Demo</h1>
 
-<.ckeditor id="decoupled" type="decoupled" change_event>
-  <div class="flex flex-col gap-4">
-    <%!-- Toolbar can be placed anywhere --%>
-    <.cke_ui_part name="toolbar" />
+  <.ckeditor id="decoupled" type="decoupled" change_event>
+    <div class="flex flex-col gap-4">
+      <%!-- Toolbar can be placed anywhere --%>
+      <.cke_ui_part name="toolbar" />
 
-    <%!-- Editable area with custom styling --%>
-    <.cke_editable
-      value={@editor_value}
-      class="border border-gray-300 rounded"
-      editable_height="300px"
-    />
+      <%!-- Editable area with custom styling --%>
+      <.cke_editable
+        value={@editor_value}
+        class="border border-gray-300 rounded"
+        editable_height="300px"
+      />
+    </div>
+  </.ckeditor>
+
+  <div class="bg-gray-50 mt-8 p-4 border border-gray-300">
+    <h2 class="mb-2 font-bold">Current editor value:</h2>
+    <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
   </div>
-</.ckeditor>
-
-<div class="bg-gray-50 mt-8 p-4 border border-gray-300">
-  <h2 class="mb-2 font-bold">Current editor value:</h2>
-  <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
 </div>

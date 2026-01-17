@@ -84,6 +84,13 @@ defmodule CKEditor5.Components.Editor do
     doc:
       "Whether to enable the watchdog for the editor. If true, the component will automatically restart the editor if it crashes."
 
+  attr :upload_url, :string,
+    required: false,
+    default: nil,
+    doc:
+      "The URL endpoint for image uploads. If not provided, the default upload endpoint will be used if configured in the application config. " <>
+        "Set to false to disable upload functionality."
+
   slot :inner_block,
     required: false,
     doc: "Optional content to render inside the editor container."

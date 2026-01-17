@@ -235,10 +235,13 @@ defmodule CKEditor5.PresetsTest do
       {:ok, preset} = Presets.get("default")
 
       expected_image_toolbar = [
+        "imageStyle:inline",
+        "imageStyle:block",
+        "imageStyle:wrapText",
+        :|,
+        :toggleImageCaption,
         :imageTextAlternative,
-        :imageStyle,
-        :imageResize,
-        :imageInsertViaUrl
+        :imageResize
       ]
 
       assert preset.config.image.toolbar == expected_image_toolbar

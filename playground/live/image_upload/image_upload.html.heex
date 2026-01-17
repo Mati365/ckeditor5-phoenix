@@ -1,0 +1,29 @@
+<div class="mx-auto p-8 max-w-4xl">
+  <.back_to_home />
+
+  <h1 class="mb-6 font-bold text-3xl">Image Upload Demo</h1>
+
+  <div class="mb-8">
+    <p class="mb-4 text-gray-600">
+      This demo shows the CKEditor 5 with automatic image upload functionality.
+      Upload images using the image button in the toolbar or paste them directly into the editor.
+    </p>
+  </div>
+
+  <div class="mb-8">
+    <CKEditor5.Components.Editor.render
+      id="editor-with-upload"
+      preset="default"
+      upload_url="/api/ckeditor5/upload"
+      value={@content}
+      change_event
+    />
+  </div>
+
+  <div class="mt-8">
+    <h2 class="mb-4 font-bold text-xl">Editor Content:</h2>
+    <div class="bg-gray-100 p-4 rounded">
+      <pre class="break-words whitespace-pre-wrap"><%= @content %></pre>
+    </div>
+  </div>
+</div>

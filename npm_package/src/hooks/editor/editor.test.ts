@@ -907,4 +907,311 @@ describe('editor hook', () => {
       });
     });
   });
+
+  describe('phoenix upload adapter', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      fetchSpy = vi.spyOn(globalThis, 'fetch') as any;
+    });
+
+    afterEach(() => {
+      fetchSpy.mockRestore();
+    });
+
+    it('should initialize PhoenixUploadAdapter when phoenixUpload.url is configured', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+
+      expect(editor.plugins.has('PhoenixUploadAdapter')).toBe(true);
+      expect(editor.config.get('phoenixUpload.url')).toBe(uploadUrl);
+    });
+
+    it('should not initialize PhoenixUploadAdapter when phoenixUpload.url is not configured', async () => {
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {}),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+
+      // Plugin should be loaded but adapter not registered
+      expect(editor.plugins.has('PhoenixUploadAdapter')).toBe(true);
+    });
+
+    it('should upload file successfully', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const mockResponse = { url: 'https://example.com/uploads/image.jpg' };
+
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+
+      // Create a mock file
+      const file = new File(['test content'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      if (!loader) {
+        throw new Error('Loader was not created');
+      }
+
+      const result = await loader.upload();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      const [calledUrl, calledOptions] = fetchSpy.mock.calls[0] as [string, RequestInit];
+
+      expect(calledUrl).toBe(uploadUrl);
+      expect(calledOptions.method).toBe('POST');
+      expect(calledOptions.body).toBeInstanceOf(FormData);
+
+      expect(result).toEqual({ default: mockResponse.url });
+    });
+
+    it('should include CSRF token in upload request if available', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const mockResponse = { url: 'https://example.com/uploads/image.jpg' };
+      const csrfToken = 'test-csrf-token';
+
+      // Mock CSRF token
+      const metaElement = document.createElement('meta');
+      metaElement.name = 'csrf-token';
+      metaElement.content = csrfToken;
+      document.head.appendChild(metaElement);
+
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+
+      const file = new File(['test content'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      await loader!.upload();
+
+      const [_url, options] = fetchSpy.mock.calls[0] as [string, any];
+
+      expect(options.headers['X-CSRF-Token']).toBe(csrfToken);
+
+      // Clean up
+      document.head.removeChild(metaElement);
+    });
+
+    it('should handle upload errors', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const errorMessage = 'File too large';
+
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: { message: errorMessage } }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+
+      const file = new File(['test content'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      await expect(loader!.upload()).rejects.toThrow(errorMessage);
+    });
+
+    it('should handle generic upload errors when error message is not provided', async () => {
+      const uploadUrl = 'https://example.com/upload';
+
+      fetchSpy.mockResolvedValueOnce(
+        new Response('Server error', {
+          status: 500,
+        }),
+      );
+
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+
+      const file = new File(['test content'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      await expect(loader!.upload()).rejects.toThrow('Couldn\'t upload file!');
+    });
+
+    it('should track upload progress', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const mockResponse = { url: 'https://example.com/uploads/image.jpg' };
+
+      fetchSpy.mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+
+      const fileContent = 'a'.repeat(1024); // 1KB file
+      const file = new File([fileContent], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      // Before upload
+      expect(loader!.uploaded).toBe(0);
+
+      await loader!.upload();
+
+      // After upload
+      expect(loader!.uploadTotal).toBe(file.size);
+      expect(loader!.uploaded).toBe(file.size);
+    });
+
+    it('should not initialize adapter if SimpleUploadAdapter plugin is present', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          plugins: ['Image', 'ImageUpload', 'SimpleUploadAdapter'],
+          toolbar: [],
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      try {
+        await loader!.upload();
+      }
+      catch {
+        // Expected to fail or do nothing if no adapter is present
+      }
+
+      expect(fetchSpy).not.toHaveBeenCalledWith(uploadUrl, expect.anything());
+    });
+
+    it('should not initialize adapter if Base64UploadAdapter plugin is present', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          plugins: ['Image', 'ImageUpload', 'Base64UploadAdapter'],
+          toolbar: [],
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      try {
+        await loader!.upload();
+      }
+      catch {
+        // Expected to fail or do nothing if no adapter is present
+      }
+
+      expect(fetchSpy).not.toHaveBeenCalledWith(uploadUrl, expect.anything());
+    });
+
+    it('should not initialize adapter if CKFinderUploadAdapter plugin is present', async () => {
+      const uploadUrl = 'https://example.com/upload';
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('classic', {
+          plugins: ['Image', 'ImageUpload', 'Link', 'CKFinderUploadAdapter'],
+          toolbar: [],
+          phoenixUpload: { url: uploadUrl },
+        }),
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const fileRepository = editor.plugins.get('FileRepository');
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      const loader = fileRepository.createLoader(file);
+
+      try {
+        await loader!.upload();
+      }
+      catch {
+        // Expected to fail or do nothing if no adapter is present
+      }
+
+      expect(fetchSpy).not.toHaveBeenCalledWith(uploadUrl, expect.anything());
+    });
+  });
 });

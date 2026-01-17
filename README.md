@@ -42,6 +42,12 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
   - [Forms Integration 🧾](#forms-integration-)
     - [Phoenix Form Helper 🧑‍💻](#phoenix-form-helper-)
     - [LiveView Handler ⚡](#liveview-handler-)
+  - [Image Upload 🖼️](#image-upload-️)
+    - [Enabling uploads 🚀](#enabling-uploads-)
+    - [Backend Handling 📥](#backend-handling-)
+      - [Using Built-in Controller 📦](#using-built-in-controller-)
+      - [Custom Controller 🛠️](#custom-controller-️)
+    - [CSRF Protection 🛡️](#csrf-protection-️)
   - [Configuration ⚙️](#configuration-️)
     - [Custom Presets 🧩](#custom-presets-)
     - [Dynamic presets 🎯](#dynamic-presets-)
@@ -515,6 +521,106 @@ defmodule MyApp.PageLive do
         {:noreply, put_flash(socket, :error, "Failed to save content")}
     end
   end
+end
+```
+
+## Image Upload 🖼️
+
+CKEditor 5 Phoenix includes a dedicated upload adapter that integrates seamlessly with Phoenix applications. It handles image uploads using standard `multipart/form-data` requests and automatically includes CSRF tokens.
+
+### Enabling uploads 🚀
+
+To enable image uploads, simply provide the `upload_url` prop to the editor component. This URL should point to your Phoenix controller action that handles the file upload.
+
+```heex
+<.ckeditor
+  id="editor"
+  upload_url="/api/uploads"
+  value="<p>Content with images</p>"
+/>
+```
+
+Alternatively, you can configure the upload URL globally in your `config/config.exs`:
+
+```elixir
+config :ckeditor5_phoenix, :uploads, api_url: "/api/uploads"
+```
+
+When `upload_url` is configured (either via prop or globally), the editor will automatically:
+
+1. Enable the `PhoenixUploadAdapter` plugin.
+2. Disable conflicting adapters (like `SimpleUploadAdapter` or `Base64UploadAdapter`).
+3. Send upload requests to the specified URL.
+
+### Backend Handling 📥
+
+The editor expects the server to return a JSON response containing the URL of the uploaded file:
+
+```json
+{
+  "url": "https://example.com/images/foo.jpg"
+}
+```
+
+In case of an error, return a JSON object with an error message:
+
+```json
+{
+  "error": {
+    "message": "File too big."
+  }
+}
+```
+
+#### Using Built-in Controller 📦
+
+The package includes a ready-to-use `CKEditor5.Upload.Controller` that handles local file storage. To use it:
+
+1. **Configure storage location**:
+
+   ```elixir
+   config :ckeditor5_phoenix, :uploads,
+     folder: "priv/static/uploads",
+     url: "/uploads" # Base URL for serving files
+   ```
+
+2. **Add route** in your `router.ex`:
+
+   ```elixir
+   scope "/api/ckeditor5" do
+     pipe_through :api # Ensure this pipeline expects JSON
+
+     post "/upload", CKEditor5.Upload.Controller, :upload
+   end
+   ```
+
+#### Custom Controller 🛠️
+
+If you need custom logic (e.g., uploading to S3), create your own controller:
+
+```elixir
+defmodule MyAppWeb.UploadController do
+  use MyAppWeb, :controller
+
+  def upload(conn, %{"file" => upload}) do
+    # 1. Handle the upload (e.g., store in S3)
+    # 2. Return the public URL
+    json(conn, %{url: "https://my-bucket.s3.amazonaws.com/..."})
+  end
+end
+```
+
+### CSRF Protection 🛡️
+
+The adapter automatically fetches the CSRF token from the `meta[name="csrf-token"]` tag or `_csrf_token` cookie and sends it in the `X-CSRF-Token` header.
+
+However, standard Phoenix `:api` pipelines often **do not** include CSRF protection by default. To secure your upload endpoint, ensure your pipeline includes the verification plug:
+
+```elixir
+pipeline :api do
+  plug :accepts, ["json"]
+  plug :fetch_session  # Required for CSRF protection
+  plug :protect_from_forgery
 end
 ```
 

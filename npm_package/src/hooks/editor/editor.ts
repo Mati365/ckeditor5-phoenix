@@ -3,15 +3,15 @@ import type { Editor } from 'ckeditor5';
 import type { EditorId } from './typings';
 import type { EditorCreator } from './utils';
 
-import {
-  isEmptyObject,
-  parseIntIfNotNull,
-  waitFor,
-} from '../../shared';
+import { isEmptyObject, parseIntIfNotNull, waitFor } from '../../shared';
 import { ClassHook, makeHook } from '../../shared/hook';
 import { ContextsRegistry, getNearestContextParentPromise } from '../context';
 import { EditorsRegistry } from './editors-registry';
-import { createSyncEditorWithInputPlugin, createSyncEditorWithPhoenixPlugin } from './plugins';
+import {
+  createPhoenixUploadAdapterPlugin,
+  createSyncEditorWithInputPlugin,
+  createSyncEditorWithPhoenixPlugin,
+} from './plugins';
 import {
   createEditorInContext,
   isSingleRootEditor,
@@ -189,13 +189,16 @@ class EditorHookImpl extends ClassHook {
     }
 
     loadedPlugins.push(
-      await createSyncEditorWithPhoenixPlugin({
-        editorId,
-        saveDebounceMs,
-        events,
-        pushEvent: this.pushEvent.bind(this),
-        handleEvent: this.handleEvent.bind(this),
-      }),
+      ...await Promise.all([
+        createSyncEditorWithPhoenixPlugin({
+          editorId,
+          saveDebounceMs,
+          events,
+          pushEvent: this.pushEvent.bind(this),
+          handleEvent: this.handleEvent.bind(this),
+        }),
+        createPhoenixUploadAdapterPlugin(),
+      ]),
     );
 
     // Mix custom translations with loaded translations.

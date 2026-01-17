@@ -19,6 +19,14 @@ defmodule Playground.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
+    plug :protect_from_forgery
+  end
+
+  scope "/api/ckeditor5", CKEditor5 do
+    pipe_through :api
+
+    post "/upload", Upload.Controller, :upload
   end
 
   scope "/", Playground do
@@ -36,5 +44,6 @@ defmodule Playground.Router do
     live "/multiroot", Live.Multiroot
     live "/context", Live.Context
     live "/i18n", Live.I18n
+    live "/image-upload", Live.ImageUpload
   end
 end

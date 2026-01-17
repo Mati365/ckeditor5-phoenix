@@ -3,6 +3,7 @@ export * from './camel-case';
 export * from './debounce';
 export * from './deep-camel-case-keys';
 export * from './filter-object-values';
+export * from './get-csrf-token';
 export * from './hook';
 export * from './is-empty-object';
 export * from './is-nil';
