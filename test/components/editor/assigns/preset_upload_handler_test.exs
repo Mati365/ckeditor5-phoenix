@@ -114,5 +114,23 @@ defmodule CKEditor5.Components.Editor.PresetUploadHandlerTest do
       refute "SimpleUploadAdapter" in plugins
       refute Map.has_key?(processed.preset.config, :phoenixUpload)
     end
+
+    test "returns assigns unchanged when no upload_url is provided or configured" do
+      old_config = Application.get_env(:ckeditor5_phoenix, :uploads)
+      Application.delete_env(:ckeditor5_phoenix, :uploads)
+
+      on_exit(fn ->
+        if old_config do
+          Application.put_env(:ckeditor5_phoenix, :uploads, old_config)
+        end
+      end)
+
+      assigns = %{
+        preset: basic_preset(),
+        type: nil
+      }
+
+      assert PresetUploadHandler.override_upload_url(assigns) == assigns
+    end
   end
 end

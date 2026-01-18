@@ -1,8 +1,21 @@
 defmodule CKEditor5.PresetsTest do
-  use CKEditor5.Test.PresetsTestCaseTemplate, async: true
+  use CKEditor5.Test.PresetsTestCaseTemplate, async: false
 
   alias CKEditor5.{Errors, Preset, Presets}
   alias CKEditor5.Test.LicenseGenerator
+
+  setup do
+    original_key = System.get_env("CKEDITOR5_LICENSE_KEY")
+    System.delete_env("CKEDITOR5_LICENSE_KEY")
+
+    on_exit(fn ->
+      if original_key do
+        System.put_env("CKEDITOR5_LICENSE_KEY", original_key)
+      end
+    end)
+
+    :ok
+  end
 
   describe "get/1" do
     test "returns {:ok, preset} for the default preset" do

@@ -109,7 +109,7 @@ defmodule CKEditor5.MixProject do
   defp aliases do
     [
       playground: "run -e 'Playground.App.run()'",
-      e2e: ["assets.build", "test test/e2e"],
+      e2e: ["assets.build", "test --include e2e test/e2e"],
       "assets.test": ["cmd npm run npm_package:test"],
       "assets.typecheck": ["cmd npm run typecheck"],
       "assets.setup": [

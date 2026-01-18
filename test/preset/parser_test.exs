@@ -1,9 +1,22 @@
 defmodule CKEditor5.Preset.ParserTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias CKEditor5.{Cloud, Errors, License, Preset}
   alias CKEditor5.Preset.Parser
   alias CKEditor5.Test.LicenseGenerator
+
+  setup do
+    original_key = System.get_env("CKEDITOR5_LICENSE_KEY")
+    System.delete_env("CKEDITOR5_LICENSE_KEY")
+
+    on_exit(fn ->
+      if original_key do
+        System.put_env("CKEDITOR5_LICENSE_KEY", original_key)
+      end
+    end)
+
+    :ok
+  end
 
   describe "parse/1" do
     test "returns {:ok, %Preset{}} for a minimal valid preset" do

@@ -151,6 +151,9 @@ jobs:
           node-version: '22'
           cache: npm
 
+      - name: Install inotify-tools
+        run: sudo apt-get update && sudo apt-get install -y inotify-tools
+
       - name: Install Node.js dependencies
         run: npm ci
 

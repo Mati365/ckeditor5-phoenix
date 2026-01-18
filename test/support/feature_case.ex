@@ -8,6 +8,8 @@ defmodule Playground.FeatureCase do
 
   using do
     quote do
+      @moduletag :e2e
+
       use Wallaby.Feature
       use Playground, :verified_routes
 
