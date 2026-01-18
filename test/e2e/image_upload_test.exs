@@ -37,27 +37,6 @@ defmodule Playground.ImageUploadTest do
 
       editable.dispatchEvent(pasteEvent);
     """)
-    |> assert_image_uploaded()
-  end
-
-  defp assert_image_uploaded(session) do
-    query = Query.css(".ck-content img[src*='/uploads/']", count: 1)
-
-    result =
-      Enum.reduce_while(1..20, false, fn _, _ ->
-        if Wallaby.Browser.has?(session, query) do
-          {:halt, true}
-        else
-          Process.sleep(500)
-          {:cont, false}
-        end
-      end)
-
-    if result do
-      assert_has(session, query)
-    else
-      # Final check to raise the error if still not found
-      assert_has(session, query)
-    end
+    |> assert_has(Query.css(".ck-content img[src*='/uploads/']", count: 1))
   end
 end

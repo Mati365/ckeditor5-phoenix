@@ -61,6 +61,8 @@ defmodule CKEditor5.Upload.Controller do
     # Save file.
     destination = Path.join(uploads_folder, filename)
 
+    File.mkdir_p!(uploads_folder)
+
     case File.cp(upload.path, destination) do
       :ok ->
         # Return URL to access the uploaded file.
