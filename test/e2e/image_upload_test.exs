@@ -8,6 +8,11 @@ defmodule Playground.ImageUploadTest do
     session
     |> visit(~p"/image-upload")
     |> assert_has(Query.css(".ck-editor__editable"))
+    |> then(fn session ->
+      # Wait for initialization of the editor.
+      Process.sleep(500)
+      session
+    end)
     |> Wallaby.Browser.execute_script("""
       const editable = document.querySelector('.ck-editor__editable');
 
@@ -32,6 +37,27 @@ defmodule Playground.ImageUploadTest do
 
       editable.dispatchEvent(pasteEvent);
     """)
-    |> assert_has(Query.css(".ck-content img[src*='/uploads/']", count: 1))
+    |> assert_image_uploaded()
+  end
+
+  defp assert_image_uploaded(session) do
+    query = Query.css(".ck-content img[src*='/uploads/']", count: 1)
+
+    result =
+      Enum.reduce_while(1..20, false, fn _, _ ->
+        if Wallaby.Browser.has?(session, query) do
+          {:halt, true}
+        else
+          Process.sleep(500)
+          {:cont, false}
+        end
+      end)
+
+    if result do
+      assert_has(session, query)
+    else
+      # Final check to raise the error if still not found
+      assert_has(session, query)
+    end
   end
 end
