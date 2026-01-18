@@ -40,7 +40,8 @@ defmodule CKEditor5.MixProject do
         "coveralls.html": :test,
         "coveralls.github": :test,
         "coveralls.cobertura": :test,
-        "test.watch": :test
+        "test.watch": :test,
+        e2e: :test
       ]
     ]
   end
@@ -55,24 +56,25 @@ defmodule CKEditor5.MixProject do
       {:castore, ">= 0.0.0"},
       {:phoenix, "~> 1.7"},
       {:phoenix_html, "~> 4.1"},
-      {:phoenix_view, "~> 2.0", only: [:dev]},
+      {:phoenix_view, "~> 2.0", only: [:dev, :test]},
       {:phoenix_live_view, "~> 1.0"},
       {:norm, "~> 0.13"},
       {:memoize, "~> 1.4"},
       {:jason, "~> 1.4"},
-      {:dotenv, "~> 3.0.0", only: [:dev]},
+      {:dotenv, "~> 3.0.0", only: [:dev, :test]},
       {:telemetry_metrics, "~> 1.0", only: [:dev]},
       {:telemetry_poller, "~> 1.0", only: [:dev]},
-      {:phoenix_live_reload, "~> 1.6", only: [:dev]},
+      {:phoenix_live_reload, "~> 1.6", only: [:dev, :test]},
       {:dns_cluster, "~> 0.1.1", only: [:dev]},
-      {:bandit, "~> 1.5", only: [:dev]},
-      {:tailwind, "~> 0.3", only: [:dev], runtime: is_dev},
-      {:esbuild, "~> 0.7", only: [:dev], runtime: is_dev},
+      {:bandit, "~> 1.5", only: [:dev, :test]},
+      {:tailwind, "~> 0.3", only: [:dev, :test], runtime: is_dev},
+      {:esbuild, "~> 0.7", only: [:dev, :test], runtime: is_dev},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.38.2", only: [:prod, :dev], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:wallaby, "~> 0.30", runtime: false, only: :test}
     ]
   end
 
@@ -100,13 +102,14 @@ defmodule CKEditor5.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/support", "playground"]
   defp elixirc_paths(:dev), do: ["lib", "playground"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp aliases do
     [
       playground: "run -e 'Playground.App.run()'",
+      e2e: ["assets.build", "test test/e2e"],
       "assets.test": ["cmd npm run npm_package:test"],
       "assets.typecheck": ["cmd npm run typecheck"],
       "assets.setup": [
