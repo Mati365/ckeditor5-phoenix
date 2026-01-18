@@ -77,8 +77,9 @@ defmodule CKEditor5.Upload.ControllerTest do
   end
 
   test "returns error when file copy fails", %{upload_path: upload_path} do
-    # Remove the upload directory to force File.cp to fail
+    # Create a file at upload_path to force mkdir_p to fail (since it expects a directory)
     File.rm_rf!(upload_path)
+    File.write!(upload_path, "blocker")
 
     conn = build_conn()
 
