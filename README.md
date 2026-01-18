@@ -14,6 +14,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 > [!IMPORTANT]
 > This package is unofficial and not maintained by CKSource. For official CKEditor 5 documentation, visit [ckeditor.com](https://ckeditor.com/docs/ckeditor5/latest/). If you encounter any issues in the editor, please report them on the [GitHub repository](https://github.com/ckeditor/ckeditor5/issues).
 
+<!-- markdownlint-disable MD033 -->
 <p align="center">
   <img src="docs/intro-classic-editor.png" alt="CKEditor 5 Classic Editor in Phoenix (Elixir) application">
 </p>
