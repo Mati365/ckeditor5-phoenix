@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "pnpm run clean && vite build && node ./scripts/check-dist-imports.mjs",
+    "build": "npm run clean && vite build && node ./scripts/check-dist-imports.mjs",
     "watch": "vite build --watch",
     "dev": "vite build --watch",
     "typecheck": "tsc --noEmit --pretty",
