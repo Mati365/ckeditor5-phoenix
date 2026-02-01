@@ -1,13 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "typecheck": "pnpm run npm_package:typecheck && pnpm run playground:typecheck",
+    "typecheck": "npm run npm_package:typecheck && npm run playground:typecheck",
     "playground:typecheck": "tsc --noEmit --pretty",
-    "npm_package:typecheck": "pnpm -F ckeditor5-phoenix run typecheck",
-    "npm_package:watch": "pnpm -F ckeditor5-phoenix run watch",
-    "npm_package:build": "pnpm -F ckeditor5-phoenix run build",
-    "npm_package:test": "pnpm -F ckeditor5-phoenix run test",
-    "npm_package:test:watch": "pnpm -F ckeditor5-phoenix run test:watch"
+    "npm_package:typecheck": "npm run typecheck --workspace ckeditor5-phoenix",
+    "npm_package:watch": "npm run watch",
+    "npm_package:build": "npm run build --workspace ckeditor5-phoenix",
+    "npm_package:test": "npm run test --workspace ckeditor5-phoenix",
+    "npm_package:test:watch": "npm run test:watch --workspace ckeditor5-phoenix"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.15.0",
@@ -15,6 +15,8 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@types/phoenix": "^1.6.6",
     "chromedriver": "^143.0.4",
+    "ckeditor5": "^47.4.0",
+    "ckeditor5-premium-features": "^47.4.0",
     "esbuild": "^0.25.5",
     "eslint": "^9.29.0",
     "husky": "^9.1.7",
@@ -24,7 +26,8 @@
     "typescript": "^5.8.3"
   },
   "workspaces": [
-    "npm_package"
+    "npm_package",
+    "playground"
   ],
   "lint-staged": {
     "*.{ts,js,mjs}": [

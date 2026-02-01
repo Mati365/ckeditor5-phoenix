@@ -20,12 +20,14 @@ jobs:
       - name: Install inotify-tools
         run: sudo apt-get update && sudo apt-get install -y inotify-tools
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          version: 10
+          node-version: '22'
+          cache: npm
 
       - name: Install Node.js dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Set up Elixir
         id: beam
@@ -95,12 +97,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          version: 10
+          node-version: '22'
+          cache: npm
 
       - name: Install Node.js dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Set up Elixir
         id: beam
@@ -153,15 +157,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          version: 10
+          node-version: '22'
+          cache: npm
 
       - name: Install inotify-tools
         run: sudo apt-get update && sudo apt-get install -y inotify-tools
 
       - name: Install Node.js dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Set up Elixir
         id: beam
