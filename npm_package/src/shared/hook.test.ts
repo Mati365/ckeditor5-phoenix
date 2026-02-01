@@ -119,13 +119,10 @@ describe('makeHook', () => {
 
     const minimalHookObject = makeHook(MinimalHook);
 
-    minimalHookObject.mounted?.call(mockContext);
+    minimalHookObject.mounted.call(mockContext);
 
     expect(() => {
-      minimalHookObject.beforeUpdate?.call(mockContext);
-      minimalHookObject.destroyed?.call(mockContext);
-      minimalHookObject.disconnected?.call(mockContext);
-      minimalHookObject.reconnected?.call(mockContext);
+      minimalHookObject.destroyed.call(mockContext);
     }).not.toThrow();
   });
 });
