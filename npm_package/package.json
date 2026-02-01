@@ -28,8 +28,8 @@
     "test:watch": "vitest --watch --coverage"
   },
   "dependencies": {
-    "ckeditor5": "^45.2.1",
-    "ckeditor5-premium-features": "^45.2.1",
+    "ckeditor5": "^47.4.0",
+    "ckeditor5-premium-features": "^47.4.0",
     "phoenix_live_view": "^1.0.17"
   },
   "devDependencies": {

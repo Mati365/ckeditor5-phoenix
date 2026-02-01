@@ -148,7 +148,7 @@ defmodule CKEditor5.MixProject do
       main: "readme",
       name: "CKEditor 5",
       source_ref: "v#{@version}",
-      canonical: "http://hexdocs.pm/ckeditor5",
+      canonical: "http://hexdocs.pm/ckeditor5_phoenix",
       source_url: @source_url,
       extras: ["README.md", "LICENSE"]
     ]
