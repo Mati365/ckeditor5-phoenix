@@ -3,11 +3,11 @@
   "scripts": {
     "typecheck": "pnpm run npm_package:typecheck && pnpm run playground:typecheck",
     "playground:typecheck": "tsc --noEmit --pretty",
-    "npm_package:typecheck": "pnpm run typecheck --workspace=ckeditor5-phoenix",
-    "npm_package:watch": "pnpm run watch --workspace=ckeditor5-phoenix",
-    "npm_package:build": "pnpm run build --workspace=ckeditor5-phoenix",
-    "npm_package:test": "pnpm run test --workspace=ckeditor5-phoenix",
-    "npm_package:test:watch": "pnpm run test:watch --workspace=ckeditor5-phoenix"
+    "npm_package:typecheck": "pnpm -F ckeditor5-phoenix run typecheck",
+    "npm_package:watch": "pnpm -F ckeditor5-phoenix run watch",
+    "npm_package:build": "pnpm -F ckeditor5-phoenix run build",
+    "npm_package:test": "pnpm -F ckeditor5-phoenix run test",
+    "npm_package:test:watch": "pnpm -F ckeditor5-phoenix run test:watch"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.15.0",
