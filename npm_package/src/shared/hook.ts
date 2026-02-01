@@ -1,4 +1,4 @@
-import type { Hook, LiveSocket } from 'phoenix_live_view';
+import type { Hook, LiveSocketConstructor } from 'phoenix_live_view';
 
 import type { RequiredBy } from '../types';
 
@@ -23,7 +23,7 @@ export abstract class ClassHook {
   /**
    * The LiveView socket instance, providing connection to the server.
    */
-  liveSocket: LiveSocket;
+  liveSocket: LiveSocketConstructor;
 
   /**
    * Pushes an event from the client to the LiveView server process.

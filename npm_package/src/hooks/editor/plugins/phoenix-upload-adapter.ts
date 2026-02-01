@@ -50,7 +50,7 @@ export async function createPhoenixUploadAdapterPlugin(): Promise<PluginConstruc
   };
 }
 
-declare module '@ckeditor/ckeditor5-core' {
+declare module 'ckeditor5' {
   // eslint-disable-next-line ts/consistent-type-definitions
   interface EditorConfig {
     /**

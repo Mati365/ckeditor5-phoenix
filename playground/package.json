@@ -1,0 +1,10 @@
+{
+  "name": "ckeditor5-phoenix-playground",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "ckeditor5": "^47.4.0",
+    "ckeditor5-phoenix": "workspace:../npm_package",
+    "ckeditor5-premium-features": "^47.4.0"
+  }
+}

@@ -1,13 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "typecheck": "npm run npm_package:typecheck && npm run playground:typecheck",
+    "typecheck": "pnpm run npm_package:typecheck && pnpm run playground:typecheck",
     "playground:typecheck": "tsc --noEmit --pretty",
-    "npm_package:typecheck": "npm run typecheck --workspace=ckeditor5-phoenix",
-    "npm_package:watch": "npm run watch --workspace=ckeditor5-phoenix",
-    "npm_package:build": "npm run build --workspace=ckeditor5-phoenix",
-    "npm_package:test": "npm run test --workspace=ckeditor5-phoenix",
-    "npm_package:test:watch": "npm run test:watch --workspace=ckeditor5-phoenix"
+    "npm_package:typecheck": "pnpm run typecheck --workspace=ckeditor5-phoenix",
+    "npm_package:watch": "pnpm run watch --workspace=ckeditor5-phoenix",
+    "npm_package:build": "pnpm run build --workspace=ckeditor5-phoenix",
+    "npm_package:test": "pnpm run test --workspace=ckeditor5-phoenix",
+    "npm_package:test:watch": "pnpm run test:watch --workspace=ckeditor5-phoenix"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.15.0",

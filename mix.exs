@@ -110,19 +110,19 @@ defmodule CKEditor5.MixProject do
     [
       playground: "run -e 'Playground.App.run()'",
       e2e: ["assets.build", "test --include e2e test/e2e"],
-      "assets.test": ["cmd npm run npm_package:test"],
-      "assets.typecheck": ["cmd npm run typecheck"],
+      "assets.test": ["cmd pnpm run npm_package:test"],
+      "assets.typecheck": ["cmd pnpm run typecheck"],
       "assets.setup": [
         "tailwind.install --if-missing",
         "esbuild.install --if-missing"
       ],
       "assets.build": [
-        "cmd npm run npm_package:build",
+        "cmd pnpm run npm_package:build",
         "tailwind ckeditor --minify",
         "esbuild ckeditor --minify"
       ],
       "prepare.publish": [
-        "cmd npm run npm_package:build",
+        "cmd pnpm run npm_package:build",
         "cmd cp -r npm_package/dist .",
         "cmd cp npm_package/package.json ."
       ],
