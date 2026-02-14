@@ -1,6 +1,6 @@
 {
   "name": "ckeditor5-phoenix",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "description": "CKEditor 5 integration for Phoenix Framework",
   "author": "Mateusz Bagiński <cziken58@gmail.com>",
   "license": "MIT",
