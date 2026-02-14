@@ -766,6 +766,8 @@ Support multiple languages in the editor UI and content. Learn how to load trans
 Use `language` to set the CKEditor UI language (menus, tooltips, labels) and `content_language` to set the language of the editable content (`lang` attribute in the editor area).
 
 ```heex
+<.cke_cloud_assets translations={["pl"]} />
+
 <.ckeditor
   id="article-editor"
   type="classic"
