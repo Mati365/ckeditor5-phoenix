@@ -2,6 +2,12 @@
   "name": "ckeditor5-phoenix",
   "version": "1.17.0",
   "description": "CKEditor 5 integration for Phoenix Framework",
+  "author": "Mateusz Bagiński <cziken58@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mati365/ckeditor5-phoenix"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
