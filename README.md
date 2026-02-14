@@ -55,10 +55,8 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Dynamic presets 🎯](#dynamic-presets-)
     - [Providing the License Key 🗝️](#providing-the-license-key-️)
     - [Referencing DOM Elements in Config 🏷️](#referencing-dom-elements-in-config-️)
-      - [How to use 🛠️](#how-to-use-️)
-      - [Example 📄](#example-)
   - [Localization 🌍](#localization-)
-    - [CDN Translation Loading 🌐](#cdn-translation-loading-)
+    - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
     - [Custom translations 🌐](#custom-translations-)
   - [Custom plugins 🧩](#custom-plugins-)
@@ -473,12 +471,6 @@ Seamlessly integrate CKEditor 5 with Phoenix forms and LiveView for robust conte
 
 The editor automatically creates hidden input fields for form integration. Content is synchronized with form fields using the `field` attribute, making it compatible with standard Phoenix form helpers.
 
-**How it works:**
-
-- Hidden input field is created automatically
-- Field name is derived from the `field` attribute
-- Content is synchronized on form submission
-
 ```heex
 <.form for={@form} phx-submit="save">
   <.ckeditor id="content-editor" field={@form[:content]} />
@@ -744,13 +736,6 @@ If both are set, the preset config takes priority. For more details, see the [CK
 
 You can reference DOM elements directly in your editor configuration using the special `{ $element: "selector" }` format. This is useful when you want to attach the editor's UI parts (like toolbars or editable areas) to specific elements in your HTML.
 
-#### How to use 🛠️
-
-- In your config object, use `{ $element: "CSS_SELECTOR" }` wherever a DOM element is expected.
-- The selector will be resolved to the actual DOM element before initializing the editor.
-
-#### Example 📄
-
 ```elixir
 # config/config.exs
 config :ckeditor5_phoenix,
@@ -776,18 +761,17 @@ This will find the elements with IDs `my-toolbar` and `my-editable` in the DOM a
 
 Support multiple languages in the editor UI and content. Learn how to load translations via CDN or configure them globally.
 
-### CDN Translation Loading 🌐
+### UI language and content language 🈯
 
-Depending on your setup, you can preload translations via CDN or let your bundler handle them automatically using lazy imports.
+Use `language` to set the CKEditor UI language (menus, tooltips, labels) and `content_language` to set the language of the editable content (`lang` attribute in the editor area).
 
 ```heex
-<%!-- CDN only: Load specific translations --%>
-<.cke_cloud_assets translations={["pl", "de", "fr"]} />
-
 <.ckeditor
+  id="article-editor"
+  type="classic"
   language="pl"
   content_language="en"
-  value="<p>Content in English, UI in Polish</p>"
+  value="<p>Hello world!</p>"
 />
 ```
 
