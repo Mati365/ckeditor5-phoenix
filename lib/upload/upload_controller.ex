@@ -22,7 +22,7 @@ defmodule CKEditor5.Upload.Controller do
 
   """
 
-  use Phoenix.Controller
+  use Phoenix.Controller, formats: []
 
   @doc """
   Handles file upload from CKEditor 5.
