@@ -10,7 +10,7 @@ defmodule Playground.Live.Classic do
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
-       editor_value: "<h1>Initial Content</h1><p>Try the buttons below.</p>",
+       editor_value: "<p>Hello World!</p>",
        editor_focused?: false
      )}
   end

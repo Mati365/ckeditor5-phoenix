@@ -33,11 +33,12 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [With LiveView Sync 🔄](#with-liveview-sync-)
       - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
       - [Two-way Communication 🔄](#two-way-communication-)
-        - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
         - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
+        - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
+        - [Multiroot editor 🌲](#multiroot-editor-)
   - [Editor Types 🖊️](#editor-types-️)
     - [Classic editor 📝](#classic-editor-)
-    - [Multiroot editor 🌳](#multiroot-editor-)
+    - [Multiroot editor 🌳](#multiroot-editor--1)
     - [Inline editor 📝](#inline-editor-)
     - [Decoupled editor 🌐](#decoupled-editor-)
   - [Forms Integration 🧾](#forms-integration-)
@@ -272,90 +273,109 @@ These events are sent **immediately** when the editor gains or loses focus, allo
 
 #### Two-way Communication 🔄
 
-CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. This allows you to both receive updates from the editor and programmatically control it from your Elixir code.
-
-##### From JavaScript to Phoenix (Client → Server) 📤
-
-The editor automatically sends events to your LiveView when content changes, focus changes, or other interactions occur. These events are handled in your LiveView module using standard `handle_event/3` callbacks.
-
-```heex
-<.ckeditor
-  id="editor"
-  value={@content}
-  change_event
-/>
-```
-
-```elixir
-defmodule MyAppWeb.EditorLive do
-  use MyAppWeb, :live_view
-  use CKEditor5
-
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, content: "<p>Initial content</p>", focused?: false)}
-  end
-
-  # Receive content updates from editor
-  def handle_event("ckeditor5:change", %{"data" => data}, socket) do
-    {:noreply, assign(socket, content: data["main"])}
-  end
-end
-```
+CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. You can receive updates from the editor and programmatically control its content from your Elixir code.
 
 ##### From Phoenix to JavaScript (Server → Client) 📥
 
-You can programmatically update the editor content from your LiveView by pushing events to the client. This is useful for scenarios like:
+There are two ways to update the editor content from your LiveView server:
+
+1. **Reactive State Update (Recommended) ✨**
+
+    The simplest way to update the editor is to change the assign bound to the value attribute. LiveView handles the synchronization seamlessly without requiring manual event pushing.
+
+    ```heex
+    <button phx-click="load_template">Load Template</button>
+
+    <.ckeditor id="editor" value={@editor_value} change_event />
+    ```
+
+    ```elixir
+    defmodule MyAppWeb.EditorLive do
+      use MyAppWeb, :live_view
+      use CKEditor5
+
+      def mount(_params, _session, socket) do
+        {:ok, assign(socket, editor_value: "<h1>Initial Content</h1>")}
+      end
+
+      # Reactively updates the editor content by changing the assign
+      def handle_event("load_template", _params, socket) do
+        {:noreply, assign(socket, editor_value: "<h1>Daily Report</h1><p>Work is progressing well.</p>")}
+      end
+    end
+    ```
+
+2. **Imperative Update via `push_event` 🚀**
+
+    If you prefer not to continuously track the editor's state in your assigns, or if you need to force an update directly, you can push a standard Phoenix event to the client. The integration listens for the `ckeditor5:set-data` event and requires the `editorId` and data payload.
+
+    ```heex
+    <form phx-submit="force_set_data">
+      <textarea name="new_content" placeholder="Enter HTML content..."></textarea>
+      <button type="submit">Set Data</button>
+    </form>
+    ```
+
+    ```elixir
+    def handle_event("force_set_data", %{"new_content" => val}, socket) do
+      # Forces an update by pushing an event directly to the specific editor instance
+      {:noreply, push_event(socket, "ckeditor5:set-data", %{editorId: "editor", data: val})}
+    end
+    ```
+
+##### From JavaScript to Phoenix (Client → Server) 📤
+
+By adding the change_event attribute, the editor automatically sends content updates to your LiveView whenever the user types.
 
 ```heex
-<.ckeditor
-  id="editor"
-  value={@content}
-  change_event
-/>
-
-<button phx-click="load_template">Load Template</button>
-<button phx-click="reset_content">Reset</button>
+<.ckeditor id="editor" value={@content} change_event />
 ```
 
 ```elixir
-defmodule MyAppWeb.EditorLive do
-  use MyAppWeb, :live_view
-  use CKEditor5
+# Receives content updates from the editor
+def handle_event("ckeditor5:change", %{"data" => %{"main" => data}}, socket) do
+  {:noreply, assign(socket, editor_value: data)}
+end
+```
 
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, content: "<p>Initial content</p>")}
-  end
+You can use `setData` event to programmatically update the editor content from JavaScript. It'll be automatically synchronized with Phoenix if `change_event` is enabled.
 
-  # Update editor content from server
-  def handle_event("load_template", _params, socket) do
-    template_content = """
-    <h1>Article Template</h1>
-    <p>Start writing your article here...</p>
-    <h2>Section 1</h2>
-    <p>Content goes here.</p>
-    """
+```javascript
+document.getElementById('update-button').addEventListener('click', async () => {
+  const editor = await EditorsRegistry.the.get('editor');
 
-    {:noreply,
-     socket
-     |> push_event("ckeditor5:set-data", %{
-       editorId: "editor",
-       data: template_content
-     })}
-  end
+  editor.setData('<h1>New Content</h1><p>This content was set from JavaScript!</p>');
+});
+```
 
-  def handle_event("reset_content", _params, socket) do
-    {:noreply,
-     socket
-     |> push_event("ckeditor5:set-data", %{
-       editorId: "editor",
-       data: "<p>Reset to empty state</p>"
-     })}
-  end
+##### Multiroot editor 🌲
 
-  # Still handle incoming changes from editor
-  def handle_event("ckeditor5:change", %{"data" => data}, socket) do
-    {:noreply, assign(socket, content: data["main"])}
-  end
+For multiroot editors, reactivity works on a per-root basis. You can iterate over your roots and sync changes accordingly.
+
+```heex
+<.ckeditor type="multiroot" change_event />
+
+<.cke_ui_part name="toolbar" class="mb-4" />
+
+<div class="flex flex-col gap-6">
+  <%= for root <- @roots do %>
+    <.cke_editable root={root.id} value={root.value} />
+  <% end %>
+</div>
+```
+
+```elixir
+def handle_event("ckeditor5:change", %{"data" => data}, socket) do
+  updated_roots =
+    Enum.map(socket.assigns.roots, fn root ->
+      if Map.has_key?(data, root.id) do
+        %{root | value: data[root.id]}
+      else
+        root
+      end
+    end)
+
+  {:noreply, assign(socket, roots: updated_roots)}
 end
 ```
 
