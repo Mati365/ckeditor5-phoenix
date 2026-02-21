@@ -352,6 +352,8 @@ document.getElementById('update-button').addEventListener('click', async () => {
 
 For multiroot editors, reactivity works on a per-root basis. You can iterate over your roots and sync changes accordingly.
 
+![CKEditor 5 Multiroot Live Sync example](docs/multiroot-live-sync.gif)
+
 ```heex
 <.ckeditor type="multiroot" change_event />
 

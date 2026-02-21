@@ -1,7 +1,5 @@
 name: Publish Package
 
-description: Manual workflow to publish both Elixir (mix) and npm packages, and tag the release in git.
-
 on:
   workflow_dispatch:
     inputs:
