@@ -244,11 +244,11 @@ The watchdog is enabled by default. To disable it, set the `watchdog` prop to `f
 
 Enable real-time synchronization between the editor and your LiveView. Content changes are automatically sent to the server with configurable debouncing for performance optimization.
 
-![CKEditor 5 Live Sync example](docs/live-sync.gif)
-
 #### Focus and blur events 👁️‍🗨️
 
 To handle focus and blur events, you can use the `focus_event` and `blur_event` attributes in the component. This allows you to capture when the editor gains or loses focus, which can be useful for tracking user interactions or saving content.
+
+![CKEditor 5 Live Sync Focus example](docs/live-sync-focus.gif)
 
 ```heex
 <.ckeditor
@@ -274,6 +274,8 @@ These events are sent **immediately** when the editor gains or loses focus, allo
 #### Two-way Communication 🔄
 
 CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. You can receive updates from the editor and programmatically control its content from your Elixir code.
+
+![CKEditor 5 Classic Live Sync example](docs/classic-live-sync-set-data.gif)
 
 ##### From Phoenix to JavaScript (Server → Client) 📥
 
