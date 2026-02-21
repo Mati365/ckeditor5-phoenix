@@ -19,6 +19,13 @@ defmodule CKEditor5.Preset.EditorType do
   end
 
   @doc """
+  Checks if the given type is a decoupled or multiroot editor, which have external editables.
+  """
+  def has_external_editables?(type) do
+    type in [:decoupled, :multiroot]
+  end
+
+  @doc """
   Validates the given editor type against the defined schema.
   Returns `:ok` if the type is valid, or an error tuple if it is not.
   """

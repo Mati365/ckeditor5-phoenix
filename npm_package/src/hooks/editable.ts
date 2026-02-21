@@ -8,7 +8,7 @@ import { EditorsRegistry } from './editor/editors-registry';
  */
 class EditableHookImpl extends ClassHook {
   /**
-   * The name of the hook.
+   * The promise that resolves to the editor instance once it's registered.
    */
   private editorPromise: Promise<MultiRootEditor | null> | null = null;
 
@@ -65,7 +65,9 @@ class EditableHookImpl extends ClassHook {
       editing.view.forceRender();
 
       if (input) {
-        syncEditorRootToInput(input, editor, rootName);
+        const unmount = syncEditorRootToInput(input, editor, rootName);
+
+        this.onBeforeDestroy(unmount);
       }
 
       return editor;
@@ -115,6 +117,12 @@ function syncEditorRootToInput(input: HTMLInputElement, editor: MultiRootEditor,
     input.value = editor.getData({ rootName });
   };
 
-  editor.model.document.on('change:data', debounce(100, sync));
+  const debouncedSync = debounce(200, sync);
+
+  editor.model.document.on('change:data', debouncedSync);
   sync();
+
+  return () => {
+    editor.model.document.off('change:data', debouncedSync);
+  };
 }

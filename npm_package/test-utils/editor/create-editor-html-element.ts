@@ -28,36 +28,36 @@ export function createEditorHtmlElement(
       id,
       'phx-hook': 'CKEditor5',
       'phx-update': 'ignore',
-      'cke-preset': JSON.stringify(preset),
+      'data-cke-preset': JSON.stringify(preset),
       ...focusEvent && {
-        'cke-focus-event': '',
+        'data-cke-focus-event': '',
       },
       ...blurEvent && {
-        'cke-blur-event': '',
+        'data-cke-blur-event': '',
       },
       ...changeEvent && {
-        'cke-change-event': '',
+        'data-cke-change-event': '',
       },
       ...initialValue && {
-        'cke-initial-value': initialValue,
+        'data-cke-initial-value': initialValue,
       },
       ...editableHeight && {
-        'cke-editable-height': editableHeight,
+        'data-cke-editable-height': editableHeight,
       },
       ...saveDebounceMs !== undefined && {
-        'cke-save-debounce-ms': saveDebounceMs,
+        'data-cke-save-debounce-ms': saveDebounceMs,
       },
       ...language?.ui && {
-        'cke-language': language.ui,
+        'data-cke-language': language.ui,
       },
       ...language?.content && {
-        'cke-content-language': language.content,
+        'data-cke-content-language': language.content,
       },
       ...watchdog && {
-        'cke-watchdog': '',
+        'data-cke-watchdog': '',
       },
       ...contextId && {
-        'cke-context-id': contextId,
+        'data-cke-context-id': contextId,
       },
       ...hookAttrs,
     },

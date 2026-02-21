@@ -1,4 +1,4 @@
-defmodule CKEditor5.Components.Editor.ValueNormalizer do
+defmodule CKEditor5.Components.Editor.EditableHeightNormalizer do
   @moduledoc """
   Normalizes and transforms values for the Editor component.
   """

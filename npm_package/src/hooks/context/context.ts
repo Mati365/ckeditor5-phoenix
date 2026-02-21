@@ -27,8 +27,8 @@ class ContextHookImpl extends ClassHook {
       id: this.el.id,
       config: readContextConfigOrThrow(this.el),
       language: {
-        ui: get('cke-language') || 'en',
-        content: get('cke-content-language') || 'en',
+        ui: get('data-cke-language') || 'en',
+        content: get('data-cke-content-language') || 'en',
       },
     };
 
@@ -118,7 +118,7 @@ class ContextHookImpl extends ClassHook {
  * Type guard to check if an element is a context hook HTMLElement.
  */
 function isContextHookHTMLElement(el: HTMLElement): el is HTMLElement & { instance: ContextHookImpl; } {
-  return el.hasAttribute('cke-context');
+  return el.hasAttribute('data-cke-context');
 }
 
 /**

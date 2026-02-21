@@ -51,6 +51,8 @@ export default defineConfig({
       },
       exclude: [
         ...configDefaults.exclude,
+        './src/types/**/*.type.ts',
+        './src/hooks/context/typings.ts',
         '**/node_modules/**',
         '**/dist/**',
         './src/**/index.ts',

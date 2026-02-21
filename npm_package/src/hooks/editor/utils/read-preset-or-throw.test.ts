@@ -15,7 +15,7 @@ describe('readPresetOrThrow', () => {
         key: 'test-license-key',
       },
     };
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     const result = readPresetOrThrow(element);
 
@@ -36,7 +36,7 @@ describe('readPresetOrThrow', () => {
       config: { plugins: [] },
       license: { key: 'test-key' },
     };
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'CKEditor5 hook configuration must include "editor", "config", and "license" properties.',
@@ -49,7 +49,7 @@ describe('readPresetOrThrow', () => {
       type: 'classic',
       license: { key: 'test-key' },
     };
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'CKEditor5 hook configuration must include "editor", "config", and "license" properties.',
@@ -62,7 +62,7 @@ describe('readPresetOrThrow', () => {
       type: 'classic',
       config: { plugins: [] },
     };
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'CKEditor5 hook configuration must include "editor", "config", and "license" properties.',
@@ -76,7 +76,7 @@ describe('readPresetOrThrow', () => {
       config: { plugins: [] },
       license: { key: 'test-key' },
     };
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'Invalid editor type: invalid-type. Must be one of: inline, classic, balloon, decoupled, multiroot.',
@@ -99,7 +99,7 @@ describe('readPresetOrThrow', () => {
         config: { plugins: [] },
         license: { key: 'test-key' },
       };
-      element.setAttribute('cke-preset', JSON.stringify(preset));
+      element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
       expect(() => readPresetOrThrow(element)).not.toThrow();
       const result = readPresetOrThrow(element);
@@ -109,7 +109,7 @@ describe('readPresetOrThrow', () => {
 
   it('should throw error for invalid JSON', () => {
     const element = document.createElement('div');
-    element.setAttribute('cke-preset', 'invalid-json');
+    element.setAttribute('data-cke-preset', 'invalid-json');
 
     expect(() => readPresetOrThrow(element)).toThrow();
   });
@@ -134,7 +134,7 @@ describe('readPresetOrThrow', () => {
       },
     };
 
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     const result = readPresetOrThrow(element);
 
@@ -162,7 +162,7 @@ describe('readPresetOrThrow', () => {
       customTranslations: { foo: 'bar' },
     };
 
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     const result = readPresetOrThrow(element);
 
@@ -185,7 +185,7 @@ describe('readPresetOrThrow', () => {
       custom_translations: { bar: 'baz' },
     };
 
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     const result = readPresetOrThrow(element);
 
@@ -197,7 +197,7 @@ describe('readPresetOrThrow', () => {
   it('should handle empty attribute gracefully', () => {
     const element = document.createElement('div');
 
-    element.setAttribute('cke-preset', '');
+    element.setAttribute('data-cke-preset', '');
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'CKEditor5 hook requires a "cke-preset" attribute on the element.',
@@ -212,7 +212,7 @@ describe('readPresetOrThrow', () => {
       license: { key: 'test-key' },
     };
 
-    element.setAttribute('cke-preset', JSON.stringify(preset));
+    element.setAttribute('data-cke-preset', JSON.stringify(preset));
 
     expect(() => readPresetOrThrow(element)).toThrow(
       'CKEditor5 hook configuration must include "editor", "config", and "license" properties.',

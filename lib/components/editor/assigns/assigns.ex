@@ -5,9 +5,9 @@ defmodule CKEditor5.Components.Editor.Assigns do
 
   alias CKEditor5.Components.Editor.{
     AttributeValidator,
+    EditableHeightNormalizer,
     LanguageHandler,
-    PresetHandler,
-    ValueNormalizer
+    PresetHandler
   }
 
   alias CKEditor5.Components.{AssignStyles, FormAttrs}
@@ -22,7 +22,7 @@ defmodule CKEditor5.Components.Editor.Assigns do
     |> FormAttrs.assign_form_fields()
     |> PresetHandler.process_preset()
     |> AttributeValidator.validate_for_editor_type()
-    |> ValueNormalizer.normalize_values()
+    |> EditableHeightNormalizer.normalize_values()
     |> LanguageHandler.assign_language()
     |> AssignStyles.assign_styles(%{position: "relative"})
   end

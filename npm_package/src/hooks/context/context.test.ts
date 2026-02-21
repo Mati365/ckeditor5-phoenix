@@ -98,8 +98,8 @@ describe('context hook', () => {
         language: { ui: 'pl', content: 'de' },
       });
 
-      hookElement.setAttribute('cke-language', 'pl');
-      hookElement.setAttribute('cke-content-language', 'de');
+      hookElement.setAttribute('data-cke-language', 'pl');
+      hookElement.setAttribute('data-cke-content-language', 'de');
 
       document.body.appendChild(hookElement);
       ContextHook.mounted.call({ el: hookElement });
@@ -164,7 +164,7 @@ describe('context hook', () => {
   });
 
   describe('attaching editor', () => {
-    it('should attach editor without specified `cke-context-id` if placed within context element', async () => {
+    it('should attach editor without specified `data-cke-context-id` if placed within context element', async () => {
       const contextHookElement = createContextHtmlElement();
       const editorHookElement = createEditorHtmlElement();
 
@@ -183,7 +183,7 @@ describe('context hook', () => {
       expect(context?.editors.first).toEqual(editor);
     });
 
-    it('should attach editor with specified via `cke-context-id` to different context if placed within context element', async () => {
+    it('should attach editor with specified via `data-cke-context-id` to different context if placed within context element', async () => {
       const firstContextHookElement = createContextHtmlElement({ id: 'first-magic-context' });
       const secondContextHookElement = createContextHtmlElement({ id: 'second-magic-context' });
       const editorHookElement = createEditorHtmlElement({ contextId: 'second-magic-context' });
