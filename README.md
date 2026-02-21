@@ -30,11 +30,11 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Simple Editor ✏️](#simple-editor-️)
     - [Watchdog prop 🐶](#watchdog-prop-)
   - [LiveView Sync 🔄](#liveview-sync-)
-    - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
     - [Two-way Communication 🔄](#two-way-communication-)
       - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
       - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
       - [Multiroot editor 🌲](#multiroot-editor-)
+    - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
   - [Editor Types 🖊️](#editor-types-️)
     - [Classic editor 📝](#classic-editor-)
     - [Multiroot editor 🌳](#multiroot-editor--1)
@@ -241,33 +241,6 @@ The watchdog is enabled by default. To disable it, set the `watchdog` prop to `f
 
 Enable real-time synchronization between the editor and your LiveView. Content changes are automatically sent to the server with configurable debouncing for performance optimization.
 
-### Focus and blur events 👁️‍🗨️
-
-To handle focus and blur events, you can use the `focus_event` and `blur_event` attributes in the component. This allows you to capture when the editor gains or loses focus, which can be useful for tracking user interactions or saving content.
-
-![CKEditor 5 Live Sync Focus example](docs/live-sync-focus.gif)
-
-```heex
-<.ckeditor
-  id="editor"
-  value={@content}
-  focus_event
-  blur_event
-/>
-```
-
-```elixir
-def handle_event("ckeditor5:focus", %{"data" => data}, socket) do
-  {:noreply, assign(socket, content: data["main"])}
-end
-
-def handle_event("ckeditor5:blur", %{"data" => data}, socket) do
-  {:noreply, assign(socket, content: data["main"])}
-end
-```
-
-These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
-
 ### Two-way Communication 🔄
 
 CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. You can receive updates from the editor and programmatically control its content from your Elixir code.
@@ -379,6 +352,33 @@ def handle_event("ckeditor5:change", %{"data" => data}, socket) do
   {:noreply, assign(socket, roots: updated_roots)}
 end
 ```
+
+### Focus and blur events 👁️‍🗨️
+
+To handle focus and blur events, you can use the `focus_event` and `blur_event` attributes in the component. This allows you to capture when the editor gains or loses focus, which can be useful for tracking user interactions or saving content.
+
+![CKEditor 5 Live Sync Focus example](docs/live-sync-focus.gif)
+
+```heex
+<.ckeditor
+  id="editor"
+  value={@content}
+  focus_event
+  blur_event
+/>
+```
+
+```elixir
+def handle_event("ckeditor5:focus", %{"data" => data}, socket) do
+  {:noreply, assign(socket, content: data["main"])}
+end
+
+def handle_event("ckeditor5:blur", %{"data" => data}, socket) do
+  {:noreply, assign(socket, content: data["main"])}
+end
+```
+
+These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
 
 ## Editor Types 🖊️
 
