@@ -14,16 +14,13 @@ describe('makeHook', () => {
   let hookObject: any;
   let mockContext: any;
   let mockElement: HTMLElement & { instance: any; };
-  let mockLiveSocket: any;
 
   beforeEach(() => {
     hookObject = makeHook(TestHook);
     mockElement = document.createElement('div') as any;
-    mockLiveSocket = { mock: 'liveSocket' };
 
     mockContext = {
       el: mockElement,
-      liveSocket: mockLiveSocket,
       pushEvent: vi.fn(),
       pushEventTo: vi.fn(),
       handleEvent: vi.fn(),
@@ -43,7 +40,6 @@ describe('makeHook', () => {
 
     expect(mockContext.el.instance).toBeInstanceOf(TestHook);
     expect(mockContext.el.instance.el).toBe(mockContext.el);
-    expect(mockContext.el.instance.liveSocket).toBe(mockContext.liveSocket);
     expect(mockContext.el.instance.mounted).toHaveBeenCalledOnce();
   });
 

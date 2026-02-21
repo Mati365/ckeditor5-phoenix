@@ -22,7 +22,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "phoenix": "^1.7.21",
-    "phoenix_live_view": "^1.0.17",
+    "phoenix_live_view": "1.0.17",
     "typescript": "^5.8.3"
   },
   "workspaces": [

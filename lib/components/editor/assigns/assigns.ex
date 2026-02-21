@@ -18,7 +18,7 @@ defmodule CKEditor5.Components.Editor.Assigns do
   """
   def prepare(assigns) do
     assigns
-    |> Helpers.assign_id_if_missing("cke")
+    |> Helpers.generate_id_if_missing("cke")
     |> FormAttrs.assign_form_fields()
     |> PresetHandler.process_preset()
     |> AttributeValidator.validate_for_editor_type()

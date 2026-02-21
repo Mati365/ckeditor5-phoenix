@@ -27,7 +27,8 @@ defmodule CKEditor5.Components.UIPart do
   attr :rest, :global
 
   def render(assigns) do
-    assigns = assigns |> Helpers.assign_id_if_missing("cke-ui-part")
+    assigns =
+      assigns |> Helpers.assign_id_if_missing("cke-ui-part-#{assigns.editor_id}-#{assigns.name}")
 
     ~H"""
     <div

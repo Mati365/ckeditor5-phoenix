@@ -1,27 +1,50 @@
-<div class="mx-auto p-8 max-w-4xl">
+<div class="mx-auto p-8 max-w-4xl text-gray-900">
   <.back_to_home />
   <h1 class="mb-6 font-bold text-3xl">Multi-root Editor Demo</h1>
 
-  <.ckeditor type="multiroot" />
+  <form phx-submit="add_root" phx-change="update_new_root_name" class="flex sm:flex-row flex-col gap-2 mb-8">
+    <input
+      type="text"
+      name="root_name"
+      value={@new_root_name}
+      placeholder="Enter root ID (e.g. sidebar)"
+      class="flex-1 p-2 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+    />
+    <button
+      type="submit"
+      class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-none font-bold text-white transition-colors"
+    >
+      Add Root
+    </button>
+  </form>
+
+  <.ckeditor type="multiroot" change_event />
 
   <.cke_ui_part name="toolbar" class="mb-4" />
 
-  <div class="flex flex-col gap-4">
-    <.cke_editable
-      root="header"
-      name="header"
-      value="<h1>Main Header</h1>"
-      class="border border-gray-300"
-    />
-    <.cke_editable
-      root="content"
-      value="<p>Main content area</p>"
-      class="border border-gray-300"
-    />
-    <.cke_editable
-      root="sidebar"
-      value="<p>Sidebar content</p>"
-      class="border border-gray-300"
-    />
+  <div class="flex flex-col gap-6">
+    <%= for root <- @roots do %>
+      <div class="bg-white border border-gray-300" id={"container-#{root.id}"} data-id={root.id}>
+        <div class="flex justify-between items-center bg-gray-50 p-2 border-gray-300 border-b">
+          <span class="font-mono font-bold text-gray-600 text-xs uppercase">Root ID: <%= root.id %></span>
+          <button
+            type="button"
+            phx-click="remove_root"
+            phx-value-id={root.id}
+            class="hover:bg-red-50 px-2 py-1 border border-red-600 rounded-none font-bold text-red-600 text-xs transition-colors"
+          >
+            Remove
+          </button>
+        </div>
+
+        <div class="p-2">
+          <.cke_editable
+            root={root.id}
+            value={root.value}
+            class="mb-2 focus:outline-none"
+          />
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

@@ -41,7 +41,7 @@ defmodule CKEditor5.Components.Context do
   def render(assigns) do
     assigns =
       assigns
-      |> Helpers.assign_id_if_missing("cke-context")
+      |> Helpers.generate_id_if_missing("cke-context")
       |> load_context()
 
     ~H"""

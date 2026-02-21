@@ -53,7 +53,7 @@ defmodule CKEditor5.Components.Editable do
   def render(assigns) do
     assigns =
       assigns
-      |> Helpers.assign_id_if_missing("cke-editable")
+      |> Helpers.assign_id_if_missing("cke-editable-#{assigns.editor_id}-#{assigns.root}")
       |> AssignStyles.assign_styles(%{position: "relative"})
       |> assign_form_fields()
 

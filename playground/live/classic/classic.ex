@@ -8,27 +8,41 @@ defmodule Playground.Live.Classic do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, editor_value: "Hello World!", editor_focused?: false)}
+    {:ok,
+     assign(socket,
+       editor_value: "<h1>Initial Content</h1><p>Try the buttons below.</p>",
+       editor_focused?: false
+     )}
   end
 
   @impl true
-  def handle_event("ckeditor5:change", %{"data" => data}, socket) do
-    {:noreply, assign(socket, editor_value: data["main"])}
+  def handle_event("preset_template", %{"type" => type}, socket) do
+    content =
+      case type do
+        "clear" -> ""
+        "work" -> "<h1>Daily Report</h1><p>Work on CKEditor integration is progressing well.</p>"
+      end
+
+    {:noreply, assign(socket, editor_value: content)}
   end
 
+  @impl true
+  def handle_event("force_set_data", %{"new_content" => val}, socket) do
+    {:noreply, push_event(socket, "ckeditor5:set-data", %{editorId: "editor", data: val})}
+  end
+
+  @impl true
+  def handle_event("ckeditor5:change", %{"data" => %{"main" => data}}, socket) do
+    {:noreply, assign(socket, editor_value: data)}
+  end
+
+  @impl true
   def handle_event("ckeditor5:focus", _, socket) do
     {:noreply, assign(socket, editor_focused?: true)}
   end
 
-  def handle_event("ckeditor5:blur", %{"data" => data}, socket) do
-    {:noreply, assign(socket, editor_value: data["main"], editor_focused?: false)}
-  end
-
-  def handle_event("set_data", _, socket) do
-    new_data = "<p>New content set at #{DateTime.utc_now() |> DateTime.to_string()}</p>"
-
-    {:noreply,
-     socket
-     |> push_event("ckeditor5:set-data", %{editorId: "editor", data: new_data})}
+  @impl true
+  def handle_event("ckeditor5:blur", _, socket) do
+    {:noreply, assign(socket, editor_focused?: false)}
   end
 end

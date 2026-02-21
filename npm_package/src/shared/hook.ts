@@ -1,4 +1,4 @@
-import type { Hook, LiveSocketConstructor } from 'phoenix_live_view';
+import type { Hook } from 'phoenix_live_view';
 
 import type { RequiredBy } from '../types';
 
@@ -19,11 +19,6 @@ export abstract class ClassHook {
    * It includes an `instance` property to hold the hook instance.
    */
   el: HTMLElement & { instance: Hook; };
-
-  /**
-   * The LiveView socket instance, providing connection to the server.
-   */
-  liveSocket: LiveSocketConstructor;
 
   /**
    * Callbacks to run before the hook is destroyed.
@@ -148,7 +143,6 @@ export function makeHook(constructor: new () => ClassHook): RequiredBy<Hook<any>
       this.el.instance = instance;
 
       instance.el = this.el;
-      instance.liveSocket = this.liveSocket;
 
       instance.pushEvent = (event, payload, callback) => this.pushEvent?.(event, payload, callback);
       instance.pushEventTo = (selector, event, payload, callback) => this.pushEventTo?.(selector, event, payload, callback);
