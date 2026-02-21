@@ -29,6 +29,15 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
   - [Basic Usage 🏁](#basic-usage-)
     - [Simple Editor ✏️](#simple-editor-️)
     - [Watchdog prop 🐶](#watchdog-prop-)
+  - [Configuration ⚙️](#configuration-️)
+    - [Custom Presets 🧩](#custom-presets-)
+    - [Dynamic presets 🎯](#dynamic-presets-)
+    - [Providing the License Key 🗝️](#providing-the-license-key-️)
+    - [Referencing DOM Elements in Config 🏷️](#referencing-dom-elements-in-config-️)
+  - [Localization 🌍](#localization-)
+    - [UI language and content language 🈯](#ui-language-and-content-language-)
+    - [Global Translation Config 🛠️](#global-translation-config-️)
+    - [Custom translations 🌐](#custom-translations-)
   - [LiveView Sync 🔄](#liveview-sync-)
     - [Two-way Communication 🔄](#two-way-communication-)
       - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
@@ -50,15 +59,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
       - [Using Built-in Controller 📦](#using-built-in-controller-)
       - [Custom Controller 🛠️](#custom-controller-️)
     - [CSRF Protection 🛡️](#csrf-protection-️)
-  - [Configuration ⚙️](#configuration-️)
-    - [Custom Presets 🧩](#custom-presets-)
-    - [Dynamic presets 🎯](#dynamic-presets-)
-    - [Providing the License Key 🗝️](#providing-the-license-key-️)
-    - [Referencing DOM Elements in Config 🏷️](#referencing-dom-elements-in-config-️)
-  - [Localization 🌍](#localization-)
-    - [UI language and content language 🈯](#ui-language-and-content-language-)
-    - [Global Translation Config 🛠️](#global-translation-config-️)
-    - [Custom translations 🌐](#custom-translations-)
   - [Custom plugins 🧩](#custom-plugins-)
   - [Context 🤝](#context-)
     - [Basic usage 🔧](#basic-usage--1)
@@ -235,6 +235,191 @@ The watchdog is enabled by default. To disable it, set the `watchdog` prop to `f
   value="<p>Initial content</p>"
   watchdog={false}
 />
+```
+
+## Configuration ⚙️
+
+You can configure the editor _presets_ in your `config/config.exs` file. The default preset is `:default`, which provides a basic configuration with a toolbar and essential plugins. The preset is a map that contains the editor configuration, including the toolbar items and plugins. There can be multiple presets, and you can switch between them by passing the `preset` keyword argument to the `ckeditor` component.
+
+### Custom Presets 🧩
+
+In order to override the default preset or add custom presets, you can add the following configuration to your `config/config.exs` file:
+
+```elixir
+# config/config.exs
+config :ckeditor5_phoenix,
+  presets: %{
+    minimal: %{
+      cloud: %{
+        version: "46.0.0",
+        premium: true,
+        translations: ["pl"],
+        ckbox: %{
+          version: "1.0.0"
+        }
+      },
+      config: %{
+        toolbar: [:bold, :italic, :link],
+        plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
+      }
+    },
+    full: %{
+      config: %{
+        toolbar: [
+          :heading, :|, :bold, :italic, :underline, :|,
+          :link, :insertImage, :insertTable, :|,
+          :bulletedList, :numberedList, :blockQuote
+        ],
+        plugins: [
+          :Heading, :Bold, :Italic, :Underline, :Link,
+          :ImageBlock, :ImageUpload, :Table, :List, :BlockQuote,
+          :Essentials, :Paragraph
+        ]
+      }
+    }
+  }
+```
+
+In template:
+
+```heex
+<.ckeditor preset="minimal" value="<p>Simple editor</p>" />
+```
+
+### Dynamic presets 🎯
+
+You can also create dynamic presets that can be modified at runtime. This is useful if you want to change the editor configuration based on user input or other conditions.
+
+```elixir
+defmodule MyApp.PageLive do
+  use MyAppWeb, :live_view
+  use CKEditor5
+
+  alias CKEditor5.Preset
+
+  def mount(_params, _session, socket) do
+    preset = Preset.Parser.parse!(%{
+      config: %{
+        toolbar: [:bold, :italic, :link],
+        plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
+      }
+    })
+
+    {:ok, assign(socket, preset: preset)}
+  end
+end
+```
+
+In template:
+
+```heex
+<.ckeditor preset={@preset} />
+````
+
+### Providing the License Key 🗝️
+
+CKEditor 5 requires a license key when using the official CDN or premium features. You can provide the license key in two simple ways:
+
+1. **Environment variable**: Set the `CKEDITOR5_LICENSE_KEY` environment variable before starting your Phoenix app. This is the easiest and most common way.
+2. **Preset config**: You can also set the license key directly in your preset configuration in `config/config.exs`:
+
+   ```elixir
+   config :ckeditor5_phoenix,
+     presets: %{
+       default: %{
+         license_key: "your-license-key-here"
+       }
+     }
+   ```
+
+If you use CKEditor 5 under the GPL license, you do not need to provide a license key. However, if you choose to set one, it must be set to `GPL`.
+
+If both are set, the preset config takes priority. For more details, see the [CKEditor 5 licensing guide](https://ckeditor.com/docs/ckeditor5/latest/getting-started/licensing/license-and-legal.html).
+
+### Referencing DOM Elements in Config 🏷️
+
+You can reference DOM elements directly in your editor configuration using the special `{ $element: "selector" }` format. This is useful when you want to attach the editor's UI parts (like toolbars or editable areas) to specific elements in your HTML.
+
+```elixir
+# config/config.exs
+config :ckeditor5_phoenix,
+  presets: %{
+    # ... other presets
+    minimal: %{
+      config: %{
+        # ... other config
+        yourPlugin: %{
+          toolbar: %{ $element: "#my-toolbar" },
+          editable: %{ $element: "#my-editable" }
+        },
+      }
+    }
+  }
+```
+
+This will find the elements with IDs `my-toolbar` and `my-editable` in the DOM and use them for the editor's UI.
+
+⚠️ If the element is not found, a warning will be shown in the console.
+
+## Localization 🌍
+
+Support multiple languages in the editor UI and content. Learn how to load translations via CDN or configure them globally.
+
+### UI language and content language 🈯
+
+Use `language` to set the CKEditor UI language (menus, tooltips, labels) and `content_language` to set the language of the editable content (`lang` attribute in the editor area).
+
+```heex
+<.cke_cloud_assets translations={["pl"]} />
+
+<.ckeditor
+  id="article-editor"
+  type="classic"
+  language="pl"
+  content_language="en"
+  value="<p>Hello world!</p>"
+/>
+```
+
+### Global Translation Config 🛠️
+
+You can also configure translations globally in your `config/config.exs` file. This is useful if you want to load translations for multiple languages at once or set a default language for the editor. Keep in mind that this configuration is only used when loading translations via CDN. If you are using self-hosted setup, translations are handled by your bundler automatically.
+
+```elixir
+# config/config.exs
+config :ckeditor5_phoenix,
+  presets: %{
+    default: %{
+      cloud: %{
+        translations: ["pl", "de", "fr"]  # CDN only
+      }
+    }
+  }
+```
+
+**Note:** For self-hosted setups, translations are handled by your bundler automatically.
+
+### Custom translations 🌐
+
+You can also provide custom translations for the editor. This is useful if you want to override existing translations or add new ones. Custom translations can be provided in the preset configuration.
+
+```elixir
+# config/config.exs
+config :ckeditor5_phoenix,
+  presets: %{
+    default: %{
+      custom_translations: %{
+        en: %{
+          Bold: "Custom Bold",
+          Italic: "Custom Italic"
+        },
+        pl: %{
+          Bold: "Pogrubiony",
+          Italic: "Kursywa"
+        }
+      }
+    }
+  }
 ```
 
 ## LiveView Sync 🔄
@@ -652,191 +837,6 @@ pipeline :api do
   plug :fetch_session  # Required for CSRF protection
   plug :protect_from_forgery
 end
-```
-
-## Configuration ⚙️
-
-You can configure the editor _presets_ in your `config/config.exs` file. The default preset is `:default`, which provides a basic configuration with a toolbar and essential plugins. The preset is a map that contains the editor configuration, including the toolbar items and plugins. There can be multiple presets, and you can switch between them by passing the `preset` keyword argument to the `ckeditor` component.
-
-### Custom Presets 🧩
-
-In order to override the default preset or add custom presets, you can add the following configuration to your `config/config.exs` file:
-
-```elixir
-# config/config.exs
-config :ckeditor5_phoenix,
-  presets: %{
-    minimal: %{
-      cloud: %{
-        version: "46.0.0",
-        premium: true,
-        translations: ["pl"],
-        ckbox: %{
-          version: "1.0.0"
-        }
-      },
-      config: %{
-        toolbar: [:bold, :italic, :link],
-        plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
-      }
-    },
-    full: %{
-      config: %{
-        toolbar: [
-          :heading, :|, :bold, :italic, :underline, :|,
-          :link, :insertImage, :insertTable, :|,
-          :bulletedList, :numberedList, :blockQuote
-        ],
-        plugins: [
-          :Heading, :Bold, :Italic, :Underline, :Link,
-          :ImageBlock, :ImageUpload, :Table, :List, :BlockQuote,
-          :Essentials, :Paragraph
-        ]
-      }
-    }
-  }
-```
-
-In template:
-
-```heex
-<.ckeditor preset="minimal" value="<p>Simple editor</p>" />
-```
-
-### Dynamic presets 🎯
-
-You can also create dynamic presets that can be modified at runtime. This is useful if you want to change the editor configuration based on user input or other conditions.
-
-```elixir
-defmodule MyApp.PageLive do
-  use MyAppWeb, :live_view
-  use CKEditor5
-
-  alias CKEditor5.Preset
-
-  def mount(_params, _session, socket) do
-    preset = Preset.Parser.parse!(%{
-      config: %{
-        toolbar: [:bold, :italic, :link],
-        plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
-      }
-    })
-
-    {:ok, assign(socket, preset: preset)}
-  end
-end
-```
-
-In template:
-
-```heex
-<.ckeditor preset={@preset} />
-````
-
-### Providing the License Key 🗝️
-
-CKEditor 5 requires a license key when using the official CDN or premium features. You can provide the license key in two simple ways:
-
-1. **Environment variable**: Set the `CKEDITOR5_LICENSE_KEY` environment variable before starting your Phoenix app. This is the easiest and most common way.
-2. **Preset config**: You can also set the license key directly in your preset configuration in `config/config.exs`:
-
-   ```elixir
-   config :ckeditor5_phoenix,
-     presets: %{
-       default: %{
-         license_key: "your-license-key-here"
-       }
-     }
-   ```
-
-If you use CKEditor 5 under the GPL license, you do not need to provide a license key. However, if you choose to set one, it must be set to `GPL`.
-
-If both are set, the preset config takes priority. For more details, see the [CKEditor 5 licensing guide](https://ckeditor.com/docs/ckeditor5/latest/getting-started/licensing/license-and-legal.html).
-
-### Referencing DOM Elements in Config 🏷️
-
-You can reference DOM elements directly in your editor configuration using the special `{ $element: "selector" }` format. This is useful when you want to attach the editor's UI parts (like toolbars or editable areas) to specific elements in your HTML.
-
-```elixir
-# config/config.exs
-config :ckeditor5_phoenix,
-  presets: %{
-    # ... other presets
-    minimal: %{
-      config: %{
-        # ... other config
-        yourPlugin: %{
-          toolbar: %{ $element: "#my-toolbar" },
-          editable: %{ $element: "#my-editable" }
-        },
-      }
-    }
-  }
-```
-
-This will find the elements with IDs `my-toolbar` and `my-editable` in the DOM and use them for the editor's UI.
-
-⚠️ If the element is not found, a warning will be shown in the console.
-
-## Localization 🌍
-
-Support multiple languages in the editor UI and content. Learn how to load translations via CDN or configure them globally.
-
-### UI language and content language 🈯
-
-Use `language` to set the CKEditor UI language (menus, tooltips, labels) and `content_language` to set the language of the editable content (`lang` attribute in the editor area).
-
-```heex
-<.cke_cloud_assets translations={["pl"]} />
-
-<.ckeditor
-  id="article-editor"
-  type="classic"
-  language="pl"
-  content_language="en"
-  value="<p>Hello world!</p>"
-/>
-```
-
-### Global Translation Config 🛠️
-
-You can also configure translations globally in your `config/config.exs` file. This is useful if you want to load translations for multiple languages at once or set a default language for the editor. Keep in mind that this configuration is only used when loading translations via CDN. If you are using self-hosted setup, translations are handled by your bundler automatically.
-
-```elixir
-# config/config.exs
-config :ckeditor5_phoenix,
-  presets: %{
-    default: %{
-      cloud: %{
-        translations: ["pl", "de", "fr"]  # CDN only
-      }
-    }
-  }
-```
-
-**Note:** For self-hosted setups, translations are handled by your bundler automatically.
-
-### Custom translations 🌐
-
-You can also provide custom translations for the editor. This is useful if you want to override existing translations or add new ones. Custom translations can be provided in the preset configuration.
-
-```elixir
-# config/config.exs
-config :ckeditor5_phoenix,
-  presets: %{
-    default: %{
-      custom_translations: %{
-        en: %{
-          Bold: "Custom Bold",
-          Italic: "Custom Italic"
-        },
-        pl: %{
-          Bold: "Pogrubiony",
-          Italic: "Kursywa"
-        }
-      }
-    }
-  }
 ```
 
 ## Custom plugins 🧩
