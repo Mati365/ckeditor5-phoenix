@@ -34,6 +34,11 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Dynamic presets 🎯](#dynamic-presets-)
     - [Providing the License Key 🗝️](#providing-the-license-key-️)
     - [Referencing DOM Elements in Config 🏷️](#referencing-dom-elements-in-config-️)
+  - [Editor Types 🖊️](#editor-types-️)
+    - [Classic editor 📝](#classic-editor-)
+    - [Multiroot editor 🌳](#multiroot-editor-)
+    - [Inline editor 📝](#inline-editor-)
+    - [Decoupled editor 🌐](#decoupled-editor-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
@@ -42,13 +47,8 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Two-way Communication 🔄](#two-way-communication-)
       - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
       - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
-      - [Multiroot editor 🌲](#multiroot-editor-)
+      - [Multiroot editor 🌲](#multiroot-editor--1)
     - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
-  - [Editor Types 🖊️](#editor-types-️)
-    - [Classic editor 📝](#classic-editor-)
-    - [Multiroot editor 🌳](#multiroot-editor--1)
-    - [Inline editor 📝](#inline-editor-)
-    - [Decoupled editor 🌐](#decoupled-editor-)
   - [Forms Integration 🧾](#forms-integration-)
     - [Phoenix Form Helper 🧑‍💻](#phoenix-form-helper-)
     - [LiveView Handler ⚡](#liveview-handler-)
@@ -357,9 +357,111 @@ config :ckeditor5_phoenix,
   }
 ```
 
-This will find the elements with IDs `my-toolbar` and `my-editable` in the DOM and use them for the editor's UI.
+This will find the elements with IDs `my-toolbar` and `my-editable` in the DOM and use them for the editor's UI. If the element is not found, a warning will be shown in the console.
 
-⚠️ If the element is not found, a warning will be shown in the console.
+## Editor Types 🖊️
+
+CKEditor 5 Phoenix supports four distinct editor types, each designed for specific use cases. Choose the one that best fits your application's layout and functionality requirements.
+
+### Classic editor 📝
+
+Traditional WYSIWYG editor with a fixed toolbar above the editing area. Best for standard content editing scenarios like blog posts, articles, or forms.
+
+![CKEditor 5 Classic Editor in Elixir Phoenix application with Menubar](docs/classic-editor-with-toolbar.png)
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Classic editor in <body> --%>
+<.ckeditor
+  type="classic"
+  value="<p>Initial content here</p>"
+  editable_height="300px"
+/>
+```
+
+### Multiroot editor 🌳
+
+Advanced editor supporting multiple independent editable areas within a single editor instance. Perfect for complex layouts like page builders, newsletters, or multi-section content management.
+
+![CKEditor 5 Multiroot Editor in Elixir Phoenix application](docs/multiroot-editor.png)
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Editor container --%>
+<.ckeditor type="multiroot" />
+
+<%!-- Shared toolbar --%>
+<.cke_ui_part name="toolbar" />
+
+<%!-- Multiple editable areas --%>
+<div class="flex flex-col gap-4">
+  <.cke_editable
+    root="header"
+    value="<h1>Main Header</h1>"
+    class="border border-gray-300"
+  />
+  <.cke_editable
+    root="content"
+    value="<p>Main content area</p>"
+    class="border border-gray-300"
+  />
+  <.cke_editable
+    root="sidebar"
+    value="<p>Sidebar content</p>"
+    class="border border-gray-300"
+  />
+</div>
+```
+
+### Inline editor 📝
+
+Minimalist editor that appears directly within content when clicked. Ideal for in-place editing scenarios where the editing interface should be invisible until needed.
+
+![CKEditor 5 Inline Editor in Elixir Phoenix application](docs/inline-editor.png)
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Inline editor --%>
+<.ckeditor
+  type="inline"
+  value="<p>Click here to edit this content</p>"
+  editable_height="300px"
+/>
+```
+
+**Note:** Inline editors don't work with `<textarea>` elements and may not be suitable for traditional form scenarios.
+
+### Decoupled editor 🌐
+
+Flexible editor where toolbar and editing area are completely separated. Provides maximum layout control for custom interfaces and complex applications.
+
+![CKEditor 5 Decoupled Editor in Elixir Phoenix application](docs/decoupled-editor.png)
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Decoupled editor container --%>
+<.ckeditor id="your-editor" type="decoupled">
+  <div class="flex flex-col gap-4">
+    <%!-- Toolbar can be placed anywhere --%>
+    <.cke_ui_part name="toolbar" />
+
+    <%!-- Editable area with custom styling --%>
+    <.cke_editable
+      value="<p>Initial content here</p>"
+      class="border border-gray-300 p-4 rounded"
+      editable_height="300px"
+    />
+  </div>
+</.ckeditor>
+```
 
 ## Localization 🌍
 
@@ -564,110 +666,6 @@ end
 ```
 
 These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
-
-## Editor Types 🖊️
-
-CKEditor 5 Phoenix supports four distinct editor types, each designed for specific use cases. Choose the one that best fits your application's layout and functionality requirements.
-
-### Classic editor 📝
-
-Traditional WYSIWYG editor with a fixed toolbar above the editing area. Best for standard content editing scenarios like blog posts, articles, or forms.
-
-![CKEditor 5 Classic Editor in Elixir Phoenix application with Menubar](docs/classic-editor-with-toolbar.png)
-
-```heex
-<%!-- CDN assets in <head> --%>
-<.cke_cloud_assets />
-
-<%!-- Classic editor in <body> --%>
-<.ckeditor
-  type="classic"
-  value="<p>Initial content here</p>"
-  editable_height="300px"
-/>
-```
-
-### Multiroot editor 🌳
-
-Advanced editor supporting multiple independent editable areas within a single editor instance. Perfect for complex layouts like page builders, newsletters, or multi-section content management.
-
-![CKEditor 5 Multiroot Editor in Elixir Phoenix application](docs/multiroot-editor.png)
-
-```heex
-<%!-- CDN assets in <head> --%>
-<.cke_cloud_assets />
-
-<%!-- Editor container --%>
-<.ckeditor type="multiroot" />
-
-<%!-- Shared toolbar --%>
-<.cke_ui_part name="toolbar" />
-
-<%!-- Multiple editable areas --%>
-<div class="flex flex-col gap-4">
-  <.cke_editable
-    root="header"
-    value="<h1>Main Header</h1>"
-    class="border border-gray-300"
-  />
-  <.cke_editable
-    root="content"
-    value="<p>Main content area</p>"
-    class="border border-gray-300"
-  />
-  <.cke_editable
-    root="sidebar"
-    value="<p>Sidebar content</p>"
-    class="border border-gray-300"
-  />
-</div>
-```
-
-### Inline editor 📝
-
-Minimalist editor that appears directly within content when clicked. Ideal for in-place editing scenarios where the editing interface should be invisible until needed.
-
-![CKEditor 5 Inline Editor in Elixir Phoenix application](docs/inline-editor.png)
-
-```heex
-<%!-- CDN assets in <head> --%>
-<.cke_cloud_assets />
-
-<%!-- Inline editor --%>
-<.ckeditor
-  type="inline"
-  value="<p>Click here to edit this content</p>"
-  editable_height="300px"
-/>
-```
-
-**Note:** Inline editors don't work with `<textarea>` elements and may not be suitable for traditional form scenarios.
-
-### Decoupled editor 🌐
-
-Flexible editor where toolbar and editing area are completely separated. Provides maximum layout control for custom interfaces and complex applications.
-
-![CKEditor 5 Decoupled Editor in Elixir Phoenix application](docs/decoupled-editor.png)
-
-```heex
-<%!-- CDN assets in <head> --%>
-<.cke_cloud_assets />
-
-<%!-- Decoupled editor container --%>
-<.ckeditor id="your-editor" type="decoupled">
-  <div class="flex flex-col gap-4">
-    <%!-- Toolbar can be placed anywhere --%>
-    <.cke_ui_part name="toolbar" />
-
-    <%!-- Editable area with custom styling --%>
-    <.cke_editable
-      value="<p>Initial content here</p>"
-      class="border border-gray-300 p-4 rounded"
-      editable_height="300px"
-    />
-  </div>
-</.ckeditor>
-```
 
 ## Forms Integration 🧾
 
