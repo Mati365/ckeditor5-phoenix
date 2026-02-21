@@ -121,4 +121,36 @@ describe('makeHook', () => {
       minimalHookObject.destroyed.call(mockContext);
     }).not.toThrow();
   });
+
+  it('should register and execute onBeforeDestroy callbacks in LIFO order', async () => {
+    const calls: string[] = [];
+
+    class BeforeDestroyHook extends ClassHook {
+      override mounted() {
+        this.onBeforeDestroy(() => calls.push('first'));
+        this.onBeforeDestroy(() => calls.push('second'));
+      }
+    }
+
+    const hookObj = makeHook(BeforeDestroyHook);
+
+    hookObj.mounted.call(mockContext);
+    hookObj.destroyed.call(mockContext);
+
+    expect(calls).toEqual(['second', 'first']);
+  });
+
+  it('should allow lifecycle methods to be empty without errors', async () => {
+    class EmptyHook extends ClassHook {}
+    const hookObj = makeHook(EmptyHook);
+
+    await expect(hookObj.mounted.call(mockContext)).resolves.not.toThrow();
+
+    expect(() => hookObj.beforeUpdate?.call(mockContext)).not.toThrow();
+    expect(() => hookObj.updated?.call(mockContext)).not.toThrow();
+    expect(() => hookObj.disconnected?.call(mockContext)).not.toThrow();
+    expect(() => hookObj.reconnected?.call(mockContext)).not.toThrow();
+
+    await expect(hookObj.destroyed.call(mockContext)).resolves.not.toThrow();
+  });
 });
