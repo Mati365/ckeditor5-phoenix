@@ -1,3 +1,5 @@
+import type { Editor } from 'ckeditor5';
+
 import { MultiRootEditor } from 'ckeditor5';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -187,16 +189,22 @@ describe('editable hook', () => {
   });
 
   describe('destroy', () => {
-    it('should remove the editable root from the editor', async () => {
-      const editor = await appendMultirootEditor();
-      const editable = createEditableHtmlElement({
+    let editor: Editor, editable: HTMLElement;
+
+    beforeEach(async () => {
+      editor = await appendMultirootEditor();
+
+      editable = createEditableHtmlElement({
         name: 'foo',
         initialValue: '<p>Foo</p>',
+        withInput: true,
       });
 
       document.body.appendChild(editable);
       EditableHook.mounted.call({ el: editable });
+    });
 
+    it('should remove the editable root from the editor', async () => {
       expect(editor.getData({ rootName: 'foo' })).toBe('<p>Foo</p>');
       expect(editor.model.document.getRoot('foo')?.isAttached()).toBe(true);
 
@@ -208,21 +216,19 @@ describe('editable hook', () => {
     });
 
     it('should hide the element during destruction to prevent flickering', async () => {
-      await appendMultirootEditor();
-
-      const editable = createEditableHtmlElement({
-        name: 'foo',
-        initialValue: '<p>Foo</p>',
-      });
-
-      document.body.appendChild(editable);
-      EditableHook.mounted.call({ el: editable });
-
       expect(editable.style.display).toBe('');
 
       EditableHook.destroyed.call({ el: editable });
 
       expect(editable.style.display).toBe('none');
+    });
+
+    it('should clean up event listeners on destroy', async () => {
+      const offDocumentSpy = vi.spyOn(editor.model.document, 'off');
+
+      EditableHook.destroyed.call({ el: editable });
+
+      expect(offDocumentSpy).toHaveBeenCalledWith('change:data', expect.any(Function));
     });
   });
 });

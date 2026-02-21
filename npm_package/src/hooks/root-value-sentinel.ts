@@ -1,4 +1,4 @@
-import type { DecoupledEditor, MultiRootEditor } from 'ckeditor5';
+import type { Editor } from 'ckeditor5';
 
 import { ClassHook, makeHook } from '../shared';
 import { EditorsRegistry } from './editor/editors-registry';
@@ -9,7 +9,7 @@ class RootValueSentinel extends ClassHook {
    * It can be either a MultiRootEditor or a DecoupledEditor, depending on the type of editor being used.
    * It will be null if the editor is not registered yet or if the hook is being destroyed before the editor is registered.
    */
-  private editorPromise: Promise<DecoupledEditor | MultiRootEditor | null> | null = null;
+  private editorPromise: Promise<Editor | null> | null = null;
 
   /**
    * When the editor is focused and the value attribute changes, we want to wait until it blurs to
@@ -26,11 +26,15 @@ class RootValueSentinel extends ClassHook {
    */
   private previousValue: string | null = null;
 
+  /**
+   * Helper to read and parse attributes from the element.
+   * It assumes that the element has the correct attributes set, as they are required for the hook to function properly.
+   */
   private get attrs() {
     return {
-      editorId: this.el.getAttribute('data-cke-editor-id') || null,
+      editorId: this.el.getAttribute('data-cke-editor-id')!,
       rootName: this.el.getAttribute('data-cke-root-name')!,
-      value: this.el.getAttribute('data-cke-value') || '',
+      value: this.el.getAttribute('data-cke-value')!,
     };
   }
 
@@ -41,19 +45,16 @@ class RootValueSentinel extends ClassHook {
     const { editorId, value, rootName } = this.attrs;
 
     this.previousValue = value;
-    this.editorPromise = EditorsRegistry.the.execute(
-      editorId,
-      (editor: MultiRootEditor | DecoupledEditor) => {
-        /* v8 ignore next 3 */
-        if (this.isBeingDestroyed()) {
-          return null;
-        }
+    this.editorPromise = EditorsRegistry.the.execute(editorId, (editor: Editor) => {
+      /* v8 ignore next 3 */
+      if (this.isBeingDestroyed()) {
+        return null;
+      }
 
-        this.setupSyncHandlers(editor, rootName);
+      this.setupSyncHandlers(editor, rootName);
 
-        return editor;
-      },
-    );
+      return editor;
+    });
   }
 
   /**
@@ -76,9 +77,7 @@ class RootValueSentinel extends ClassHook {
       return;
     }
 
-    const { focusTracker } = editor.ui;
-
-    if (focusTracker.isFocused) {
+    if (editor.ui.focusTracker.isFocused) {
       this.pendingValue = value;
     }
     else {
@@ -90,52 +89,35 @@ class RootValueSentinel extends ClassHook {
    * Sets up focus-aware sync handlers on the editor.
    * Registers cleanup via onBeforeDestroy.
    */
-  private setupSyncHandlers(editor: MultiRootEditor | DecoupledEditor, rootName: string) {
-    const multiRoot = editor as MultiRootEditor;
-    const { focusTracker } = editor.ui;
-    const { model } = multiRoot;
-
-    // When user types - discard any pending server value
+  private setupSyncHandlers(editor: Editor, rootName: string) {
     const onDataChange = () => {
       this.pendingValue = null;
     };
 
-    // When editor blurs - apply pending value if user hasn't changed content in the meantime
     const onFocusChange = () => {
-      if (!focusTracker.isFocused && this.pendingValue !== null) {
+      if (!editor.ui.focusTracker.isFocused && this.pendingValue !== null) {
         this.setRootValue(editor, rootName, this.pendingValue);
         this.pendingValue = null;
       }
     };
 
-    model.document.on('change:data', onDataChange);
-    focusTracker.on('change:isFocused', onFocusChange);
+    editor.model.document.on('change:data', onDataChange);
+    editor.ui.focusTracker.on('change:isFocused', onFocusChange);
 
     this.onBeforeDestroy(() => {
-      model.document.off('change:data', onDataChange);
-      focusTracker.off('change:isFocused', onFocusChange);
+      editor.model.document.off('change:data', onDataChange);
+      editor.ui.focusTracker.off('change:isFocused', onFocusChange);
     });
   }
 
   /**
    * Sets the value of a specific root in the editor.
    */
-  private setRootValue(
-    editor: MultiRootEditor | DecoupledEditor,
-    rootName: string,
-    value: string,
-  ) {
-    const multiRoot = editor as MultiRootEditor;
-    const root = multiRoot.model.document.getRoot(rootName);
-
-    if (!root) {
-      return;
-    }
-
-    const current = multiRoot.getData({ rootName });
+  private setRootValue(editor: Editor, rootName: string, value: string) {
+    const current = editor.getData({ rootName });
 
     if (current !== value) {
-      multiRoot.setData({ [rootName]: value });
+      editor.setData({ [rootName]: value });
     }
   }
 }
