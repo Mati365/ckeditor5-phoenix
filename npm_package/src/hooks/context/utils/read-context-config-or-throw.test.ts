@@ -9,7 +9,7 @@ describe('readContextConfigOrThrow', () => {
     const el = document.createElement('div');
 
     expect(() => readContextConfigOrThrow(el)).toThrow(
-      'CKEditor5 hook requires a "cke-context" attribute on the element.',
+      'CKEditor5 hook requires a "data-cke-context" attribute on the element.',
     );
   });
 

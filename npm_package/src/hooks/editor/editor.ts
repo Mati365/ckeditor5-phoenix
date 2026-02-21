@@ -51,19 +51,19 @@ class EditorHookImpl extends ClassHook {
 
     const value = {
       editorId: get('id')!,
-      contextId: get('cke-context-id'),
+      contextId: get('data-cke-context-id'),
       preset: readPresetOrThrow(el),
-      editableHeight: parseIntIfNotNull(get('cke-editable-height')),
-      watchdog: has('cke-watchdog'),
+      editableHeight: parseIntIfNotNull(get('data-cke-editable-height')),
+      watchdog: has('data-cke-watchdog'),
       events: {
-        change: has('cke-change-event'),
-        blur: has('cke-blur-event'),
-        focus: has('cke-focus-event'),
+        change: has('data-cke-change-event'),
+        blur: has('data-cke-blur-event'),
+        focus: has('data-cke-focus-event'),
       },
-      saveDebounceMs: parseIntIfNotNull(get('cke-save-debounce-ms')) ?? 400,
+      saveDebounceMs: parseIntIfNotNull(get('data-cke-save-debounce-ms')) ?? 400,
       language: {
-        ui: get('cke-language') || 'en',
-        content: get('cke-content-language') || 'en',
+        ui: get('data-cke-language') || 'en',
+        content: get('data-cke-content-language') || 'en',
       },
     };
 

@@ -72,7 +72,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
     return acc;
   }
 
-  const initialRootEditableValue = rootEditorElement.getAttribute('cke-initial-value') || '';
+  const initialRootEditableValue = rootEditorElement.getAttribute('data-cke-initial-value') || '';
   const contentElement = rootEditorElement.querySelector<HTMLElement>(`#${editorId}_editor `);
   const currentMain = acc['main'];
 

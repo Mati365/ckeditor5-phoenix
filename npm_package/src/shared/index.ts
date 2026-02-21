@@ -11,6 +11,7 @@ export * from './is-plain-object';
 export * from './map-object-values';
 export * from './once';
 export * from './parse-int-if-not-null';
+export * from './shallow-equal';
 export * from './timeout';
 export * from './uid';
 export * from './wait-for';

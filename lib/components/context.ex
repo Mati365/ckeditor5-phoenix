@@ -41,7 +41,7 @@ defmodule CKEditor5.Components.Context do
   def render(assigns) do
     assigns =
       assigns
-      |> Helpers.assign_id_if_missing("cke-context")
+      |> Helpers.generate_id_if_missing("cke-context")
       |> load_context()
 
     ~H"""
@@ -49,9 +49,9 @@ defmodule CKEditor5.Components.Context do
       id={@id}
       phx-hook="CKContext"
       phx-update="ignore"
-      cke-language={@language}
-      cke-content-language={@content_language}
-      cke-context={Jason.encode!(@context)}
+      data-cke-language={@language}
+      data-cke-content-language={@content_language}
+      data-cke-context={Jason.encode!(@context)}
       {@rest}
     >
       <%= render_slot(@inner_block) %>

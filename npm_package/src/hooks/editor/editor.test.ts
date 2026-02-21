@@ -803,8 +803,8 @@ describe('editor hook', () => {
         language: { ui: 'pl', content: 'de' },
       });
 
-      hookElement.setAttribute('cke-language', 'pl');
-      hookElement.setAttribute('cke-content-language', 'de');
+      hookElement.setAttribute('data-cke-language', 'pl');
+      hookElement.setAttribute('data-cke-content-language', 'de');
 
       document.body.appendChild(hookElement);
       EditorHook.mounted.call({ el: hookElement });

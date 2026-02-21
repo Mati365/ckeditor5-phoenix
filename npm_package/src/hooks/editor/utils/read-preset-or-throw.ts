@@ -10,7 +10,7 @@ import { EDITOR_TYPES } from '../typings';
  * @returns The parsed hook configuration.
  */
 export function readPresetOrThrow(element: HTMLElement): EditorPreset {
-  const attributeValue = element.getAttribute('cke-preset');
+  const attributeValue = element.getAttribute('data-cke-preset');
 
   if (!attributeValue) {
     throw new Error('CKEditor5 hook requires a "cke-preset" attribute on the element.');

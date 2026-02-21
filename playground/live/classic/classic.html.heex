@@ -2,30 +2,57 @@
   <.back_to_home />
   <h1 class="mb-6 font-bold text-3xl">Classic Editor Demo</h1>
 
-  <.ckeditor
-    id="editor"
-    value={@editor_value}
-    change_event
-    focus_event
-    blur_event
-  />
-
-  <div class="mt-4">
+  <div class="flex gap-2 mb-4">
     <button
-      phx-click="set_data"
-      class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white"
+      phx-click="preset_template"
+      phx-value-type="work"
+      class="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white transition-colors duration-200"
     >
-      Set New Data
+      Load Template
+    </button>
+
+    <button
+      phx-click="preset_template"
+      phx-value-type="clear"
+      class="hover:bg-red-50 px-4 py-2 border border-red-600 text-red-600 transition-colors duration-200"
+    >
+      Clear
     </button>
   </div>
 
-  <div
-    class={[
-      "bg-gray-50 mt-8 p-4 border border-gray-300",
-      if(@editor_focused?, do: "ring-2 ring-blue-500")
-    ]}
-  >
-    <h2 class="mb-2 font-bold">Current editor value:</h2>
-    <pre class="whitespace-pre-wrap"> <%= @editor_value %> </pre>
+  <div class="mt-6">
+    <.ckeditor
+      id="editor"
+      value={@editor_value}
+      change_event
+      focus_event
+      blur_event
+    />
+  </div>
+
+  <form phx-submit="force_set_data" class="space-y-2 mt-8">
+    <label class="block font-bold">Push New Content</label>
+    <div class="flex sm:flex-row flex-col gap-2">
+      <textarea
+        name="new_content"
+        placeholder="Enter HTML content..."
+        class="flex-1 p-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-600 h-24"
+      />
+
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 px-4 py-2 h-fit text-white transition-colors duration-200"
+      >
+        Set Data
+      </button>
+    </div>
+  </form>
+
+  <div class={[
+    "mt-8 p-4 border transition-colors duration-200",
+    if(@editor_focused?, do: "bg-blue-50 border-blue-400", else: "bg-gray-50 border-gray-300")
+  ]}>
+    <strong class="block mb-2">Current editor value (Socket):</strong>
+    <pre class="bg-white p-2 border border-gray-200 font-mono text-gray-700 text-sm whitespace-pre-wrap"><%= @editor_value %></pre>
   </div>
 </div>

@@ -2,10 +2,18 @@ import type { Editor, PluginConstructor } from 'ckeditor5';
 
 import type { EditorId } from '../typings';
 
-import { debounce, isNil } from '../../../shared';
+import { debounce, isNil, shallowEqual } from '../../../shared';
 
 /**
- * Creates a SyncEditorWithPhoenix plugin class.
+ * Creates a SyncEditorWithPhoenix plugin class. It's not two way binding, but
+ * it allows you to push editor data to Phoenix on change, focus and blur events, and
+ * also to set editor data from Phoenix.
+ *
+ * In order to debug two-way binding, check `EditorRootValueSentinel` component, which is used
+ * to assign the value to the editor based on modification of the Elixir component's assigns.
+ *
+ * @param options The options for the plugin, including editorId, debounce time, events to listen to, and pushEvent/handleEvent functions.
+ * @returns A Promise that resolves to the SyncEditorWithPhoenix plugin constructor.
  */
 export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise<PluginConstructor> {
   const { Plugin } = await import('ckeditor5');
@@ -49,15 +57,22 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
      */
     private setupTypingContentPush() {
       const { editor } = this;
+      let lastValue: Record<string, string> | null = null;
 
       const pushContentChange = () => {
-        pushEvent(
-          'ckeditor5:change',
-          {
-            editorId,
-            data: getEditorRootsValues(this.editor),
-          },
-        );
+        const newValue = getEditorRootsValues(editor);
+
+        if (!lastValue || !shallowEqual(lastValue, newValue)) {
+          pushEvent(
+            'ckeditor5:change',
+            {
+              editorId,
+              data: newValue,
+            },
+          );
+
+          lastValue = newValue;
+        }
       };
 
       editor.model.document.on('change:data', debounce(saveDebounceMs, pushContentChange));

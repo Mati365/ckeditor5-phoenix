@@ -1,4 +1,4 @@
-import type { Hook, LiveSocketConstructor } from 'phoenix_live_view';
+import type { Hook } from 'phoenix_live_view';
 
 import type { RequiredBy } from '../types';
 
@@ -21,9 +21,17 @@ export abstract class ClassHook {
   el: HTMLElement & { instance: Hook; };
 
   /**
-   * The LiveView socket instance, providing connection to the server.
+   * Callbacks to run before the hook is destroyed.
    */
-  liveSocket: LiveSocketConstructor;
+  private _beforeDestroyCallbacks: Array<() => void> = [];
+
+  /**
+   * Registers a callback to be called before the hook is destroyed.
+   * Callbacks are called in LIFO order (last registered, first called).
+   */
+  onBeforeDestroy(callback: () => void): void {
+    this._beforeDestroyCallbacks.push(callback);
+  }
 
   /**
    * Pushes an event from the client to the LiveView server process.
@@ -65,13 +73,18 @@ export abstract class ClassHook {
    * Called when the hook has been mounted to the DOM.
    * This is the ideal place for initialization code.
    */
-  abstract mounted(): any;
+  mounted(): any {}
 
   /**
    * Called when the element has been removed from the DOM.
    * Perfect for cleanup tasks.
    */
-  abstract destroyed(): any;
+  destroyed(): any {}
+
+  /**
+   * Called when the element has been updated by a LiveView patch.
+   */
+  updated(): any {}
 
   /**
    * Called before the element is updated by a LiveView patch.
@@ -93,6 +106,18 @@ export abstract class ClassHook {
    */
   isBeingDestroyed(): boolean {
     return this.state === 'destroyed' || this.state === 'destroying';
+  }
+
+  /**
+   * Runs all registered before-destroy callbacks and clears the list.
+   * Called internally by makeHook before destroyed().
+   */
+  _runBeforeDestroyCallbacks(): void {
+    for (const cb of this._beforeDestroyCallbacks.reverse()) {
+      cb();
+    }
+
+    this._beforeDestroyCallbacks = [];
   }
 }
 
@@ -118,7 +143,6 @@ export function makeHook(constructor: new () => ClassHook): RequiredBy<Hook<any>
       this.el.instance = instance;
 
       instance.el = this.el;
-      instance.liveSocket = this.liveSocket;
 
       instance.pushEvent = (event, payload, callback) => this.pushEvent?.(event, payload, callback);
       instance.pushEventTo = (selector, event, payload, callback) => this.pushEventTo?.(selector, event, payload, callback);
@@ -145,6 +169,7 @@ export function makeHook(constructor: new () => ClassHook): RequiredBy<Hook<any>
       const { instance } = this.el;
 
       instance.state = 'destroying';
+      instance._runBeforeDestroyCallbacks();
       await instance.destroyed?.();
       instance.state = 'destroyed';
     },
@@ -161,6 +186,13 @@ export function makeHook(constructor: new () => ClassHook): RequiredBy<Hook<any>
      */
     reconnected(this: any) {
       this.el.instance.reconnected?.();
+    },
+
+    /**
+     * The updated lifecycle callback that delegates to the hook instance.
+     */
+    updated(this: any) {
+      this.el.instance.updated?.();
     },
   };
 }

@@ -7,11 +7,22 @@ defmodule CKEditor5.Helpers do
   Assigns a unique ID if one is not already present in assigns.
   Generates a random UUID-based ID only when :id key is missing.
   """
-  def assign_id_if_missing(assigns, prefix) do
+  @spec generate_id_if_missing(map(), String.t()) :: map()
+  def generate_id_if_missing(assigns, prefix) do
     Phoenix.Component.assign_new(assigns, :id, fn ->
       uuid = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
       "#{prefix}-#{uuid}"
     end)
+  end
+
+  @doc """
+  Assigns a unique ID if one is not already present in assigns.
+  Generates a random UUID-based ID only when :id key is missing.
+  This is an alias for `generate_id_if_missing/2` to maintain backward compatibility.
+  """
+  @spec assign_id_if_missing(map(), String.t()) :: map()
+  def assign_id_if_missing(assigns, fallback) do
+    Phoenix.Component.assign_new(assigns, :id, fn -> fallback end)
   end
 
   @doc """

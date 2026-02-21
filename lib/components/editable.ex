@@ -8,7 +8,7 @@ defmodule CKEditor5.Components.Editable do
 
   import CKEditor5.Components.FormAttrs
 
-  alias CKEditor5.Components.{AssignStyles, HiddenInput}
+  alias CKEditor5.Components.{AssignStyles, HiddenInput, RootValueSentinel}
   alias CKEditor5.Helpers
 
   # Default root name for decoupled editors, while optional in multiroot editors.
@@ -53,7 +53,7 @@ defmodule CKEditor5.Components.Editable do
   def render(assigns) do
     assigns =
       assigns
-      |> Helpers.assign_id_if_missing("cke-editable")
+      |> Helpers.assign_id_if_missing("cke-editable-#{assigns.editor_id}-#{assigns.root}")
       |> AssignStyles.assign_styles(%{position: "relative"})
       |> assign_form_fields()
 
@@ -80,6 +80,7 @@ defmodule CKEditor5.Components.Editable do
         />
       <% end %>
     </div>
+    <RootValueSentinel.render editor_id={@id} value={@value || ""} root={@root} />
     """
   end
 end

@@ -11,7 +11,8 @@ defmodule CKEditor5.Components.Editor do
   import CKEditor5.Components.FormAttrs
 
   alias CKEditor5.Components.Editor.Assigns
-  alias CKEditor5.Components.HiddenInput
+  alias CKEditor5.Components.{HiddenInput, RootValueSentinel}
+  alias CKEditor5.Preset.EditorType
 
   @doc """
   Renders the CKEditor 5 component in a LiveView.
@@ -107,21 +108,22 @@ defmodule CKEditor5.Components.Editor do
       style={@style}
       phx-hook="CKEditor5"
       phx-update="ignore"
-      cke-preset={Jason.encode!(@preset)}
-      cke-editable-height={@editable_height}
-      cke-initial-value={@value || ""}
-      cke-change-event={@change_event}
-      cke-blur-event={@blur_event}
-      cke-focus-event={@focus_event}
-      cke-save-debounce-ms={@save_debounce_ms}
-      cke-language={@language}
-      cke-content-language={@content_language}
-      cke-watchdog={@watchdog}
-      cke-context-id={@context_id}
+      data-cke-preset={Jason.encode!(@preset)}
+      data-cke-editable-height={@editable_height}
+      data-cke-initial-value={@value || ""}
+      data-cke-change-event={@change_event}
+      data-cke-blur-event={@blur_event}
+      data-cke-focus-event={@focus_event}
+      data-cke-save-debounce-ms={@save_debounce_ms}
+      data-cke-language={@language}
+      data-cke-content-language={@content_language}
+      data-cke-watchdog={@watchdog}
+      data-cke-context-id={@context_id}
     >
-      <%= if @preset.type not in [:multiroot, :decoupled] do %>
+      <%= unless EditorType.has_external_editables?(@preset.type) do %>
         <div id={"#{@id}_editor"}></div>
       <% end %>
+
       <%= if @name do %>
         <HiddenInput.render
           id={"#{@id}_input"}
@@ -132,6 +134,10 @@ defmodule CKEditor5.Components.Editor do
       <% end %>
       <%= render_slot(@inner_block) %>
     </div>
+
+    <%= unless EditorType.has_external_editables?(@preset.type) do %>
+       <RootValueSentinel.render editor_id={@id} value={@value || ""} />
+    <% end %>
     """
   end
 end

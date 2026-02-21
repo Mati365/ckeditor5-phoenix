@@ -9,10 +9,10 @@ import { deepCamelCaseKeys } from '../../../shared/deep-camel-case-keys';
  * @returns The parsed hook configuration.
  */
 export function readContextConfigOrThrow(element: HTMLElement): ContextConfig {
-  const attributeValue = element.getAttribute('cke-context');
+  const attributeValue = element.getAttribute('data-cke-context');
 
   if (!attributeValue) {
-    throw new Error('CKEditor5 hook requires a "cke-context" attribute on the element.');
+    throw new Error('CKEditor5 hook requires a "data-cke-context" attribute on the element.');
   }
 
   const { config, ...rest } = JSON.parse(attributeValue);
