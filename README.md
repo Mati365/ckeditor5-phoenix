@@ -29,13 +29,12 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
   - [Basic Usage 🏁](#basic-usage-)
     - [Simple Editor ✏️](#simple-editor-️)
     - [Watchdog prop 🐶](#watchdog-prop-)
-      - [Disabling the watchdog 🚫](#disabling-the-watchdog-)
-    - [With LiveView Sync 🔄](#with-liveview-sync-)
-      - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
-      - [Two-way Communication 🔄](#two-way-communication-)
-        - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
-        - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
-        - [Multiroot editor 🌲](#multiroot-editor-)
+  - [LiveView Sync 🔄](#liveview-sync-)
+    - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
+    - [Two-way Communication 🔄](#two-way-communication-)
+      - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
+      - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
+      - [Multiroot editor 🌲](#multiroot-editor-)
   - [Editor Types 🖊️](#editor-types-️)
     - [Classic editor 📝](#classic-editor-)
     - [Multiroot editor 🌳](#multiroot-editor--1)
@@ -228,8 +227,6 @@ Create a basic editor with default toolbar and features. Perfect for simple cont
 
 By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users.
 
-#### Disabling the watchdog 🚫
-
 The watchdog is enabled by default. To disable it, set the `watchdog` prop to `false`:
 
 ```heex
@@ -240,11 +237,11 @@ The watchdog is enabled by default. To disable it, set the `watchdog` prop to `f
 />
 ```
 
-### With LiveView Sync 🔄
+## LiveView Sync 🔄
 
 Enable real-time synchronization between the editor and your LiveView. Content changes are automatically sent to the server with configurable debouncing for performance optimization.
 
-#### Focus and blur events 👁️‍🗨️
+### Focus and blur events 👁️‍🗨️
 
 To handle focus and blur events, you can use the `focus_event` and `blur_event` attributes in the component. This allows you to capture when the editor gains or loses focus, which can be useful for tracking user interactions or saving content.
 
@@ -271,13 +268,13 @@ end
 
 These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
 
-#### Two-way Communication 🔄
+### Two-way Communication 🔄
 
 CKEditor 5 Phoenix supports bidirectional communication between your LiveView server and the JavaScript editor instance. You can receive updates from the editor and programmatically control its content from your Elixir code.
 
 ![CKEditor 5 Classic Live Sync example](docs/classic-live-sync-set-data.gif)
 
-##### From Phoenix to JavaScript (Server → Client) 📥
+#### From Phoenix to JavaScript (Server → Client) 📥
 
 There are two ways to update the editor content from your LiveView server:
 
@@ -325,7 +322,7 @@ There are two ways to update the editor content from your LiveView server:
     end
     ```
 
-##### From JavaScript to Phoenix (Client → Server) 📤
+#### From JavaScript to Phoenix (Client → Server) 📤
 
 By adding the change_event attribute, the editor automatically sends content updates to your LiveView whenever the user types.
 
@@ -350,7 +347,7 @@ document.getElementById('update-button').addEventListener('click', async () => {
 });
 ```
 
-##### Multiroot editor 🌲
+#### Multiroot editor 🌲
 
 For multiroot editors, reactivity works on a per-root basis. You can iterate over your roots and sync changes accordingly.
 
