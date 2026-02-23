@@ -45,6 +45,15 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
         this.setupEventPush('focus');
       }
 
+      if (events.ready) {
+        this.editor.once('ready', () => {
+          pushEvent('ckeditor5:ready', {
+            editorId,
+            data: getEditorRootsValues(editor),
+          });
+        });
+      }
+
       handleEvent('ckeditor5:set-data', ({ editorId: targetId, data }) => {
         if (isNil(targetId) || targetId === editorId) {
           editor.setData(data);
@@ -75,7 +84,9 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
         }
       };
 
-      editor.model.document.on('change:data', debounce(saveDebounceMs, pushContentChange));
+      const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
+
+      editor.model.document.on('change:data', debouncedPushContentChange);
       editor.once('ready', pushContentChange);
     }
 
@@ -114,6 +125,7 @@ type Attrs = {
     change: boolean;
     focus: boolean;
     blur: boolean;
+    ready: boolean;
   };
   pushEvent: (event: string, payload: any) => void;
   handleEvent: (event: string, callback: (payload: any) => void) => void;

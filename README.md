@@ -49,6 +49,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
       - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
       - [Multiroot editor 🌲](#multiroot-editor--1)
     - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
+    - [Ready event ✅](#ready-event-)
   - [Forms Integration 🧾](#forms-integration-)
     - [Phoenix Form Helper 🧑‍💻](#phoenix-form-helper-)
     - [LiveView Handler ⚡](#liveview-handler-)
@@ -666,6 +667,27 @@ end
 ```
 
 These events are sent **immediately** when the editor gains or loses focus, allowing you to perform actions like saving content or updating UI elements.
+
+### Ready event ✅
+
+Sometimes you need to know when the editor has finished initializing so you can perform setup work (e.g. enable UI controls or notify the user). The `ready_event` attribute will make the component push a `ckeditor5:ready` event **once** as soon as the editor is ready.
+
+```heex
+<.ckeditor
+  id="editor"
+  value={@content}
+  ready_event
+/>
+```
+
+```elixir
+def handle_event("ckeditor5:ready", %{"data" => data}, socket) do
+  # editor is ready – maybe mark a flag in assigns
+  {:noreply, assign(socket, editor_ready?: true)}
+end
+```
+
+The payload contains the same root data object that change/focus/blur events include. This event is perfect for showing “editor initialized” messages or performing client‑side setup.
 
 ## Forms Integration 🧾
 

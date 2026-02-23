@@ -361,6 +361,17 @@ defmodule CKEditor5.Components.EditorTest do
 
       assert html =~ ~s(cke-focus-event)
     end
+
+    test "pushes ready event when ready_event is true" do
+      html =
+        render_component(&Editor.render/1,
+          id: "editor_ready",
+          name: "content_ready",
+          ready_event: true
+        )
+
+      assert html =~ ~s(cke-ready-event)
+    end
   end
 
   describe "save_debounce_ms attribute" do

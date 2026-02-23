@@ -51,6 +51,11 @@ defmodule CKEditor5.Components.Editor do
     doc:
       "Whether the editor should push events to the LiveView when it loses focus. If true, the editor will send `ckeditor5:blur` event when it loses focus."
 
+  attr :ready_event, :boolean,
+    default: false,
+    doc:
+      "Whether the editor should notify the LiveView when it has finished initializing. If true, the editor will send `ckeditor5:ready` event once when it is ready."
+
   attr :editable_height, :string,
     default: nil,
     required: false,
@@ -114,6 +119,7 @@ defmodule CKEditor5.Components.Editor do
       data-cke-change-event={@change_event}
       data-cke-blur-event={@blur_event}
       data-cke-focus-event={@focus_event}
+      data-cke-ready-event={@ready_event}
       data-cke-save-debounce-ms={@save_debounce_ms}
       data-cke-language={@language}
       data-cke-content-language={@content_language}

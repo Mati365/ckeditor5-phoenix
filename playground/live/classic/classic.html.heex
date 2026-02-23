@@ -27,7 +27,18 @@
       change_event
       focus_event
       blur_event
+      ready_event
     />
+  </div>
+
+  <div class="inline-flex items-center gap-2 bg-gray-50 mt-4 px-3 py-2 border border-gray-200 text-sm">
+    <%= if @editor_ready? do %>
+      <span class="bg-green-500 rounded-full w-2 h-2"></span>
+      <span class="font-semibold text-green-600">Editor is ready</span>
+    <% else %>
+      <span class="bg-gray-400 rounded-full w-2 h-2 animate-pulse"></span>
+      <span class="text-gray-500">Editor is initializing…</span>
+    <% end %>
   </div>
 
   <form phx-submit="force_set_data" class="space-y-2 mt-8">

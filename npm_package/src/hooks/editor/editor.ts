@@ -59,6 +59,7 @@ class EditorHookImpl extends ClassHook {
         change: has('data-cke-change-event'),
         blur: has('data-cke-blur-event'),
         focus: has('data-cke-focus-event'),
+        ready: has('data-cke-ready-event'),
       },
       saveDebounceMs: parseIntIfNotNull(get('data-cke-save-debounce-ms')) ?? 400,
       language: {

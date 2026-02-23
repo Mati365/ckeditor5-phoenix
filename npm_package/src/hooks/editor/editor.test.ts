@@ -707,6 +707,52 @@ describe('editor hook', () => {
 
       expect(pushSpy).not.toHaveBeenCalled();
     });
+
+    it('should push ready event to the server when editor is ready', async () => {
+      const hookElement = createEditorHtmlElement({
+        readyEvent: true,
+      });
+
+      const pushSpy = vi.fn();
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({
+        el: hookElement,
+        pushEvent: pushSpy,
+      });
+
+      await waitForTestEditor();
+
+      expect(pushSpy).toHaveBeenCalledTimes(1);
+      expect(pushSpy).toHaveBeenCalledWith(
+        'ckeditor5:ready',
+        {
+          editorId: hookElement.id,
+          data: {
+            main: '<p>Test content</p>',
+          },
+        },
+        undefined,
+      );
+    });
+
+    it('should not push ready event when not enabled', async () => {
+      const hookElement = createEditorHtmlElement({
+        readyEvent: false,
+      });
+
+      const pushSpy = vi.fn();
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({
+        el: hookElement,
+        pushEvent: pushSpy,
+      });
+
+      await waitForTestEditor();
+
+      expect(pushSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('`cke-editable-height` attribute', () => {

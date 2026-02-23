@@ -11,7 +11,8 @@ defmodule Playground.Live.Classic do
     {:ok,
      assign(socket,
        editor_value: "<p>Hello World!</p>",
-       editor_focused?: false
+       editor_focused?: false,
+       editor_ready?: false
      )}
   end
 
@@ -44,5 +45,10 @@ defmodule Playground.Live.Classic do
   @impl true
   def handle_event("ckeditor5:blur", _, socket) do
     {:noreply, assign(socket, editor_focused?: false)}
+  end
+
+  @impl true
+  def handle_event("ckeditor5:ready", _, socket) do
+    {:noreply, assign(socket, editor_ready?: true)}
   end
 end

@@ -92,8 +92,13 @@ class EditableHookImpl extends ClassHook {
       const root = editor.model.document.getRoot(rootName);
 
       if (root && 'detachEditable' in editor) {
-        editor.detachEditable(root);
-        editor.detachRoot(rootName, false);
+        if (editor.ui.view.editables[rootName]) {
+          editor.detachEditable(root);
+        }
+
+        if (root.isAttached()) {
+          editor.detachRoot(rootName, false);
+        }
       }
     }
   }
