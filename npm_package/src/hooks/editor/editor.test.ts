@@ -880,6 +880,7 @@ describe('editor hook', () => {
     it('should pass custom translations to the editor', async () => {
       const hookElement = createEditorHtmlElement({
         preset: createEditorPreset('classic', {}, {
+          en: { Bold: 'Custom Bold' },
           pl: { Bold: 'Custom Pogrubienie' },
         }),
         language: {
@@ -893,6 +894,33 @@ describe('editor hook', () => {
 
       const editor = await waitForTestEditor();
       const translation = editor.t('Bold');
+
+      expect(translation).toBe('Custom Pogrubienie');
+    });
+
+    it('should pass translation references to the editor', async () => {
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset(
+          'classic',
+          {
+            customPlugin: { $translation: 'CustomPlugin' },
+          },
+          {
+            en: { CustomPlugin: 'Custom Bold' },
+            pl: { CustomPlugin: 'Custom Pogrubienie' },
+          },
+        ),
+        language: {
+          ui: 'pl',
+          content: 'pl',
+        },
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const translation = editor.config.get('customPlugin');
 
       expect(translation).toBe('Custom Pogrubienie');
     });

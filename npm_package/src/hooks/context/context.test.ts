@@ -161,6 +161,36 @@ describe('context hook', () => {
 
       expect(translation).toBe('Custom Pogrubienie');
     });
+
+    it('should pass translation references to the context', async () => {
+      const hookElement = createContextHtmlElement({
+        config: {
+          watchdogConfig: {},
+          config: {
+            customPlugin: { $translation: 'CustomPlugin' },
+            plugins: [],
+          },
+          customTranslations: {
+            dictionary: {
+              en: { CustomPlugin: 'Custom Bold' },
+              pl: { CustomPlugin: 'Custom Plugin' },
+            },
+          },
+        },
+        language: {
+          ui: 'pl',
+          content: 'pl',
+        },
+      });
+
+      document.body.appendChild(hookElement);
+      ContextHook.mounted.call({ el: hookElement });
+
+      const { context } = await waitForTestContext();
+      const translation = context?.config.get('customPlugin');
+
+      expect(translation).toBe('Custom Plugin');
+    });
   });
 
   describe('attaching editor', () => {

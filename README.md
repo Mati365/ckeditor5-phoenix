@@ -43,6 +43,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
     - [Custom translations 🌐](#custom-translations-)
+      - [Translation references 📝](#translation-references-)
   - [LiveView Sync 🔄](#liveview-sync-)
     - [Two-way Communication 🔄](#two-way-communication-)
       - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
@@ -524,6 +525,33 @@ config :ckeditor5_phoenix,
     }
   }
 ```
+
+#### Translation references 📝
+
+Beyond static strings, the configuration itself can reference translation keys using the special
+`$translation` object. This is resolved at initialization using the same translation packs
+loaded for the editor (including any custom translations) and is particularly handy when
+configuring plugin labels, toolbar items or other strings that should adapt to the UI language.
+
+```elixir
+# config/config.exs
+config :ckeditor5_phoenix,
+  presets: %{
+    default: %{
+      custom_translations: %{
+        en: %{CustomPlugin: "Custom Bold"},
+        pl: %{CustomPlugin: "Custom Plugin"}
+      },
+      config: %{
+        customPlugin: %{ $translation: "CustomPlugin" }
+      }
+    }
+  }
+```
+
+When the editor/context is created the reference will be replaced with the translated value for
+`language.ui`. If no translation is found for the active locale, `null` is used and a warning is
+logged.
 
 ## LiveView Sync 🔄
 

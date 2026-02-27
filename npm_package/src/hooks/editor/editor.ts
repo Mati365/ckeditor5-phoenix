@@ -23,6 +23,7 @@ import {
   queryEditablesSnapshotContent,
   readPresetOrThrow,
   resolveEditorConfigElementReferences,
+  resolveEditorConfigTranslations,
   setEditorEditableHeight,
   unwrapEditorContext,
   unwrapEditorWatchdog,
@@ -241,8 +242,14 @@ class EditorHookImpl extends ClassHook {
         sourceElements = sourceElements['main'];
       }
 
+      // Construct parsed config. First resolve DOM element references in the provided configuration.
+      let resolvedConfig = resolveEditorConfigElementReferences(config);
+
+      // Then resolve translation references in the provided configuration, using the mixed translations.
+      resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
+
       const parsedConfig = {
-        ...resolveEditorConfigElementReferences(config),
+        ...resolvedConfig,
         initialData,
         licenseKey: license.key,
         plugins: loadedPlugins,

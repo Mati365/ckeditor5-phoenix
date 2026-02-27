@@ -5,6 +5,8 @@ import {
   loadAllEditorTranslations,
   loadEditorPlugins,
   normalizeCustomTranslations,
+  resolveEditorConfigElementReferences,
+  resolveEditorConfigTranslations,
 } from '../editor/utils';
 import { ContextsRegistry } from './contexts-registry';
 import { readContextConfigOrThrow } from './utils';
@@ -58,6 +60,12 @@ class ContextHookImpl extends ClassHook {
     ]
       .filter(translations => !isEmptyObject(translations));
 
+    // Construct parsed config. First resolve DOM element references in the provided configuration.
+    let resolvedConfig = resolveEditorConfigElementReferences(config);
+
+    // Then resolve translation references in the provided configuration, using the mixed translations.
+    resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
+
     // Initialize context.
     this.contextPromise = (async () => {
       const { ContextWatchdog, Context } = await import('ckeditor5');
@@ -67,7 +75,7 @@ class ContextHookImpl extends ClassHook {
       });
 
       await instance.create({
-        ...config,
+        ...resolvedConfig,
         language,
         plugins: loadedPlugins,
         ...mixedTranslations.length && {
