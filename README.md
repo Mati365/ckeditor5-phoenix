@@ -574,7 +574,7 @@ There are two ways to update the editor content from your LiveView server:
     ```heex
     <button phx-click="load_template">Load Template</button>
 
-    <.ckeditor id="editor" value={@editor_value} change_event />
+    <.ckeditor id="editor" value={@editor_value} />
     ```
 
     ```elixir
