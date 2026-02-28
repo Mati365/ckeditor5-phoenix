@@ -49,6 +49,7 @@ export default defineConfig({
         branches: 100,
         statements: 100,
       },
+      include: ['src/**/*.ts'],
       exclude: [
         ...configDefaults.exclude,
         './src/types/**/*.type.ts',
