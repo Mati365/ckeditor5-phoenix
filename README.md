@@ -39,6 +39,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Multiroot editor 🌳](#multiroot-editor-)
     - [Inline editor 📝](#inline-editor-)
     - [Balloon editor 🎈](#balloon-editor-)
+    - [Decoupled editor 🌐](#decoupled-editor-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
@@ -455,6 +456,7 @@ Contextual editor that shows a floating toolbar near the selected text. Great fo
   value="<p>Click here to edit this content</p>"
   editable_height="300px"
 />
+```
 
 ### Decoupled editor 🌐
 
