@@ -38,7 +38,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Classic editor 📝](#classic-editor-)
     - [Multiroot editor 🌳](#multiroot-editor-)
     - [Inline editor 📝](#inline-editor-)
-    - [Decoupled editor 🌐](#decoupled-editor-)
+    - [Balloon editor 🎈](#balloon-editor-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
@@ -438,6 +438,23 @@ Minimalist editor that appears directly within content when clicked. Ideal for i
 ```
 
 **Note:** Inline editors don't work with `<textarea>` elements and may not be suitable for traditional form scenarios.
+
+### Balloon editor 🎈
+
+Contextual editor that shows a floating toolbar near the selected text. Great for editing small content snippets or when you want to minimize UI clutter.
+
+![CKEditor 5 Balloon Editor in Elixir Phoenix application](docs/balloon-editor.png)
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Balloon editor --%>
+<.ckeditor
+  type="balloon"
+  value="<p>Click here to edit this content</p>"
+  editable_height="300px"
+/>
 
 ### Decoupled editor 🌐
 
