@@ -83,6 +83,9 @@ jobs:
         run: mix credo --strict
 
       - name: Run tests
+        run: mix coveralls
+
+      - name: Upload coverage report
         run: mix coveralls.github
 
   assets_checks:
