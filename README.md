@@ -96,7 +96,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 2. **Install CKEditor 5**
 
    ```bash
-   mix ckeditor5.install # --premium --version 47.3.0
+   mix ckeditor5.install # --premium --version 47.6.0
    # ... or: npm install ckeditor5 --prefix assets
    ```
 
