@@ -16,7 +16,7 @@
     "@types/phoenix": "^1.6.6",
     "chromedriver": "^144.0.0",
     "ckeditor5": "^47.6.0",
-    "ckeditor5-premium-features": "^47.4.0",
+    "ckeditor5-premium-features": "^47.6.0",
     "esbuild": "^0.25.5",
     "eslint": "^9.29.0",
     "husky": "^9.1.7",
