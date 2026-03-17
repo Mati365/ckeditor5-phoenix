@@ -539,6 +539,78 @@ describe('editor hook', () => {
       );
     });
 
+    it('should push event immediately when editor is not focused', async () => {
+      const hookElement = createEditorHtmlElement({
+        changeEvent: true,
+      });
+
+      const pushSpy = vi.fn();
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement, pushEvent: pushSpy });
+
+      const editor = await waitForTestEditor();
+
+      pushSpy.mockClear();
+      editor.setData('<p>New content</p>');
+
+      // Without focus, change:data should push immediately.
+      expect(pushSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should debounce change:data when editor is focused', async () => {
+      const hookElement = createEditorHtmlElement({
+        changeEvent: true,
+      });
+
+      const pushSpy = vi.fn();
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement, pushEvent: pushSpy });
+
+      const editor = await waitForTestEditor();
+
+      // Make sure editor is focused and change:data is debounced.
+      editor.ui.focusTracker.isFocused = true;
+
+      pushSpy.mockClear();
+      editor.setData('<p>New content</p>');
+
+      await vi.advanceTimersByTimeAsync(100);
+      expect(pushSpy).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(500);
+      expect(pushSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not push event after editor is destroyed (debounced)', async () => {
+      const hookElement = createEditorHtmlElement({
+        changeEvent: true,
+      });
+
+      const pushSpy = vi.fn();
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({
+        el: hookElement,
+        pushEvent: pushSpy,
+      });
+
+      const editor = await waitForTestEditor();
+
+      // Ensure we are in focused mode so change:data is debounced.
+      editor.ui.focusTracker.isFocused = true;
+
+      pushSpy.mockClear();
+
+      editor.setData('<p>New content</p>');
+      EditorHook.destroyed.call({ el: hookElement });
+
+      await vi.advanceTimersByTimeAsync(500);
+
+      expect(pushSpy).not.toHaveBeenCalled();
+    });
+
     it('should not push event to the server if `push events` is not enabled', async () => {
       const hookElement = createEditorHtmlElement();
       const pushSpy = vi.fn();
@@ -793,6 +865,9 @@ describe('editor hook', () => {
 
       const editor = await waitForTestEditor();
 
+      // Defer the push by simulating focus; change:data should be debounced only when focused.
+      editor.ui.focusTracker.isFocused = true;
+
       pushSpy.mockClear();
       editor.setData('<p>Debounce test</p>');
 
@@ -815,6 +890,10 @@ describe('editor hook', () => {
       EditorHook.mounted.call({ el: hookElement, pushEvent: pushSpy });
 
       const editor = await waitForTestEditor();
+
+      // Defer the push by simulating focus; change:data should be debounced only when focused.
+      editor.ui.focusTracker.isFocused = true;
+
       pushSpy.mockClear();
       editor.setData('<p>Debounce test</p>');
 

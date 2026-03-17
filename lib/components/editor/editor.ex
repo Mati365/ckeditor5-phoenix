@@ -90,6 +90,11 @@ defmodule CKEditor5.Components.Editor do
     doc:
       "Whether to enable the watchdog for the editor. If true, the component will automatically restart the editor if it crashes."
 
+  attr :root_attrs, :map,
+    required: false,
+    default: %{},
+    doc: "A map of HTML attributes to apply to the editor's root element(s)."
+
   attr :upload_url, :string,
     required: false,
     default: nil,
@@ -142,7 +147,7 @@ defmodule CKEditor5.Components.Editor do
     </div>
 
     <%= unless EditorType.has_external_editables?(@preset.type) do %>
-       <RootValueSentinel.render editor_id={@id} value={@value || ""} />
+       <RootValueSentinel.render editor_id={@id} value={@value || ""} root_attrs={@root_attrs} />
     <% end %>
     """
   end

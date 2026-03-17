@@ -2,7 +2,7 @@
   <.back_to_home />
   <h1 class="mb-6 font-bold text-3xl">Classic Editor Demo</h1>
 
-  <div class="flex gap-2 mb-4">
+  <div class="flex flex-wrap gap-2 mb-4">
     <button
       phx-click="preset_template"
       phx-value-type="work"
@@ -18,12 +18,25 @@
     >
       Clear
     </button>
+
+    <button
+      phx-click="increment_root_attrs"
+      class="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white transition-colors duration-200"
+    >
+      Increment Root Attr
+    </button>
+
+    <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 border border-gray-200 rounded-none text-sm">
+      <span class="font-semibold">Root attrs:</span>
+      <span class="font-mono text-gray-700">data-root-counter=<%= @root_attrs_counter %></span>
+    </div>
   </div>
 
   <div class="mt-6">
     <.ckeditor
       id="editor"
       value={@editor_value}
+      root_attrs={%{"data-root-counter" => @root_attrs_counter}}
       change_event
       focus_event
       blur_event

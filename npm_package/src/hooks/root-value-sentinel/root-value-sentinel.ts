@@ -1,7 +1,10 @@
 import type { Editor } from 'ckeditor5';
 
-import { ClassHook, makeHook } from '../shared';
-import { EditorsRegistry } from './editor/editors-registry';
+import type { RootAttributesUpdater } from './root-attributes-updater';
+
+import { ClassHook, makeHook, parseJsonIfPresent } from '../../shared';
+import { EditorsRegistry } from '../editor/editors-registry';
+import { createRootAttributesUpdater } from './root-attributes-updater';
 
 class RootValueSentinel extends ClassHook {
   /**
@@ -27,6 +30,13 @@ class RootValueSentinel extends ClassHook {
   private previousValue: string | null = null;
 
   /**
+   * Updater created once the editor is ready. Tracks which root attributes
+   * were applied by this sentinel so it can clean them up independently of
+   * other consumers.
+   */
+  private attrsUpdater: RootAttributesUpdater | null = null;
+
+  /**
    * Helper to read and parse attributes from the element.
    * It assumes that the element has the correct attributes set, as they are required for the hook to function properly.
    */
@@ -34,6 +44,7 @@ class RootValueSentinel extends ClassHook {
     return {
       editorId: this.el.getAttribute('data-cke-editor-id')!,
       rootName: this.el.getAttribute('data-cke-root-name')!,
+      rootAttributes: parseJsonIfPresent<Record<string, unknown>>(this.el.getAttribute('data-cke-root-attrs')),
       value: this.el.getAttribute('data-cke-value')!,
     };
   }
@@ -62,26 +73,26 @@ class RootValueSentinel extends ClassHook {
    * However, if the editor is focused, we want to wait until it blurs to avoid disrupting the user while typing.
    */
   override async updated() {
-    const { rootName, value } = this.attrs;
-
-    // React only if the value attribute actually changed.
-    if (value === this.previousValue) {
-      return;
-    }
-
-    this.previousValue = value;
-
+    const { rootName, value, rootAttributes } = this.attrs;
     const editor = await this.editorPromise;
 
     if (!editor || editor.state === 'destroyed') {
       return;
     }
 
-    if (editor.ui.focusTracker.isFocused) {
-      this.pendingValue = value;
-    }
-    else {
-      this.setRootValue(editor, rootName, value);
+    // Synchronize root attributes on every update, regardless of value changes.
+    this.attrsUpdater?.(rootAttributes);
+
+    // React only if the value attribute actually changed.
+    if (value !== this.previousValue) {
+      this.previousValue = value;
+
+      if (editor.ui.focusTracker.isFocused) {
+        this.pendingValue = value;
+      }
+      else {
+        this.setRootValue(editor, rootName, value);
+      }
     }
   }
 
@@ -90,6 +101,9 @@ class RootValueSentinel extends ClassHook {
    * Registers cleanup via onBeforeDestroy.
    */
   private setupSyncHandlers(editor: Editor, rootName: string) {
+    this.attrsUpdater = createRootAttributesUpdater(editor, rootName);
+    this.attrsUpdater(this.attrs.rootAttributes);
+
     const onDataChange = () => {
       this.pendingValue = null;
     };

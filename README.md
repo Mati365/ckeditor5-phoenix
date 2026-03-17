@@ -50,6 +50,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
       - [From Phoenix to JavaScript (Server → Client) 📥](#from-phoenix-to-javascript-server--client-)
       - [From JavaScript to Phoenix (Client → Server) 📤](#from-javascript-to-phoenix-client--server-)
       - [Multiroot editor 🌲](#multiroot-editor--1)
+    - [Root attributes 🏷️](#root-attributes-️)
     - [Focus and blur events 👁️‍🗨️](#focus-and-blur-events-️️)
     - [Ready event ✅](#ready-event-)
   - [Forms Integration 🧾](#forms-integration-)
@@ -686,6 +687,45 @@ def handle_event("ckeditor5:change", %{"data" => data}, socket) do
 
   {:noreply, assign(socket, roots: updated_roots)}
 end
+```
+
+### Root attributes 🏷️
+
+Each `<.cke_editable>` can carry a `root_attrs` map that is applied directly to the editor model root element - not just the surrounding DOM wrapper, but the root node inside CKEditor 5's document model. This means the attributes are part of the editor's internal data layer and can be read, observed, and manipulated through the editor API and custom plugins. They are **NOT** HTML attributes on the wrapper element, but actual model attributes on the editor root. Treat it as state that is directly synced between Phoenix and the editor's document model.
+
+This is useful whenever you need to attach metadata to a specific root, for example storing dynamic plugin configuration that is stored in Phoenix assigns and needs to be accessible in JavaScript.
+
+```heex
+<.cke_editable
+  root={root.id}
+  value={root.value}
+  root_attrs={%{"data-root-counter" => root.counter, "data-lang" => "en"}}
+  class="mb-2 focus:outline-none"
+/>
+```
+
+It's also possible to assign `root_attributes` on `<.ckeditor>` level, which will apply the attributes to main root by default. This is useful when you don't have multiple roots but still want to use dynamic attributes.
+
+```heex
+<.ckeditor
+  value={@content}
+  root_attrs={%{"data-content-id" => @content_id}}
+/>
+```
+
+In order to check if the attributes are updated correctly, you can use CKEditor 5 differ result in your custom plugin.
+
+```javascript
+editor.model.document.registerPostFixer((writer) => {
+  const root = editor.model.document.getRoot();
+  const changes = root.differ.getChanges();
+
+  for (const change of changes) {
+    if (change.type === 'attribute' && change.attributeKey === 'data-root-counter') {
+      console.log('Root counter updated:', root.getAttribute('data-root-counter'));
+    }
+  }
+});
 ```
 
 ### Focus and blur events 👁️‍🗨️

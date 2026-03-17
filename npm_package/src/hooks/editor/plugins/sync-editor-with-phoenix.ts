@@ -66,9 +66,15 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
      */
     private setupTypingContentPush() {
       const { editor } = this;
+
       let lastValue: Record<string, string> | null = null;
+      let isDestroyed = false;
 
       const pushContentChange = () => {
+        if (isDestroyed) {
+          return;
+        }
+
         const newValue = getEditorRootsValues(editor);
 
         if (!lastValue || !shallowEqual(lastValue, newValue)) {
@@ -86,8 +92,19 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
 
       const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
 
-      editor.model.document.on('change:data', debouncedPushContentChange);
+      editor.model.document.on('change:data', () => {
+        if (editor.ui.focusTracker.isFocused) {
+          debouncedPushContentChange();
+        }
+        else {
+          pushContentChange();
+        }
+      });
+
       editor.once('ready', pushContentChange);
+      editor.once('destroy', () => {
+        isDestroyed = true;
+      });
     }
 
     /**

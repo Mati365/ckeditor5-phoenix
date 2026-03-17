@@ -16,6 +16,14 @@
     >
       Add Root
     </button>
+
+    <button
+      type="button"
+      phx-click="clear_roots"
+      class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-none font-bold text-white transition-colors"
+    >
+      Clear Roots
+    </button>
   </form>
 
   <.ckeditor type="multiroot" change_event />
@@ -25,8 +33,23 @@
   <div class="flex flex-col gap-6">
     <%= for root <- @roots do %>
       <div class="bg-white border border-gray-300" id={"container-#{root.id}"} data-id={root.id}>
-        <div class="flex justify-between items-center bg-gray-50 p-2 border-gray-300 border-b">
+        <div class="flex flex-wrap justify-between items-center gap-2 bg-gray-50 p-2 border-gray-300 border-b">
           <span class="font-mono font-bold text-gray-600 text-xs uppercase">Root ID: <%= root.id %></span>
+
+          <div class="flex items-center gap-2 text-xs">
+            <span class="font-semibold">counter:</span>
+            <span class="font-mono"><%= root.counter %></span>
+          </div>
+
+          <button
+            type="button"
+            phx-click="increment_root_counter"
+            phx-value-id={root.id}
+            class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-none font-bold text-white text-xs transition-colors"
+          >
+            +1
+          </button>
+
           <button
             type="button"
             phx-click="remove_root"
@@ -41,6 +64,7 @@
           <.cke_editable
             root={root.id}
             value={root.value}
+            root_attrs={%{"data-root-counter" => root.counter}}
             class="mb-2 focus:outline-none"
           />
         </div>

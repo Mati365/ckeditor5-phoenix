@@ -90,6 +90,21 @@ defmodule CKEditor5.Components.EditableTest do
     assert html =~ ~s(data-cke-editor-id="editor-1")
   end
 
+  test "passes root attributes through to root value sentinel" do
+    html =
+      render_component(&Editable.render/1,
+        editor_id: "editor-1",
+        root: "main",
+        root_attrs: %{"data-lang" => "en", "data-foo" => "bar"}
+      )
+
+    assert html =~ ~s(id="editor-1_main_sentinel")
+    assert html =~ ~s(data-cke-root-name="main")
+
+    assert html =~ ~s(&quot;data-lang&quot;:&quot;en&quot;)
+    assert html =~ ~s(&quot;data-foo&quot;:&quot;bar&quot;)
+  end
+
   describe "form support" do
     test "renders editable with form field attributes" do
       form = %HTML.Form{

@@ -9,12 +9,12 @@ import {
 } from '~/test-utils';
 import { createRootValueSentinelElement } from '~/test-utils/editor/create-root-value-sentinel-element';
 
-import type { EditorId } from './editor/typings';
+import type { EditorId } from '../editor/typings';
 
-import { timeout } from '../shared';
-import { EditableHook } from './editable';
-import { EditorHook } from './editor';
-import { EditorsRegistry } from './editor/editors-registry';
+import { timeout } from '../../shared';
+import { EditableHook } from '../editable';
+import { EditorHook } from '../editor';
+import { EditorsRegistry } from '../editor/editors-registry';
 import { RootValueSentinelHook } from './root-value-sentinel';
 
 describe('root value sentinel', () => {
@@ -36,16 +36,22 @@ describe('root value sentinel', () => {
       initialValue = '<p>Initial</p>',
       editorId = 'test-editor' as EditorId,
       sentinelValue = initialValue,
+      rootAttrs = { 'data-lang': 'pl', 'data-id': '42' },
     }: {
       rootName?: string;
       initialValue?: string;
       editorId?: EditorId;
       sentinelValue?: string;
+      rootAttrs?: Record<string, string> | undefined | null;
     } = {},
   ) {
     const editor = await appendMultirootEditor(editorId);
+    const editable = createEditableHtmlElement({
+      name: rootName,
+      editorId,
+      initialValue,
+    });
 
-    const editable = createEditableHtmlElement({ name: rootName, initialValue });
     document.body.appendChild(editable);
     EditableHook.mounted.call({ el: editable });
 
@@ -54,7 +60,13 @@ describe('root value sentinel', () => {
     });
 
     // Add sentinel and wait a little bit to ensure the hook is initialized.
-    const sentinel = createRootValueSentinelElement({ root: rootName, value: sentinelValue, editorId });
+    const sentinel = createRootValueSentinelElement({
+      root: rootName,
+      value: sentinelValue,
+      editorId,
+      rootAttrs,
+    });
+
     document.body.appendChild(sentinel);
     RootValueSentinelHook.mounted.call({ el: sentinel });
     await timeout(0);
@@ -207,6 +219,89 @@ describe('root value sentinel', () => {
 
       expect(offDocumentSpy).toHaveBeenCalledWith('change:data', expect.any(Function));
       expect(offFocusTrackerSpy).toHaveBeenCalledWith('change:isFocused', expect.any(Function));
+    });
+  });
+
+  describe('root attributes', () => {
+    it('should apply root attributes from data-cke-root-attrs on mount', async () => {
+      const { editor } = await setup();
+      const root = editor.model.document.getRoot()!;
+
+      expect(root.getAttribute('data-lang')).toBe('pl');
+      expect(root.getAttribute('data-id')).toBe('42');
+    });
+
+    it('should not crash when data-cke-root-attrs is absent on mount', async () => {
+      const { editor } = await setup({
+        rootAttrs: null,
+      });
+
+      const root = editor.model.document.getRoot()!;
+
+      expect(root.getAttribute('data-lang')).toBeUndefined();
+    });
+
+    it('should update root attributes when data-cke-root-attrs changes', async () => {
+      const { editor, sentinel } = await setup();
+
+      sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
+      RootValueSentinelHook.updated!.call({ el: sentinel });
+
+      await timeout(0);
+
+      const root = editor.model.document.getRoot()!;
+      expect(root.getAttribute('data-lang')).toBe('en');
+    });
+
+    it('should remove root attributes that are no longer present', async () => {
+      const { editor, sentinel } = await setup();
+      const root = editor.model.document.getRoot()!;
+
+      expect(root.getAttribute('data-lang')).toBe('pl');
+
+      sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({}));
+      RootValueSentinelHook.updated!.call({ el: sentinel });
+
+      await timeout(0);
+
+      expect(root.getAttribute('data-lang')).toBeUndefined();
+      expect(root.getAttribute('data-id')).toBeUndefined();
+    });
+
+    it('should remove all managed attributes when data-cke-root-attrs is cleared', async () => {
+      const { editor, sentinel } = await setup();
+      const root = editor.model.document.getRoot()!;
+
+      expect(root.getAttribute('data-lang')).toBe('pl');
+
+      sentinel.removeAttribute('data-cke-root-attrs');
+      RootValueSentinelHook.updated!.call({ el: sentinel });
+
+      await timeout(0);
+
+      expect(root.getAttribute('data-lang')).toBeUndefined();
+      expect(root.getAttribute('data-id')).toBeUndefined();
+    });
+
+    it('should not interfere with attributes managed by other consumers', async () => {
+      const { editor, sentinel } = await setup();
+
+      // Simulate another consumer setting its own attribute directly.
+      editor.model.enqueueChange({ isUndoable: false }, (writer) => {
+        const root = editor.model.document.getRoot()!;
+
+        writer.setAttribute('data-external', 'keep-me', root);
+      });
+
+      sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
+      RootValueSentinelHook.updated!.call({ el: sentinel });
+
+      await timeout(0);
+
+      const root = editor.model.document.getRoot()!;
+
+      expect(root.getAttribute('data-external')).toBe('keep-me');
+      expect(root.getAttribute('data-lang')).toBe('en');
     });
   });
 });

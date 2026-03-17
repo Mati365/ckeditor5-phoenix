@@ -46,6 +46,11 @@ defmodule CKEditor5.Components.Editable do
     the first editor in the page will be used.
     """
 
+  attr :root_attrs, :map,
+    required: false,
+    default: %{},
+    doc: "A map of HTML attributes to apply to the editor root element for this editable."
+
   form_attrs()
 
   attr :rest, :global
@@ -80,7 +85,12 @@ defmodule CKEditor5.Components.Editable do
         />
       <% end %>
     </div>
-    <RootValueSentinel.render editor_id={@id} value={@value || ""} root={@root} />
+    <RootValueSentinel.render
+      editor_id={@editor_id}
+      value={@value || ""}
+      root={@root}
+      root_attrs={@root_attrs}
+    />
     """
   end
 end

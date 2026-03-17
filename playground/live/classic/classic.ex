@@ -12,7 +12,8 @@ defmodule Playground.Live.Classic do
      assign(socket,
        editor_value: "<p>Hello World!</p>",
        editor_focused?: false,
-       editor_ready?: false
+       editor_ready?: false,
+       root_attrs_counter: 0
      )}
   end
 
@@ -30,6 +31,11 @@ defmodule Playground.Live.Classic do
   @impl true
   def handle_event("force_set_data", %{"new_content" => val}, socket) do
     {:noreply, push_event(socket, "ckeditor5:set-data", %{editorId: "editor", data: val})}
+  end
+
+  @impl true
+  def handle_event("increment_root_attrs", _, socket) do
+    {:noreply, update(socket, :root_attrs_counter, &(&1 + 1))}
   end
 
   @impl true

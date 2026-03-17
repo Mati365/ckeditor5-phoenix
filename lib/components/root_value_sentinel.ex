@@ -27,15 +27,22 @@ defmodule CKEditor5.Components.RootValueSentinel do
     doc:
       "The name of the root element for multi-root editors. If not provided, it defaults to 'main'."
 
+  attr :root_attrs, :map,
+    required: false,
+    default: %{},
+    doc:
+      "A map of HTML attributes to apply to the editor root element (e.g., class, data-*, etc.)."
+
   def render(assigns) do
     ~H"""
     <div
-      id={"#{@editor_id}_sentinel"}
+      id={"#{@editor_id}_#{@root}_sentinel"}
       style="display:none"
       phx-hook="CKRootValueSentinel"
       data-cke-editor-id={@editor_id}
       data-cke-root-name={@root}
       data-cke-value={@value}
+      data-cke-root-attrs={Jason.encode!(@root_attrs)}
     >
     </div>
     """

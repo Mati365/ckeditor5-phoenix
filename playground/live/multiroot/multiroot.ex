@@ -12,8 +12,8 @@ defmodule Playground.Live.Multiroot do
     {:ok,
      assign(socket,
        roots: [
-         %{id: "header", value: "<h1>Main Header</h1>"},
-         %{id: "content", value: "<p>Main content area</p>"}
+         %{id: "header", value: "<h1>Main Header</h1>", counter: 0},
+         %{id: "content", value: "<p>Main content area</p>", counter: 0}
        ],
        new_root_name: ""
      )}
@@ -22,9 +22,30 @@ defmodule Playground.Live.Multiroot do
   @impl true
   def handle_event("add_root", %{"root_name" => name}, socket) do
     id = if String.trim(name) == "", do: "root_#{System.unique_integer([:positive])}", else: name
-    new_root = %{id: id, value: "<p>New root: #{id}</p>"}
+    new_root = %{id: id, value: "<p>New root: #{id}</p>", counter: 0}
 
     {:noreply, assign(socket, roots: socket.assigns.roots ++ [new_root], new_root_name: "")}
+  end
+
+  @impl true
+  def handle_event("increment_root_counter", %{"id" => id}, socket) do
+    updated_roots =
+      Enum.map(socket.assigns.roots, fn
+        %{id: ^id} = root -> %{root | counter: root.counter + 1}
+        other -> other
+      end)
+
+    {:noreply, assign(socket, roots: updated_roots)}
+  end
+
+  @impl true
+  def handle_event("clear_roots", _params, socket) do
+    cleared_roots =
+      Enum.map(socket.assigns.roots, fn root ->
+        %{root | value: ""}
+      end)
+
+    {:noreply, assign(socket, roots: cleared_roots)}
   end
 
   @impl true

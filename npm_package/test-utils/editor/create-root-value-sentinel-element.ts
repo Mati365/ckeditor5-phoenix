@@ -7,10 +7,12 @@ export function createRootValueSentinelElement(
     root = 'main',
     editorId = 'test-editor',
     value,
+    rootAttrs,
   }: {
     root?: string;
     value?: string;
     editorId?: EditorId;
+    rootAttrs?: Record<string, string> | null | undefined;
   },
 ): HTMLElement {
   return html.div(
@@ -18,6 +20,9 @@ export function createRootValueSentinelElement(
       'data-cke-root-name': root,
       'data-cke-value': value,
       'data-cke-editor-id': editorId,
+      ...rootAttrs && {
+        'data-cke-root-attrs': JSON.stringify(rootAttrs),
+      },
     },
   );
 }
