@@ -691,15 +691,16 @@ end
 
 ### Root attributes 🏷️
 
-Each `<.cke_editable>` can carry a `root_attrs` map that is applied directly to the editor model root element - not just the surrounding DOM wrapper, but the root node inside CKEditor 5's document model. This means the attributes are part of the editor's internal data layer and can be read, observed, and manipulated through the editor API and custom plugins. They are **NOT** HTML attributes on the wrapper element, but actual model attributes on the editor root. Treat it as state that is directly synced between Phoenix and the editor's document model.
-
-This is useful whenever you need to attach metadata to a specific root, for example storing dynamic plugin configuration that is stored in Phoenix assigns and needs to be accessible in JavaScript.
+Each `<.cke_editable>` can carry a `root_attrs` map that is applied directly to the editor model root element. This means the attributes are part of the editor's internal data layer and can be read, observed, and manipulated through the editor API and custom plugins. This means that they are **NOT** HTML attributes added to the DOM element, but rather part of the "state" of the editor root that can be used in your custom plugins or configuration. Use it when you want to store some dynamic metadata from Phoenix that needs to be accessible in JavaScript or when you want to configure plugins based on dynamic values.
 
 ```heex
 <.cke_editable
   root={root.id}
   value={root.value}
-  root_attrs={%{"data-root-counter" => root.counter, "data-lang" => "en"}}
+  root_attrs={%{
+    "data-root-counter" => root.counter,
+    "data-lang" => "en"
+  }}
   class="mb-2 focus:outline-none"
 />
 ```
@@ -709,7 +710,9 @@ It's also possible to assign `root_attributes` on `<.ckeditor>` level, which wil
 ```heex
 <.ckeditor
   value={@content}
-  root_attrs={%{"data-content-id" => @content_id}}
+  root_attrs={%{
+    "data-content-id" => @content_id
+  }}
 />
 ```
 
