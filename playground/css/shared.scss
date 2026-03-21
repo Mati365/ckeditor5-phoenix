@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.ck-content * {
+  all: revert;
+}
