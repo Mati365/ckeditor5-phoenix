@@ -176,6 +176,12 @@ jobs:
           elixir-version: 1.19.4
           otp-version: '26.2'
 
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: 146
+          install-chromedriver: true
+
       - name: Restore dependencies cache
         uses: actions/cache@v4
         with:
