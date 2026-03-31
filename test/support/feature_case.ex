@@ -21,7 +21,23 @@ defmodule Playground.FeatureCase do
   end
 
   setup tags do
-    {:ok, session} = Wallaby.start_session(metadata: tags)
+    {:ok, session} =
+      Wallaby.start_session(
+        metadata: tags,
+        capabilities: %{
+          chromeOptions: %{
+            args: [
+              "--headless",
+              "--no-sandbox",
+              "window-size=1280,800",
+              "--fullscreen",
+              "--disable-gpu",
+              "--disable-dev-shm-usage"
+            ]
+          }
+        }
+      )
+
     {:ok, session: session}
   end
 
