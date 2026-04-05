@@ -98,8 +98,7 @@ defmodule CKEditor5.Components.EditableTest do
         root_attrs: %{"data-lang" => "en", "data-foo" => "bar"}
       )
 
-    assert html =~ ~s(id="editor-1_main_sentinel")
-    assert html =~ ~s(data-cke-root-name="main")
+    assert html =~ ~s(data-cke-editable-root-name="main")
 
     assert html =~ ~s(&quot;data-lang&quot;:&quot;en&quot;)
     assert html =~ ~s(&quot;data-foo&quot;:&quot;bar&quot;)
