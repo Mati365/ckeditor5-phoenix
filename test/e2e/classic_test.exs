@@ -15,6 +15,7 @@ defmodule Playground.ClassicTest do
   } do
     session
     |> visit(~p"/classic")
+    |> assert_has(css(".ck-editor__editable"))
     |> fill_in(css("textarea[name='new_content']"), with: "<p>Programmatic</p>")
     |> click(button("Set Data"))
     |> assert_text("Programmatic")

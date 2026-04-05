@@ -183,7 +183,7 @@ describe('root value sentinel', () => {
 
       sentinel.setAttribute('data-cke-value', '<p>Pending update</p>');
 
-      await timeout(0); // Wait for the observer reaction
+      await timeout(0);
       expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
 
       editor.ui.focusTracker.isFocused = false;
@@ -200,7 +200,7 @@ describe('root value sentinel', () => {
 
       sentinel.setAttribute('data-cke-value', '<p>Pending value</p>');
 
-      await timeout(0); // Wait for the observer reaction
+      await timeout(0);
 
       editor.model.change((writer) => {
         const root = editor.model.document.getRoot('main')!;

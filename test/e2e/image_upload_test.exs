@@ -8,11 +8,7 @@ defmodule Playground.ImageUploadTest do
     session
     |> visit(~p"/image-upload")
     |> assert_has(Query.css(".ck-editor__editable"))
-    |> then(fn session ->
-      # Wait for initialization of the editor.
-      Process.sleep(500)
-      session
-    end)
+    |> type_in_editor(".ck-editor__editable", "image")
     |> Wallaby.Browser.execute_script("""
       const editable = document.querySelector('.ck-editor__editable');
 

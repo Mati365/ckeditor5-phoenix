@@ -159,6 +159,8 @@ export class RootValueSentinel {
     }
 
     // Synchronize root attributes on every update, regardless of value changes.
+    let unmountLock: VoidFunction = () => {};
+
     editor.model.enqueueChange({ isUndoable: false }, () => {
       let updated = this.attrsUpdater?.(rootAttributes);
 
@@ -176,9 +178,11 @@ export class RootValueSentinel {
       }
 
       if (updated) {
-        skipPendingPhoenixDataChangeSync(editor);
+        unmountLock = skipPendingPhoenixDataChangeSync(editor);
       }
     });
+
+    unmountLock();
   }
 
   /**

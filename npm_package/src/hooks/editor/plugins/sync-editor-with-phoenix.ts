@@ -95,8 +95,9 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
       const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
 
       editor.model.document.on('change:data', debounce(10, (evt) => {
-        /* v8 ignore next 3 */
+        /* v8 ignore next 4 */
         if (releasePhoenixSyncSuppressLock(evt)) {
+          lastValue = null;
           return;
         }
 
@@ -190,7 +191,18 @@ function releasePhoenixSyncSuppressLock(evt: any) {
  * @param editor Editor instance.
  */
 export function skipPendingPhoenixDataChangeSync(editor: Editor) {
-  editor.model.document.once('change:data', (evt) => {
-    (evt as any)[SUPPRESS_PHOENIX_SYNC_KEY] = true;
-  }, { priority: 'highest' });
+  let ignore = false;
+
+  const callback = (evt: any) => {
+    if (!ignore) {
+      evt[SUPPRESS_PHOENIX_SYNC_KEY] = true;
+    }
+  };
+
+  editor.model.document.once('change:data', callback, { priority: 'highest' });
+
+  return () => {
+    ignore = true;
+    editor.model.document.off('change:data', callback);
+  };
 }
