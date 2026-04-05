@@ -5,6 +5,7 @@ import type { RootAttributesUpdater } from './root-attributes-updater';
 
 import { parseJsonIfPresent } from '../../shared';
 import { EditorsRegistry } from '../editor/editors-registry';
+import { skipPendingPhoenixDataChangeSync } from '../editor/plugins';
 import { createRootAttributesUpdater } from './root-attributes-updater';
 
 export class RootValueSentinel {
@@ -168,6 +169,7 @@ export class RootValueSentinel {
         this.pendingValue = value;
       }
       else {
+        skipPendingPhoenixDataChangeSync(editor);
         this.setRootValue(editor, this.rootName, value);
       }
     }

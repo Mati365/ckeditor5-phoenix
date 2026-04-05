@@ -4,6 +4,8 @@ import type { EditorId } from '../typings';
 
 import { debounce, isNil, shallowEqual } from '../../../shared';
 
+const SUPPRESS_PHOENIX_SYNC_KEY = Symbol('suppress-phoenix-sync');
+
 /**
  * Creates a SyncEditorWithPhoenix plugin class. It's not two way binding, but
  * it allows you to push editor data to Phoenix on change, focus and blur events, and
@@ -92,7 +94,11 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
 
       const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
 
-      editor.model.document.on('change:data', () => {
+      editor.model.document.on('change:data', (evt) => {
+        if (releasePhoenixSyncSuppressLock(evt)) {
+          return;
+        }
+
         if (editor.ui.focusTracker.isFocused) {
           debouncedPushContentChange();
         }
@@ -161,4 +167,29 @@ function getEditorRootsValues(editor: Editor) {
     acc[rootName] = editor.getData({ rootName });
     return acc;
   }, Object.create({}));
+}
+
+/**
+ * Drops lock that informs plugin that data should not be synced with Phoenix.
+ *
+ * @param evt Event instance.
+ * @returns `true` if event suppressed phoenix lock.
+ */
+function releasePhoenixSyncSuppressLock(evt: any) {
+  const lock = evt[SUPPRESS_PHOENIX_SYNC_KEY];
+
+  delete evt[SUPPRESS_PHOENIX_SYNC_KEY];
+
+  return !!lock;
+}
+
+/**
+ * Marks pending `change:data` as non-syncable with Phoenix.
+ *
+ * @param editor Editor instance.
+ */
+export function skipPendingPhoenixDataChangeSync(editor: Editor) {
+  editor.model.document.once('change:data', (evt) => {
+    (evt as any)[SUPPRESS_PHOENIX_SYNC_KEY] = true;
+  }, { priority: 'highest' });
 }
