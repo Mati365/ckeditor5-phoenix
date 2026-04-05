@@ -2,6 +2,7 @@ import type { MultiRootEditor } from 'ckeditor5';
 
 import { ClassHook, debounce, makeHook } from '../shared';
 import { EditorsRegistry } from './editor/editors-registry';
+import { RootValueSentinel } from './root-value-sentinel';
 
 /**
  * Editable hook for Phoenix LiveView. It allows you to create editables for multi-root editors.
@@ -11,6 +12,11 @@ class EditableHookImpl extends ClassHook {
    * The promise that resolves to the editor instance once it's registered.
    */
   private editorPromise: Promise<MultiRootEditor | null> | null = null;
+
+  /**
+   * The sentinel instance responsible for tracking and updating root values and attributes.
+   */
+  private sentinel: RootValueSentinel | null = null;
 
   /**
    * Attributes for the editable instance.
@@ -39,6 +45,14 @@ class EditableHookImpl extends ClassHook {
   override async mounted() {
     const { editableId, editorId, rootName, initialValue } = this.attrs;
     const input = this.el.querySelector<HTMLInputElement>(`#${editableId}_input`);
+
+    this.sentinel = new RootValueSentinel({
+      el: this.el,
+      valueAttrName: 'data-cke-editable-initial-value',
+      rootAttrsAttrName: 'data-cke-editable-root-attrs',
+      editorId,
+      rootName,
+    });
 
     // If the editor is not registered yet, we will wait for it to be registered.
     this.editorPromise = EditorsRegistry.the.execute(editorId, (editor: MultiRootEditor) => {
@@ -82,6 +96,10 @@ class EditableHookImpl extends ClassHook {
 
     // Let's hide the element during destruction to prevent flickering.
     this.el.style.display = 'none';
+
+    // Destroy value sentinel.
+    this.sentinel?.destroy();
+    this.sentinel = null;
 
     // Let's wait for the mounted promise to resolve before proceeding with destruction.
     const editor = await this.editorPromise;

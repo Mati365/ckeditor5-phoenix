@@ -496,7 +496,6 @@ defmodule CKEditor5.Components.EditorTest do
           root_attrs: %{"data-lang" => "en", "data-foo" => "bar"}
         )
 
-      assert html =~ ~s(id="editor_root_attrs_main_sentinel")
       assert html =~ ~s(&quot;data-lang&quot;:&quot;en&quot;)
       assert html =~ ~s(&quot;data-foo&quot;:&quot;bar&quot;)
     end

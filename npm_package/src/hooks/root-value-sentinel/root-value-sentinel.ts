@@ -1,12 +1,54 @@
 import type { Editor } from 'ckeditor5';
 
+import type { EditorId } from '../editor';
 import type { RootAttributesUpdater } from './root-attributes-updater';
 
-import { ClassHook, makeHook, parseJsonIfPresent } from '../../shared';
+import { parseJsonIfPresent } from '../../shared';
 import { EditorsRegistry } from '../editor/editors-registry';
+import { skipPendingPhoenixDataChangeSync } from '../editor/plugins';
 import { createRootAttributesUpdater } from './root-attributes-updater';
 
-class RootValueSentinel extends ClassHook {
+export class RootValueSentinel {
+  /**
+   * The DOM element being observed for attribute changes.
+   */
+  private el: HTMLElement;
+
+  /**
+   * The unique identifier of the editor instance this sentinel is attached to.
+   */
+  private readonly editorId: EditorId | null;
+
+  /**
+   * The name of the specific root in a multi-root editor setup.
+   */
+  private readonly rootName: string;
+
+  /**
+   * The name of the HTML attribute storing the value.
+   */
+  private readonly valueAttrName: string;
+
+  /**
+   * The name of the HTML attribute storing the root attributes.
+   */
+  private readonly rootAttrsAttrName: string;
+
+  /**
+   * The MutationObserver instance responsible for watching attribute changes on the element.
+   */
+  private observer: MutationObserver | null = null;
+
+  /**
+   * A flag indicating whether the sentinel has been destroyed, used to prevent operations after cleanup.
+   */
+  private isDestroyed: boolean = false;
+
+  /**
+   * Cleanup callbacks to be executed when the sentinel is destroyed.
+   */
+  private cleanupCallbacks: Array<() => void> = [];
+
   /**
    * The promise that resolves to the editor instance once it's registered.
    * It can be either a MultiRootEditor or a DecoupledEditor, depending on the type of editor being used.
@@ -37,34 +79,70 @@ class RootValueSentinel extends ClassHook {
   private attrsUpdater: RootAttributesUpdater | null = null;
 
   /**
+   * When the hook is mounted, we will wait for the editor to be registered and then set the initial value of the root.
+   * Accepts an options object to configure element, identifiers, and custom attribute names.
+   */
+  constructor(
+    {
+      el,
+      editorId,
+      rootName,
+      valueAttrName = 'data-cke-value',
+      rootAttrsAttrName = 'data-cke-root-attrs',
+    }: RootValueSentinelOptions,
+  ) {
+    this.el = el;
+    this.editorId = editorId;
+    this.rootName = rootName;
+    this.valueAttrName = valueAttrName;
+    this.rootAttrsAttrName = rootAttrsAttrName;
+
+    const { value } = this.attrs;
+
+    this.previousValue = value;
+    this.editorPromise = EditorsRegistry.the.execute(this.editorId, (editor: Editor) => {
+      /* v8 ignore next 3 */
+      if (this.isDestroyed) {
+        return null;
+      }
+
+      this.setupSyncHandlers(editor, this.rootName);
+      return editor;
+    });
+
+    this.setupObserver();
+  }
+
+  /**
    * Helper to read and parse attributes from the element.
-   * It assumes that the element has the correct attributes set, as they are required for the hook to function properly.
+   * It uses dynamically provided attribute names.
    */
   private get attrs() {
     return {
-      editorId: this.el.getAttribute('data-cke-editor-id')!,
-      rootName: this.el.getAttribute('data-cke-root-name')!,
-      rootAttributes: parseJsonIfPresent<Record<string, unknown>>(this.el.getAttribute('data-cke-root-attrs')),
-      value: this.el.getAttribute('data-cke-value')!,
+      rootAttributes: parseJsonIfPresent<Record<string, unknown>>(this.el.getAttribute(this.rootAttrsAttrName)),
+      value: this.el.getAttribute(this.valueAttrName)!,
     };
   }
 
   /**
-   * When the hook is mounted, we will wait for the editor to be registered and then set the initial value of the root.
+   * Sets up a MutationObserver to listen for attribute changes on the element.
    */
-  override async mounted() {
-    const { editorId, value, rootName } = this.attrs;
-
-    this.previousValue = value;
-    this.editorPromise = EditorsRegistry.the.execute(editorId, (editor: Editor) => {
-      /* v8 ignore next 3 */
-      if (this.isBeingDestroyed()) {
-        return null;
+  private setupObserver() {
+    this.observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes') {
+          void this.handleUpdate();
+          break;
+        }
       }
+    });
 
-      this.setupSyncHandlers(editor, rootName);
-
-      return editor;
+    this.observer.observe(this.el, {
+      attributes: true,
+      attributeFilter: [
+        this.valueAttrName,
+        this.rootAttrsAttrName,
+      ],
     });
   }
 
@@ -72,28 +150,39 @@ class RootValueSentinel extends ClassHook {
    * When the value attribute changes, we want to update the editor root value.
    * However, if the editor is focused, we want to wait until it blurs to avoid disrupting the user while typing.
    */
-  override async updated() {
-    const { rootName, value, rootAttributes } = this.attrs;
+  private async handleUpdate() {
+    const { value, rootAttributes } = this.attrs;
     const editor = await this.editorPromise;
 
-    if (!editor || editor.state === 'destroyed') {
+    if (!editor || editor.state === 'destroyed' || this.isDestroyed) {
       return;
     }
 
     // Synchronize root attributes on every update, regardless of value changes.
-    this.attrsUpdater?.(rootAttributes);
+    let unmountLock: VoidFunction = () => {};
 
-    // React only if the value attribute actually changed.
-    if (value !== this.previousValue) {
-      this.previousValue = value;
+    editor.model.enqueueChange({ isUndoable: false }, () => {
+      let updated = this.attrsUpdater?.(rootAttributes);
 
-      if (editor.ui.focusTracker.isFocused) {
-        this.pendingValue = value;
+      // React only if the value attribute actually changed.
+      if (value !== this.previousValue) {
+        this.previousValue = value;
+
+        if (editor.ui.focusTracker.isFocused) {
+          this.pendingValue = value;
+        }
+        else {
+          this.setRootValue(editor, this.rootName, value);
+          updated = true;
+        }
       }
-      else {
-        this.setRootValue(editor, rootName, value);
+
+      if (updated) {
+        unmountLock = skipPendingPhoenixDataChangeSync(editor);
       }
-    }
+    });
+
+    unmountLock();
   }
 
   /**
@@ -118,7 +207,7 @@ class RootValueSentinel extends ClassHook {
     editor.model.document.on('change:data', onDataChange);
     editor.ui.focusTracker.on('change:isFocused', onFocusChange);
 
-    this.onBeforeDestroy(() => {
+    this.cleanupCallbacks.push(() => {
       editor.model.document.off('change:data', onDataChange);
       editor.ui.focusTracker.off('change:isFocused', onFocusChange);
     });
@@ -134,6 +223,43 @@ class RootValueSentinel extends ClassHook {
       editor.setData({ [rootName]: value });
     }
   }
+
+  /**
+   * Disconnects the observer and cleans up editor event listeners.
+   * This should be called manually when the element is removed from the DOM.
+   */
+  public destroy() {
+    this.isDestroyed = true;
+    this.observer?.disconnect();
+
+    this.cleanupCallbacks.forEach(cleanup => cleanup());
+    this.cleanupCallbacks = [];
+  }
 }
 
-export const RootValueSentinelHook = makeHook(RootValueSentinel);
+export type RootValueSentinelOptions = {
+  /**
+   * The DOM element being observed for attribute changes.
+   */
+  el: HTMLElement;
+
+  /**
+   * The unique identifier of the editor instance this sentinel is attached to.
+   */
+  editorId: string | null;
+
+  /**
+   * The name of the specific root in a multi-root editor setup.
+   */
+  rootName: string;
+
+  /**
+   * The name of the HTML attribute storing the value. Defaults to 'data-cke-value'.
+   */
+  valueAttrName?: string;
+
+  /**
+   * The name of the HTML attribute storing the root attributes. Defaults to 'data-cke-root-attrs'.
+   */
+  rootAttrsAttrName?: string;
+};

@@ -15,7 +15,9 @@ import type { Editor } from 'ckeditor5';
 export function createRootAttributesUpdater(editor: Editor, rootName: string): RootAttributesUpdater {
   const managedAttrs = new Set<string>();
 
-  return (rootAttributes?: Record<string, unknown> | null) => {
+  return (rootAttributes?: Record<string, unknown> | null): boolean => {
+    let updated = false;
+
     editor.model.enqueueChange({ isUndoable: false }, (writer) => {
       const root = editor.model.document.getRoot(rootName);
 
@@ -32,15 +34,19 @@ export function createRootAttributesUpdater(editor: Editor, rootName: string): R
 
         writer.removeAttribute(key, root);
         managedAttrs.delete(key);
+        updated = true;
       }
 
       // Apply or overwrite requested attributes.
       for (const [key, value] of Object.entries(rootAttributes ?? {})) {
         writer.setAttribute(key, value, root);
         managedAttrs.add(key);
+        updated = true;
       }
     });
+
+    return updated;
   };
 }
 
-export type RootAttributesUpdater = (rootAttributes?: Record<string, unknown> | null) => void;
+export type RootAttributesUpdater = (rootAttributes?: Record<string, unknown> | null) => boolean;

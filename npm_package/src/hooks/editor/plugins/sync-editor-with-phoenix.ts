@@ -4,6 +4,8 @@ import type { EditorId } from '../typings';
 
 import { debounce, isNil, shallowEqual } from '../../../shared';
 
+const SUPPRESS_PHOENIX_SYNC_KEY = Symbol('suppress-phoenix-sync');
+
 /**
  * Creates a SyncEditorWithPhoenix plugin class. It's not two way binding, but
  * it allows you to push editor data to Phoenix on change, focus and blur events, and
@@ -92,14 +94,20 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
 
       const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
 
-      editor.model.document.on('change:data', () => {
+      editor.model.document.on('change:data', debounce(10, (evt) => {
+        /* v8 ignore next 4 */
+        if (releasePhoenixSyncSuppressLock(evt)) {
+          lastValue = null;
+          return;
+        }
+
         if (editor.ui.focusTracker.isFocused) {
           debouncedPushContentChange();
         }
         else {
           pushContentChange();
         }
-      });
+      }));
 
       editor.once('ready', pushContentChange);
       editor.once('destroy', () => {
@@ -161,4 +169,40 @@ function getEditorRootsValues(editor: Editor) {
     acc[rootName] = editor.getData({ rootName });
     return acc;
   }, Object.create({}));
+}
+
+/**
+ * Drops lock that informs plugin that data should not be synced with Phoenix.
+ *
+ * @param evt Event instance.
+ * @returns `true` if event suppressed phoenix lock.
+ */
+function releasePhoenixSyncSuppressLock(evt: any) {
+  const lock = evt[SUPPRESS_PHOENIX_SYNC_KEY];
+
+  delete evt[SUPPRESS_PHOENIX_SYNC_KEY];
+
+  return !!lock;
+}
+
+/**
+ * Marks pending `change:data` as non-syncable with Phoenix.
+ *
+ * @param editor Editor instance.
+ */
+export function skipPendingPhoenixDataChangeSync(editor: Editor) {
+  let ignore = false;
+
+  const callback = (evt: any) => {
+    if (!ignore) {
+      evt[SUPPRESS_PHOENIX_SYNC_KEY] = true;
+    }
+  };
+
+  editor.model.document.once('change:data', callback, { priority: 'highest' });
+
+  return () => {
+    ignore = true;
+    editor.model.document.off('change:data', callback);
+  };
 }

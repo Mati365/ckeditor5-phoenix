@@ -17,7 +17,7 @@ describe('isSingleRootEditor', () => {
     expect(isSingleRootEditor('balloon')).toBe(true);
   });
 
-  it('should return false for decoupled editor', () => {
+  it('should return true for decoupled editor', () => {
     expect(isSingleRootEditor('decoupled')).toBe(true);
   });
 

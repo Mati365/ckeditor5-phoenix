@@ -6,6 +6,7 @@ import type { EditorCreator } from './utils';
 import { isEmptyObject, parseIntIfNotNull, waitFor } from '../../shared';
 import { ClassHook, makeHook } from '../../shared/hook';
 import { ContextsRegistry, getNearestContextParentPromise } from '../context';
+import { RootValueSentinel } from '../root-value-sentinel';
 import { EditorsRegistry } from './editors-registry';
 import {
   createPhoenixUploadAdapterPlugin,
@@ -14,6 +15,7 @@ import {
 } from './plugins';
 import {
   createEditorInContext,
+  isEditorWithExternalEditables,
   isSingleRootEditor,
   loadAllEditorTranslations,
   loadEditorConstructor,
@@ -41,6 +43,12 @@ class EditorHookImpl extends ClassHook {
    * The promise that resolves to the editor instance.
    */
   private editorPromise: Promise<Editor> | null = null;
+
+  /**
+   * The sentinel instance responsible for tracking and updating root values and attributes
+   * for single-root editors.
+   */
+  private sentinel: RootValueSentinel | null = null;
 
   /**
    * Attributes for the editor instance.
@@ -83,9 +91,20 @@ class EditorHookImpl extends ClassHook {
    * Mounts the editor component.
    */
   override async mounted() {
-    const { editorId } = this.attrs;
+    const { editorId, preset } = this.attrs;
 
     EditorsRegistry.the.resetErrors(editorId);
+
+    // Initialize the sentinel for editors with builtin editables.
+    if (!isEditorWithExternalEditables(preset.type)) {
+      this.sentinel = new RootValueSentinel({
+        editorId,
+        el: this.el,
+        rootName: 'main',
+        valueAttrName: 'data-cke-initial-value',
+        rootAttrsAttrName: 'data-cke-root-attrs',
+      });
+    }
 
     try {
       this.editorPromise = this.createEditor();
@@ -119,6 +138,10 @@ class EditorHookImpl extends ClassHook {
   override async destroyed() {
     // Let's hide the element during destruction to prevent flickering.
     this.el.style.display = 'none';
+
+    // Destroy value sentinel.
+    this.sentinel?.destroy();
+    this.sentinel = null;
 
     // Let's wait for the mounted promise to resolve before proceeding with destruction.
     try {
@@ -192,13 +215,15 @@ class EditorHookImpl extends ClassHook {
 
     loadedPlugins.push(
       ...await Promise.all([
-        createSyncEditorWithPhoenixPlugin({
-          editorId,
-          saveDebounceMs,
-          events,
-          pushEvent: this.pushEvent.bind(this),
-          handleEvent: this.handleEvent.bind(this),
-        }),
+        createSyncEditorWithPhoenixPlugin(
+          {
+            editorId,
+            saveDebounceMs,
+            events,
+            pushEvent: this.pushEvent.bind(this),
+            handleEvent: this.handleEvent.bind(this),
+          },
+        ),
         createPhoenixUploadAdapterPlugin(),
       ]),
     );

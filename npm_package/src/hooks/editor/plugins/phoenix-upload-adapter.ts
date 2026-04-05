@@ -70,7 +70,9 @@ declare module 'ckeditor5' {
  */
 class Adapter implements UploadAdapter {
   private readonly loader: FileLoader;
+
   private readonly uploadUrl: string;
+
   private abortController: AbortController | null = null;
 
   constructor(loader: FileLoader, uploadUrl: string) {

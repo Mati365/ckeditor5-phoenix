@@ -42,7 +42,7 @@ defmodule Playground.Live.Multiroot do
   def handle_event("clear_roots", _params, socket) do
     cleared_roots =
       Enum.map(socket.assigns.roots, fn root ->
-        %{root | value: ""}
+        %{root | value: "", counter: 0}
       end)
 
     {:noreply, assign(socket, roots: cleared_roots)}

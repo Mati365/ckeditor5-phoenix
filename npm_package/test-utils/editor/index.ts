@@ -2,7 +2,6 @@ export * from './create-context-html-element';
 export * from './create-editable-html-element';
 export * from './create-editor-html-element';
 export * from './create-editor-preset';
-export * from './create-root-value-sentinel-element';
 export * from './create-ui-part-html-element';
 export * from './get-test-editor-input';
 export * from './is-editor-shown';
