@@ -554,7 +554,8 @@ describe('editor hook', () => {
       pushSpy.mockClear();
       editor.setData('<p>New content</p>');
 
-      // Without focus, change:data should push immediately.
+      await vi.advanceTimersByTimeAsync(50);
+
       expect(pushSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -865,7 +866,6 @@ describe('editor hook', () => {
 
       const editor = await waitForTestEditor();
 
-      // Defer the push by simulating focus; change:data should be debounced only when focused.
       editor.ui.focusTracker.isFocused = true;
 
       pushSpy.mockClear();
@@ -874,7 +874,7 @@ describe('editor hook', () => {
       await vi.advanceTimersByTimeAsync(399);
       expect(pushSpy).not.toHaveBeenCalled();
 
-      await vi.advanceTimersByTimeAsync(2);
+      await vi.advanceTimersByTimeAsync(30);
       expect(pushSpy).toHaveBeenCalled();
     });
 
@@ -900,7 +900,7 @@ describe('editor hook', () => {
       await vi.advanceTimersByTimeAsync(999);
       expect(pushSpy).not.toHaveBeenCalled();
 
-      await vi.advanceTimersByTimeAsync(2);
+      await vi.advanceTimersByTimeAsync(32);
       expect(pushSpy).toHaveBeenCalled();
     });
 
@@ -910,14 +910,19 @@ describe('editor hook', () => {
         withInput: true,
         saveDebounceMs: 700,
       });
+
       document.body.appendChild(hookElement);
       EditorHook.mounted.call({ el: hookElement });
+
       const editor = await waitForTestEditor();
       const input = getTestEditorInput();
+
       editor.setData('<p>Debounced input</p>');
+
       await vi.advanceTimersByTimeAsync(699);
       expect(input.value).not.toBe('<p>Debounced input</p>');
-      await vi.advanceTimersByTimeAsync(2);
+
+      await vi.advanceTimersByTimeAsync(32);
       expect(input.value).toBe('<p>Debounced input</p>');
     });
   });

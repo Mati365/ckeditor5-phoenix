@@ -159,20 +159,26 @@ export class RootValueSentinel {
     }
 
     // Synchronize root attributes on every update, regardless of value changes.
-    this.attrsUpdater?.(rootAttributes);
+    editor.model.enqueueChange({ isUndoable: false }, () => {
+      let updated = this.attrsUpdater?.(rootAttributes);
 
-    // React only if the value attribute actually changed.
-    if (value !== this.previousValue) {
-      this.previousValue = value;
+      // React only if the value attribute actually changed.
+      if (value !== this.previousValue) {
+        this.previousValue = value;
 
-      if (editor.ui.focusTracker.isFocused) {
-        this.pendingValue = value;
+        if (editor.ui.focusTracker.isFocused) {
+          this.pendingValue = value;
+        }
+        else {
+          this.setRootValue(editor, this.rootName, value);
+          updated = true;
+        }
       }
-      else {
+
+      if (updated) {
         skipPendingPhoenixDataChangeSync(editor);
-        this.setRootValue(editor, this.rootName, value);
       }
-    }
+    });
   }
 
   /**

@@ -94,7 +94,8 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
 
       const debouncedPushContentChange = debounce(saveDebounceMs, pushContentChange);
 
-      editor.model.document.on('change:data', (evt) => {
+      editor.model.document.on('change:data', debounce(10, (evt) => {
+        /* v8 ignore next 3 */
         if (releasePhoenixSyncSuppressLock(evt)) {
           return;
         }
@@ -105,7 +106,7 @@ export async function createSyncEditorWithPhoenixPlugin(options: Attrs): Promise
         else {
           pushContentChange();
         }
-      });
+      }));
 
       editor.once('ready', pushContentChange);
       editor.once('destroy', () => {

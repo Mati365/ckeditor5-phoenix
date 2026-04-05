@@ -215,13 +215,15 @@ class EditorHookImpl extends ClassHook {
 
     loadedPlugins.push(
       ...await Promise.all([
-        createSyncEditorWithPhoenixPlugin({
-          editorId,
-          saveDebounceMs,
-          events,
-          pushEvent: this.pushEvent.bind(this),
-          handleEvent: this.handleEvent.bind(this),
-        }),
+        createSyncEditorWithPhoenixPlugin(
+          {
+            editorId,
+            saveDebounceMs,
+            events,
+            pushEvent: this.pushEvent.bind(this),
+            handleEvent: this.handleEvent.bind(this),
+          },
+        ),
         createPhoenixUploadAdapterPlugin(),
       ]),
     );
