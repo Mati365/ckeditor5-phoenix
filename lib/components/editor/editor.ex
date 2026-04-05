@@ -11,7 +11,7 @@ defmodule CKEditor5.Components.Editor do
   import CKEditor5.Components.FormAttrs
 
   alias CKEditor5.Components.Editor.Assigns
-  alias CKEditor5.Components.{HiddenInput, RootValueSentinel}
+  alias CKEditor5.Components.HiddenInput
   alias CKEditor5.Preset.EditorType
 
   @doc """
@@ -119,6 +119,7 @@ defmodule CKEditor5.Components.Editor do
       phx-hook="CKEditor5"
       phx-update="ignore"
       data-cke-preset={Jason.encode!(@preset)}
+      data-cke-root-attrs={JSON.encode!(@root_attrs || {})}
       data-cke-editable-height={@editable_height}
       data-cke-initial-value={@value || ""}
       data-cke-change-event={@change_event}
@@ -145,10 +146,6 @@ defmodule CKEditor5.Components.Editor do
       <% end %>
       <%= render_slot(@inner_block) %>
     </div>
-
-    <%= unless EditorType.has_external_editables?(@preset.type) do %>
-       <RootValueSentinel.render editor_id={@id} value={@value || ""} root_attrs={@root_attrs} />
-    <% end %>
     """
   end
 end

@@ -7,7 +7,6 @@ import {
   createEditorPreset,
   waitForTestEditor,
 } from '~/test-utils';
-import { createRootValueSentinelElement } from '~/test-utils/editor/create-root-value-sentinel-element';
 
 import type { EditorId } from '../editor/typings';
 
@@ -15,7 +14,7 @@ import { timeout } from '../../shared';
 import { EditableHook } from '../editable';
 import { EditorHook } from '../editor';
 import { EditorsRegistry } from '../editor/editors-registry';
-import { RootValueSentinelHook } from './root-value-sentinel';
+import { RootValueSentinel } from './root-value-sentinel';
 
 describe('root value sentinel', () => {
   beforeEach(() => {
@@ -59,19 +58,26 @@ describe('root value sentinel', () => {
       expect(editor.getData({ rootName })).toBe(initialValue);
     });
 
-    // Add sentinel and wait a little bit to ensure the hook is initialized.
-    const sentinel = createRootValueSentinelElement({
-      root: rootName,
-      value: sentinelValue,
-      editorId,
-      rootAttrs,
-    });
+    // Create a generic DOM element to act as our sentinel container
+    const sentinel = document.createElement('div');
+    sentinel.setAttribute('data-cke-value', sentinelValue);
+
+    if (rootAttrs) {
+      sentinel.setAttribute('data-cke-root-attrs', JSON.stringify(rootAttrs));
+    }
 
     document.body.appendChild(sentinel);
-    RootValueSentinelHook.mounted.call({ el: sentinel });
+
+    // Initialize the RootValueSentinel class
+    const sentinelInstance = new RootValueSentinel({
+      el: sentinel,
+      editorId,
+      rootName,
+    });
+
     await timeout(0);
 
-    return { editor, sentinel, editable };
+    return { editor, sentinel, sentinelInstance, editable };
   }
 
   describe('mount', () => {
@@ -87,19 +93,31 @@ describe('root value sentinel', () => {
     it('should not crash when the root does not exist', async () => {
       await appendMultirootEditor();
 
-      const sentinel = createRootValueSentinelElement({ root: 'non-existent', value: '<p>Value</p>' });
+      const sentinel = document.createElement('div');
+      sentinel.setAttribute('data-cke-value', '<p>Value</p>');
       document.body.appendChild(sentinel);
 
-      // We just call the hook and flush the event loop.
-      // If it throws an unhandled rejection, Vitest will automatically fail this test.
-      RootValueSentinelHook.mounted.call({ el: sentinel });
+      const instance = new RootValueSentinel({
+        el: sentinel,
+        editorId: 'test-editor',
+        rootName: 'non-existent',
+      });
+
       await timeout(0);
+
+      expect(instance).to.be.instanceOf(RootValueSentinel);
     });
 
     it('should be possible to mount sentinel before the editor is ready', async () => {
-      const sentinel = createRootValueSentinelElement({ root: 'main', value: '<p>Sentinel value</p>' });
+      const sentinel = document.createElement('div');
+      sentinel.setAttribute('data-cke-value', '<p>Sentinel value</p>');
       document.body.appendChild(sentinel);
-      RootValueSentinelHook.mounted.call({ el: sentinel });
+
+      const instance = new RootValueSentinel({
+        el: sentinel,
+        editorId: 'test-editor',
+        rootName: 'main',
+      });
 
       const editor = await appendMultirootEditor();
       const editable = createEditableHtmlElement({ name: 'main', initialValue: '<p>Initial</p>' });
@@ -111,21 +129,22 @@ describe('root value sentinel', () => {
         expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
       });
 
+      // Changing the attribute will trigger the MutationObserver in the background
       sentinel.setAttribute('data-cke-value', '<p>Updated value</p>');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
       await vi.waitFor(() => {
         expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated value</p>');
       });
+
+      expect(instance).to.be.instanceOf(RootValueSentinel);
     });
   });
 
-  describe('updated', () => {
+  describe('updated (mutations)', () => {
     it('should update the editor root value when the value attribute changes', async () => {
       const { editor, sentinel } = await setup();
 
       sentinel.setAttribute('data-cke-value', '<p>Updated</p>');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
       await vi.waitFor(() => {
         expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated</p>');
@@ -136,20 +155,24 @@ describe('root value sentinel', () => {
       const { editor, sentinel } = await setup({ initialValue: '<p>Same value</p>' });
       const setDataSpy = vi.spyOn(editor, 'setData');
 
-      RootValueSentinelHook.updated!.call({ el: sentinel });
+      // Change another observed attribute to trigger the observer reaction without changing the value
+      sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-dummy': 'dummy' }));
 
       await timeout(0);
       expect(setDataSpy).not.toHaveBeenCalled();
     });
 
     it('should not call setData when the new value equals the current editor content', async () => {
-      const { editor, sentinel } = await setup({ initialValue: '<p>Same</p>' });
+      const { editor, sentinel } = await setup({ initialValue: '<p>Initial</p>' });
+
+      // Change the editor content bypassing the sentinel
+      editor.setData({ main: '<p>Same</p>' });
       const setDataSpy = vi.spyOn(editor, 'setData');
 
+      // Update the sentinel to the same value as the editor
       sentinel.setAttribute('data-cke-value', '<p>Same</p>');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the MutationObserver
       expect(setDataSpy).not.toHaveBeenCalled();
     });
 
@@ -159,9 +182,8 @@ describe('root value sentinel', () => {
       editor.ui.focusTracker.isFocused = true;
 
       sentinel.setAttribute('data-cke-value', '<p>Pending update</p>');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer reaction
       expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
 
       editor.ui.focusTracker.isFocused = false;
@@ -177,9 +199,8 @@ describe('root value sentinel', () => {
       editor.ui.focusTracker.isFocused = true;
 
       sentinel.setAttribute('data-cke-value', '<p>Pending value</p>');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer reaction
 
       editor.model.change((writer) => {
         const root = editor.model.document.getRoot('main')!;
@@ -197,25 +218,26 @@ describe('root value sentinel', () => {
       expect(editor.getData({ rootName: 'main' })).toBe(userContent);
     });
 
-    it('should not crash when the editor has been destroyed before updated is called', async () => {
+    it('should not crash when the editor has been destroyed before observer triggers', async () => {
       const { sentinel } = await setup();
 
       await EditorsRegistry.the.destroyAll();
       sentinel.setAttribute('data-cke-value', '<p>After destroy</p>');
 
-      RootValueSentinelHook.updated!.call({ el: sentinel });
+      // Expect no error to be thrown during the asynchronous mutation
       await timeout(0);
     });
   });
 
   describe('destroy', () => {
     it('should clean up event listeners on destroy', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinelInstance } = await setup();
 
       const offDocumentSpy = vi.spyOn(editor.model.document, 'off');
       const offFocusTrackerSpy = vi.spyOn(editor.ui.focusTracker, 'off');
 
-      RootValueSentinelHook.destroyed!.call({ el: sentinel });
+      // Call destroy on the class instance
+      sentinelInstance.destroy();
 
       expect(offDocumentSpy).toHaveBeenCalledWith('change:data', expect.any(Function));
       expect(offFocusTrackerSpy).toHaveBeenCalledWith('change:isFocused', expect.any(Function));
@@ -245,9 +267,8 @@ describe('root value sentinel', () => {
       const { editor, sentinel } = await setup();
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer reaction
 
       const root = editor.model.document.getRoot()!;
       expect(root.getAttribute('data-lang')).toBe('en');
@@ -260,9 +281,8 @@ describe('root value sentinel', () => {
       expect(root.getAttribute('data-lang')).toBe('pl');
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({}));
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer
 
       expect(root.getAttribute('data-lang')).toBeUndefined();
       expect(root.getAttribute('data-id')).toBeUndefined();
@@ -275,9 +295,8 @@ describe('root value sentinel', () => {
       expect(root.getAttribute('data-lang')).toBe('pl');
 
       sentinel.removeAttribute('data-cke-root-attrs');
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer
 
       expect(root.getAttribute('data-lang')).toBeUndefined();
       expect(root.getAttribute('data-id')).toBeUndefined();
@@ -294,9 +313,8 @@ describe('root value sentinel', () => {
       });
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
-      RootValueSentinelHook.updated!.call({ el: sentinel });
 
-      await timeout(0);
+      await timeout(0); // Wait for the observer
 
       const root = editor.model.document.getRoot()!;
 

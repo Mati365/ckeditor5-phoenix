@@ -8,7 +8,7 @@ defmodule CKEditor5.Components.Editable do
 
   import CKEditor5.Components.FormAttrs
 
-  alias CKEditor5.Components.{AssignStyles, HiddenInput, RootValueSentinel}
+  alias CKEditor5.Components.{AssignStyles, HiddenInput}
   alias CKEditor5.Helpers
 
   # Default root name for decoupled editors, while optional in multiroot editors.
@@ -72,6 +72,7 @@ defmodule CKEditor5.Components.Editable do
       data-cke-editor-id={@editor_id}
       data-cke-editable-root-name={@root}
       data-cke-editable-initial-value={@value}
+      data-cke-editable-root-attrs={JSON.encode!(@root_attrs || {})}
       data-cke-editable-required={@required}
       {@rest}
     >
@@ -85,12 +86,6 @@ defmodule CKEditor5.Components.Editable do
         />
       <% end %>
     </div>
-    <RootValueSentinel.render
-      editor_id={@editor_id}
-      value={@value || ""}
-      root={@root}
-      root_attrs={@root_attrs}
-    />
     """
   end
 end
