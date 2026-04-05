@@ -1,4 +1,4 @@
-# CKEditor 5 Phoenix Integration ✨
+# CKEditor 5 Phoenix Integration
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-green.svg?style=flat-square)](http://makeapullrequest.com)
