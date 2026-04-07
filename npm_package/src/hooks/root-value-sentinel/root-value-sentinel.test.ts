@@ -129,41 +129,37 @@ describe('root value sentinel', () => {
         expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
       });
 
-      // Changing the attribute will trigger the MutationObserver in the background
       sentinel.setAttribute('data-cke-value', '<p>Updated value</p>');
+      await instance.updated();
 
-      await vi.waitFor(() => {
-        expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated value</p>');
-      });
-
+      expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated value</p>');
       expect(instance).to.be.instanceOf(RootValueSentinel);
     });
   });
 
   describe('updated (mutations)', () => {
     it('should update the editor root value when the value attribute changes', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
 
       sentinel.setAttribute('data-cke-value', '<p>Updated</p>');
+      await sentinelInstance.updated();
 
-      await vi.waitFor(() => {
-        expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated</p>');
-      });
+      expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated</p>');
     });
 
     it('should not call setData when the value attribute did not change', async () => {
-      const { editor, sentinel } = await setup({ initialValue: '<p>Same value</p>' });
+      const { editor, sentinel, sentinelInstance } = await setup({ initialValue: '<p>Same value</p>' });
       const setDataSpy = vi.spyOn(editor, 'setData');
 
-      // Change another observed attribute to trigger the observer reaction without changing the value
+      // Change another observed attribute to trigger an update without changing the value
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-dummy': 'dummy' }));
+      await sentinelInstance.updated();
 
-      await timeout(0);
       expect(setDataSpy).not.toHaveBeenCalled();
     });
 
     it('should not call setData when the new value equals the current editor content', async () => {
-      const { editor, sentinel } = await setup({ initialValue: '<p>Initial</p>' });
+      const { editor, sentinel, sentinelInstance } = await setup({ initialValue: '<p>Initial</p>' });
 
       // Change the editor content bypassing the sentinel
       editor.setData({ main: '<p>Same</p>' });
@@ -171,19 +167,19 @@ describe('root value sentinel', () => {
 
       // Update the sentinel to the same value as the editor
       sentinel.setAttribute('data-cke-value', '<p>Same</p>');
+      await sentinelInstance.updated();
 
-      await timeout(0); // Wait for the MutationObserver
       expect(setDataSpy).not.toHaveBeenCalled();
     });
 
     it('should defer update when the editor is focused and apply it on blur', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
 
       editor.ui.focusTracker.isFocused = true;
 
       sentinel.setAttribute('data-cke-value', '<p>Pending update</p>');
+      await sentinelInstance.updated();
 
-      await timeout(0);
       expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
 
       editor.ui.focusTracker.isFocused = false;
@@ -194,13 +190,12 @@ describe('root value sentinel', () => {
     });
 
     it('should discard pending value if user types while editor is focused', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
 
       editor.ui.focusTracker.isFocused = true;
 
       sentinel.setAttribute('data-cke-value', '<p>Pending value</p>');
-
-      await timeout(0);
+      await sentinelInstance.updated();
 
       editor.model.change((writer) => {
         const root = editor.model.document.getRoot('main')!;
@@ -218,14 +213,14 @@ describe('root value sentinel', () => {
       expect(editor.getData({ rootName: 'main' })).toBe(userContent);
     });
 
-    it('should not crash when the editor has been destroyed before observer triggers', async () => {
-      const { sentinel } = await setup();
+    it('should not crash when the editor has been destroyed before updated is called', async () => {
+      const { sentinel, sentinelInstance } = await setup();
 
       await EditorsRegistry.the.destroyAll();
       sentinel.setAttribute('data-cke-value', '<p>After destroy</p>');
 
-      // Expect no error to be thrown during the asynchronous mutation
-      await timeout(0);
+      // Expect no error to be thrown
+      await sentinelInstance.updated();
     });
   });
 
@@ -264,46 +259,43 @@ describe('root value sentinel', () => {
     });
 
     it('should update root attributes when data-cke-root-attrs changes', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
-
-      await timeout(0); // Wait for the observer reaction
+      await sentinelInstance.updated();
 
       const root = editor.model.document.getRoot()!;
       expect(root.getAttribute('data-lang')).toBe('en');
     });
 
     it('should remove root attributes that are no longer present', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
       const root = editor.model.document.getRoot()!;
 
       expect(root.getAttribute('data-lang')).toBe('pl');
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({}));
-
-      await timeout(0); // Wait for the observer
+      await sentinelInstance.updated();
 
       expect(root.getAttribute('data-lang')).toBeUndefined();
       expect(root.getAttribute('data-id')).toBeUndefined();
     });
 
     it('should remove all managed attributes when data-cke-root-attrs is cleared', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
       const root = editor.model.document.getRoot()!;
 
       expect(root.getAttribute('data-lang')).toBe('pl');
 
       sentinel.removeAttribute('data-cke-root-attrs');
-
-      await timeout(0); // Wait for the observer
+      await sentinelInstance.updated();
 
       expect(root.getAttribute('data-lang')).toBeUndefined();
       expect(root.getAttribute('data-id')).toBeUndefined();
     });
 
     it('should not interfere with attributes managed by other consumers', async () => {
-      const { editor, sentinel } = await setup();
+      const { editor, sentinel, sentinelInstance } = await setup();
 
       // Simulate another consumer setting its own attribute directly.
       editor.model.enqueueChange({ isUndoable: false }, (writer) => {
@@ -313,8 +305,7 @@ describe('root value sentinel', () => {
       });
 
       sentinel.setAttribute('data-cke-root-attrs', JSON.stringify({ 'data-lang': 'en' }));
-
-      await timeout(0); // Wait for the observer
+      await sentinelInstance.updated();
 
       const root = editor.model.document.getRoot()!;
 

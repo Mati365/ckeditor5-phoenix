@@ -35,11 +35,6 @@ export class RootValueSentinel {
   private readonly rootAttrsAttrName: string;
 
   /**
-   * The MutationObserver instance responsible for watching attribute changes on the element.
-   */
-  private observer: MutationObserver | null = null;
-
-  /**
    * A flag indicating whether the sentinel has been destroyed, used to prevent operations after cleanup.
    */
   private isDestroyed: boolean = false;
@@ -109,8 +104,6 @@ export class RootValueSentinel {
       this.setupSyncHandlers(editor, this.rootName);
       return editor;
     });
-
-    this.setupObserver();
   }
 
   /**
@@ -125,32 +118,10 @@ export class RootValueSentinel {
   }
 
   /**
-   * Sets up a MutationObserver to listen for attribute changes on the element.
-   */
-  private setupObserver() {
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'attributes') {
-          void this.handleUpdate();
-          break;
-        }
-      }
-    });
-
-    this.observer.observe(this.el, {
-      attributes: true,
-      attributeFilter: [
-        this.valueAttrName,
-        this.rootAttrsAttrName,
-      ],
-    });
-  }
-
-  /**
    * When the value attribute changes, we want to update the editor root value.
    * However, if the editor is focused, we want to wait until it blurs to avoid disrupting the user while typing.
    */
-  private async handleUpdate() {
+  async updated() {
     const { value, rootAttributes } = this.attrs;
     const editor = await this.editorPromise;
 
@@ -230,7 +201,6 @@ export class RootValueSentinel {
    */
   public destroy() {
     this.isDestroyed = true;
-    this.observer?.disconnect();
 
     this.cleanupCallbacks.forEach(cleanup => cleanup());
     this.cleanupCallbacks = [];

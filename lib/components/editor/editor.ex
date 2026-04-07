@@ -144,8 +144,9 @@ defmodule CKEditor5.Components.Editor do
           required={@required}
         />
       <% end %>
-      <%= render_slot(@inner_block) %>
     </div>
+
+    <%= render_slot(@inner_block) %>
     """
   end
 end

@@ -46,16 +46,8 @@ class EditableHookImpl extends ClassHook {
     const { editableId, editorId, rootName, initialValue } = this.attrs;
     const input = this.el.querySelector<HTMLInputElement>(`#${editableId}_input`);
 
-    this.sentinel = new RootValueSentinel({
-      el: this.el,
-      valueAttrName: 'data-cke-editable-initial-value',
-      rootAttrsAttrName: 'data-cke-editable-root-attrs',
-      editorId,
-      rootName,
-    });
-
     // If the editor is not registered yet, we will wait for it to be registered.
-    this.editorPromise = EditorsRegistry.the.execute(editorId, (editor: MultiRootEditor) => {
+    this.editorPromise = EditorsRegistry.the.execute(editorId, async (editor: MultiRootEditor) => {
       /* v8 ignore next 3 */
       if (this.isBeingDestroyed()) {
         return null;
@@ -63,20 +55,26 @@ class EditableHookImpl extends ClassHook {
 
       const { ui, editing, model } = editor;
 
-      if (model.document.getRoot(rootName)) {
-        return editor;
+      if (!model.document.getRoot(rootName)) {
+        editor.addRoot(rootName, {
+          isUndoable: false,
+          data: initialValue,
+        });
+
+        const contentElement = this.el.querySelector('[data-cke-editable-content]') as HTMLElement | null;
+        const editable = ui.view.createEditable(rootName, contentElement!);
+
+        ui.addEditable(editable);
+        editing.view.forceRender();
       }
 
-      editor.addRoot(rootName, {
-        isUndoable: false,
-        data: initialValue,
+      this.sentinel = new RootValueSentinel({
+        el: this.el,
+        valueAttrName: 'data-cke-editable-initial-value',
+        rootAttrsAttrName: 'data-cke-editable-root-attrs',
+        editorId,
+        rootName,
       });
-
-      const contentElement = this.el.querySelector('[data-cke-editable-content]') as HTMLElement | null;
-      const editable = ui.view.createEditable(rootName, contentElement!);
-
-      ui.addEditable(editable);
-      editing.view.forceRender();
 
       if (input) {
         const unmount = syncEditorRootToInput(input, editor, rootName);
@@ -86,6 +84,13 @@ class EditableHookImpl extends ClassHook {
 
       return editor;
     });
+  }
+
+  /**
+   * Watch attributes changes and sync value if something changed.
+   */
+  override async updated() {
+    this.sentinel?.updated();
   }
 
   /**

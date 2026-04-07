@@ -1,5 +1,4 @@
 export * from './create-editor-in-context';
-export * from './is-editor-with-external-editables';
 export * from './is-single-root-editor';
 export * from './load-editor-constructor';
 export * from './load-editor-plugins';

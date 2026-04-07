@@ -15,7 +15,6 @@ import {
 } from './plugins';
 import {
   createEditorInContext,
-  isEditorWithExternalEditables,
   isSingleRootEditor,
   loadAllEditorTranslations,
   loadEditorConstructor,
@@ -91,20 +90,9 @@ class EditorHookImpl extends ClassHook {
    * Mounts the editor component.
    */
   override async mounted() {
-    const { editorId, preset } = this.attrs;
+    const { editorId } = this.attrs;
 
     EditorsRegistry.the.resetErrors(editorId);
-
-    // Initialize the sentinel for editors with builtin editables.
-    if (!isEditorWithExternalEditables(preset.type)) {
-      this.sentinel = new RootValueSentinel({
-        editorId,
-        el: this.el,
-        rootName: 'main',
-        valueAttrName: 'data-cke-initial-value',
-        rootAttrsAttrName: 'data-cke-root-attrs',
-      });
-    }
 
     try {
       this.editorPromise = this.createEditor();
@@ -121,6 +109,14 @@ class EditorHookImpl extends ClassHook {
             EditorsRegistry.the.unregister(editorId);
           }
         });
+
+        this.sentinel = new RootValueSentinel({
+          editorId,
+          el: this.el,
+          rootName: 'main',
+          valueAttrName: 'data-cke-initial-value',
+          rootAttrsAttrName: 'data-cke-root-attrs',
+        });
       }
     }
     catch (error: any) {
@@ -129,6 +125,13 @@ class EditorHookImpl extends ClassHook {
     }
 
     return this;
+  }
+
+  /**
+   * Watch attributes changes and sync value if something changed.
+   */
+  override async updated() {
+    this.sentinel?.updated();
   }
 
   /**

@@ -192,7 +192,7 @@ export function makeHook(constructor: new () => ClassHook): RequiredBy<Hook<any>
      * The updated lifecycle callback that delegates to the hook instance.
      */
     updated(this: any) {
-      this.el.instance.updated?.();
+      return this.el.instance.updated?.();
     },
   };
 }

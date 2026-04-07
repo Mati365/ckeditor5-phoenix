@@ -10,6 +10,7 @@ import {
   waitForTestEditor,
 } from '~/test-utils';
 
+import { timeout } from '../shared';
 import { EditableHook } from './editable';
 import { EditorHook } from './editor';
 import { EditorsRegistry } from './editor/editors-registry';
@@ -229,6 +230,77 @@ describe('editable hook', () => {
       EditableHook.destroyed.call({ el: editable });
 
       expect(offDocumentSpy).toHaveBeenCalledWith('change:data', expect.any(Function));
+    });
+  });
+  describe('updated', () => {
+    it('should update the editor root value when data-cke-editable-initial-value changes', async () => {
+      const editor = await appendMultirootEditor();
+      const editable = createEditableHtmlElement({
+        name: 'foo',
+        initialValue: '<p>Initial</p>',
+      });
+
+      document.body.appendChild(editable);
+      EditableHook.mounted.call({ el: editable });
+
+      await vi.waitFor(() => {
+        expect(editor.getData({ rootName: 'foo' })).toBe('<p>Initial</p>');
+      });
+
+      editable.setAttribute('data-cke-editable-initial-value', '<p>Updated</p>');
+      EditableHook.updated!.call({ el: editable });
+
+      await vi.waitFor(() => {
+        expect(editor.getData({ rootName: 'foo' })).toBe('<p>Updated</p>');
+      });
+    });
+
+    it('should not call setData when the value attribute did not change', async () => {
+      const editor = await appendMultirootEditor();
+      const editable = createEditableHtmlElement({
+        name: 'foo',
+        initialValue: '<p>Same</p>',
+      });
+
+      document.body.appendChild(editable);
+      EditableHook.mounted.call({ el: editable });
+
+      await vi.waitFor(() => {
+        expect(editor.getData({ rootName: 'foo' })).toBe('<p>Same</p>');
+      });
+
+      const setDataSpy = vi.spyOn(editor, 'setData');
+
+      editable.setAttribute('data-cke-editable-initial-value', '<p>Same</p>');
+      EditableHook.updated!.call({ el: editable });
+
+      await timeout(50);
+
+      expect(setDataSpy).not.toHaveBeenCalled();
+    });
+
+    it('should update root attributes when data-cke-editable-root-attrs changes', async () => {
+      const editor = await appendMultirootEditor();
+      const editable = createEditableHtmlElement({
+        name: 'foo',
+        initialValue: '<p>Content</p>',
+      });
+
+      document.body.appendChild(editable);
+      EditableHook.mounted.call({ el: editable });
+
+      await vi.waitFor(() => {
+        expect(editor.getData({ rootName: 'foo' })).toBe('<p>Content</p>');
+      });
+
+      editable.setAttribute('data-cke-editable-root-attrs', JSON.stringify({ 'data-lang': 'pl' }));
+      EditableHook.updated!.call({ el: editable });
+
+      await vi.waitFor(() => {
+        const root = editor.model.document.getRoot('foo')!;
+
+        expect(root.getAttribute('data-lang')).toBe('pl');
+      });
     });
   });
 });

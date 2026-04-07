@@ -366,6 +366,64 @@ describe('editor hook', () => {
     });
   });
 
+  describe('updated', () => {
+    it('should update classic editor content when data-cke-initial-value attribute changes', async () => {
+      const hookElement = createEditorHtmlElement({
+        initialValue: '<p>Initial</p>',
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+
+      hookElement.setAttribute('data-cke-initial-value', '<p>Updated</p>');
+      EditorHook.updated!.call({ el: hookElement });
+
+      await vi.waitFor(() => {
+        expect(editor.getData()).toBe('<p>Updated</p>');
+      });
+    });
+
+    it('should update inline editor content when data-cke-initial-value attribute changes', async () => {
+      const hookElement = createEditorHtmlElement({
+        preset: createEditorPreset('inline'),
+        initialValue: '<p>Initial</p>',
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+
+      hookElement.setAttribute('data-cke-initial-value', '<p>Updated</p>');
+      EditorHook.updated!.call({ el: hookElement });
+
+      await vi.waitFor(() => {
+        expect(editor.getData()).toBe('<p>Updated</p>');
+      });
+    });
+
+    it('should not call setData when the value attribute did not change', async () => {
+      const hookElement = createEditorHtmlElement({
+        initialValue: '<p>Same</p>',
+      });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor();
+      const setDataSpy = vi.spyOn(editor, 'setData');
+
+      hookElement.setAttribute('data-cke-initial-value', '<p>Same</p>');
+      EditorHook.updated!.call({ el: hookElement });
+
+      await vi.waitFor(() => {
+        expect(setDataSpy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('value synchronization', () => {
     beforeEach(() => {
       vi.useFakeTimers();
