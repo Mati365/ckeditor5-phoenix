@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { CustomEditorPluginsRegistry, Hooks } from 'ckeditor5-phoenix';
 import { Socket } from 'phoenix';
 import { LiveSocket } from 'phoenix_live_view';
@@ -11,7 +12,6 @@ CustomEditorPluginsRegistry.the.register('HelloWorldPlugin', async () => {
     }
 
     init() {
-      // eslint-disable-next-line no-console
       console.info('Hello, World! Plugin initialized.');
     }
   };
@@ -26,8 +26,17 @@ CustomEditorPluginsRegistry.the.register('CustomContextPlugin', async () => {
     }
 
     init() {
-      // eslint-disable-next-line no-console
+      const { editors } = this.context;
+
       console.info('Custom Context Plugin initialized.');
+
+      editors!.on('add', (_, editor) => {
+        console.info('[MyCustomContextPlugin] Editor added:', editor);
+      });
+
+      editors!.on('remove', (_, editor) => {
+        console.info('[MyCustomContextPlugin] Editor removed:', editor);
+      });
     }
   };
 });

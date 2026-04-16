@@ -5,7 +5,7 @@ defmodule CKEditor5.Components.Context do
 
   use Phoenix.Component
 
-  alias CKEditor5.{Context, Contexts, Helpers}
+  alias CKEditor5.{Context, Contexts}
 
   attr :id, :string,
     required: false,
@@ -41,14 +41,13 @@ defmodule CKEditor5.Components.Context do
   def render(assigns) do
     assigns =
       assigns
-      |> Helpers.generate_id_if_missing("cke-context")
+      |> assign_default_context_id
       |> load_context()
 
     ~H"""
     <div
       id={@id}
       phx-hook="CKContext"
-      phx-update="ignore"
       data-cke-language={@language}
       data-cke-content-language={@content_language}
       data-cke-context={Jason.encode!(@context)}
@@ -57,6 +56,15 @@ defmodule CKEditor5.Components.Context do
       <%= render_slot(@inner_block) %>
     </div>
     """
+  end
+
+  defp assign_default_context_id(assigns) do
+    Phoenix.Component.assign_new(assigns, :id, fn ->
+      case assigns[:context] do
+        context when is_binary(context) -> "cke-context-#{context}"
+        _ -> "cke-context-custom"
+      end
+    end)
   end
 
   # Loads the preset configuration from the preset name

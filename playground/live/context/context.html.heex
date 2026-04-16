@@ -2,8 +2,53 @@
   <.back_to_home />
   <h1 class="mb-6 font-bold text-3xl">Context Demo</h1>
 
+  <form phx-submit="add_editor" phx-change="update_new_editor_name" class="flex sm:flex-row flex-col gap-2 mb-8">
+    <input
+      type="text"
+      name="editor_name"
+      value={@new_editor_name}
+      placeholder="Enter editor ID (e.g. sidebar)"
+      class="flex-1 p-2 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+    />
+    <button
+      type="submit"
+      class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-none font-bold text-white transition-colors"
+    >
+      Add Editor
+    </button>
+
+    <button
+      type="button"
+      phx-click="clear_editors"
+      class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-none font-bold text-white transition-colors"
+    >
+      Clear Editors
+    </button>
+  </form>
+
   <.cke_context context="custom">
-    <.ckeditor id="editor-a" class="mb-6" value="Child A" />
-    <.ckeditor id="editor-b" value="Child B" />
+    <%= for editor <- @editors do %>
+      <div class="bg-white mb-6 border border-gray-300" id={"container-#{editor.id}"} data-id={editor.id}>
+        <div class="flex flex-wrap justify-between items-center gap-2 bg-gray-50 p-2 border-gray-300 border-b">
+          <span class="font-mono font-bold text-gray-600 text-xs uppercase">Editor ID: <%= editor.id %></span>
+
+          <button
+            type="button"
+            phx-click="remove_editor"
+            phx-value-id={editor.id}
+            class="hover:bg-red-50 px-2 py-1 border border-red-600 rounded-none font-bold text-red-600 text-xs transition-colors"
+          >
+            Remove
+          </button>
+        </div>
+
+        <div class="p-2">
+          <.ckeditor
+            id={editor.id}
+            value={editor.value}
+          />
+        </div>
+      </div>
+    <% end %>
   </.cke_context>
 </div>

@@ -25,10 +25,24 @@ defmodule CKEditor5.Components.ContextTest do
     assert html =~ "qux"
   end
 
-  test "it should assign random ID if not provided" do
+  test "it should assign random ID if not provided (string context)" do
     html = render_component(&Context.render/1, context: "default")
-    assert html =~ ~s(id="cke-context-)
+    assert html =~ ~s(id="cke-context-default)
     assert html =~ ~s(phx-hook="CKContext")
+  end
+
+  test "it should assign random ID if not provided (object context)" do
+    context = %CKEditor5.Context{config: %{baz: :qux}}
+    html = render_component(&Context.render/1, context: context)
+
+    assert html =~ ~s(id="cke-context-custom)
+    assert html =~ ~s(phx-hook="CKContext")
+  end
+
+  test "it should not set phx-update=\"ignore\"" do
+    html = render_component(&Context.render/1, context: "default")
+
+    refute html =~ ~s(phx-update="ignore")
   end
 
   test "it is possible to pass CSS class to component" do
