@@ -1,8 +1,8 @@
 defmodule CKEditor5.Preset.CloudCompatibilityCheckerTest do
   use ExUnit.Case, async: true
 
-  alias CKEditor5.Preset.CloudCompatibilityChecker
   alias CKEditor5.{Cloud, Errors, License, Preset}
+  alias CKEditor5.Preset.CloudCompatibilityChecker
   alias CKEditor5.Test.LicenseGenerator
 
   describe "assign_default_cloud_config/1" do
