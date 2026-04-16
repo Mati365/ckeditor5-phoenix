@@ -20,8 +20,8 @@ defmodule CKEditor5.Cloud.AssetPackageBuilderTest do
       assert %AssetPackage{} = result
 
       # Should contain at least the main CKEditor5 package
-      assert length(result.js) >= 1
-      assert length(result.css) >= 1
+      assert result.js != []
+      assert result.css != []
 
       # Check that main CKEditor5 CSS is included
       assert "https://cdn.ckeditor.com/ckeditor5/1.0.0/ckeditor5.css" in result.css
