@@ -146,10 +146,10 @@ describe('makeHook', () => {
 
     await expect(hookObj.mounted.call(mockContext)).resolves.not.toThrow();
 
-    expect(() => hookObj.beforeUpdate?.call(mockContext)).not.toThrow();
-    expect(() => hookObj.updated?.call(mockContext)).not.toThrow();
-    expect(() => hookObj.disconnected?.call(mockContext)).not.toThrow();
-    expect(() => hookObj.reconnected?.call(mockContext)).not.toThrow();
+    expect(() => hookObj['beforeUpdate']?.call(mockContext)).not.toThrow();
+    expect(() => hookObj['updated']?.call(mockContext)).not.toThrow();
+    expect(() => hookObj['disconnected']?.call(mockContext)).not.toThrow();
+    expect(() => hookObj['reconnected']?.call(mockContext)).not.toThrow();
 
     await expect(hookObj.destroyed.call(mockContext)).resolves.not.toThrow();
   });

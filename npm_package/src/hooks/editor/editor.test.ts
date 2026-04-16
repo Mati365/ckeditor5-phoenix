@@ -378,7 +378,7 @@ describe('editor hook', () => {
       const editor = await waitForTestEditor();
 
       hookElement.setAttribute('data-cke-initial-value', '<p>Updated</p>');
-      EditorHook.updated!.call({ el: hookElement });
+      EditorHook['updated']!.call({ el: hookElement });
 
       await vi.waitFor(() => {
         expect(editor.getData()).toBe('<p>Updated</p>');
@@ -397,7 +397,7 @@ describe('editor hook', () => {
       const editor = await waitForTestEditor();
 
       hookElement.setAttribute('data-cke-initial-value', '<p>Updated</p>');
-      EditorHook.updated!.call({ el: hookElement });
+      EditorHook['updated']!.call({ el: hookElement });
 
       await vi.waitFor(() => {
         expect(editor.getData()).toBe('<p>Updated</p>');
@@ -416,7 +416,7 @@ describe('editor hook', () => {
       const setDataSpy = vi.spyOn(editor, 'setData');
 
       hookElement.setAttribute('data-cke-initial-value', '<p>Same</p>');
-      EditorHook.updated!.call({ el: hookElement });
+      EditorHook['updated']!.call({ el: hookElement });
 
       await vi.waitFor(() => {
         expect(setDataSpy).not.toHaveBeenCalled();

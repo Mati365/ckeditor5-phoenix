@@ -248,7 +248,7 @@ describe('editable hook', () => {
       });
 
       editable.setAttribute('data-cke-editable-initial-value', '<p>Updated</p>');
-      EditableHook.updated!.call({ el: editable });
+      EditableHook['updated']!.call({ el: editable });
 
       await vi.waitFor(() => {
         expect(editor.getData({ rootName: 'foo' })).toBe('<p>Updated</p>');
@@ -272,7 +272,7 @@ describe('editable hook', () => {
       const setDataSpy = vi.spyOn(editor, 'setData');
 
       editable.setAttribute('data-cke-editable-initial-value', '<p>Same</p>');
-      EditableHook.updated!.call({ el: editable });
+      EditableHook['updated']!.call({ el: editable });
 
       await timeout(50);
 
@@ -294,7 +294,7 @@ describe('editable hook', () => {
       });
 
       editable.setAttribute('data-cke-editable-root-attrs', JSON.stringify({ 'data-lang': 'pl' }));
-      EditableHook.updated!.call({ el: editable });
+      EditableHook['updated']!.call({ el: editable });
 
       await vi.waitFor(() => {
         const root = editor.model.document.getRoot('foo')!;
