@@ -21,7 +21,8 @@ defmodule CKEditor5.MixProject do
       package: package(),
       aliases: aliases(),
       dialyzer: dialyzer(),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
