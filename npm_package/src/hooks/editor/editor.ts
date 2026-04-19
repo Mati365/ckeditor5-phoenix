@@ -184,7 +184,7 @@ class EditorHookImpl extends ClassHook {
     const { preset, editorId, contextId, editableHeight, events, saveDebounceMs, language, watchdog } = this.attrs;
     const { customTranslations, type, license, config: { plugins, ...config } } = preset;
 
-    // Wrap editor creator with watchdog if needed.
+    // If `context` specified then wait for it.
     let Constructor: EditorCreator = await loadEditorConstructor(type);
     const context = await (
       contextId
@@ -217,6 +217,7 @@ class EditorHookImpl extends ClassHook {
 
     const { loadedPlugins, hasPremium } = await loadEditorPlugins(plugins);
 
+    // Sync `main` root (usually in single root editors) with hidden input.
     if (isSingleRootEditor(type)) {
       loadedPlugins.push(
         await createSyncEditorWithInputPlugin({
@@ -226,6 +227,7 @@ class EditorHookImpl extends ClassHook {
       );
     }
 
+    // Add phoenix integration plugins.
     loadedPlugins.push(
       ...await Promise.all([
         createSyncEditorWithPhoenixPlugin(
