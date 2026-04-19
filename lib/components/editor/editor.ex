@@ -133,7 +133,7 @@ defmodule CKEditor5.Components.Editor do
       data-cke-context-id={@context_id}
     >
       <%= unless EditorType.has_external_editables?(@preset.type) do %>
-        <div id={"#{@id}_editor"}></div>
+        <div id={"#{@id}_editor"} data-cke-controlled></div>
       <% end %>
 
       <%= if @name do %>

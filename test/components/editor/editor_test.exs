@@ -31,7 +31,7 @@ defmodule CKEditor5.Components.EditorTest do
     assert html =~ ~s(phx-hook="CKEditor5")
     assert html =~ ~s(id="editor1")
     assert html =~ ~s(cke-initial-value="Hello")
-    assert html =~ ~s(<div id="editor1_editor"></div>)
+    assert html =~ ~s(<div id="editor1_editor" data-cke-controlled></div>)
     assert html =~ ~s(<textarea)
   end
 
@@ -436,7 +436,7 @@ defmodule CKEditor5.Components.EditorTest do
       html = render_component(&Editor.render/1, id: "editor_no_inner", name: "content")
 
       assert html =~ ~s(id="editor_no_inner")
-      assert html =~ ~s(<div id="editor_no_inner_editor"></div>)
+      assert html =~ ~s(<div id="editor_no_inner_editor" data-cke-controlled></div>)
     end
   end
 
@@ -504,17 +504,17 @@ defmodule CKEditor5.Components.EditorTest do
   describe "editor container rendering" do
     test "renders editor container for classic editor" do
       html = render_component(&Editor.render/1, id: "editor_classic", type: :classic)
-      assert html =~ ~s(<div id="editor_classic_editor"></div>)
+      assert html =~ ~s(<div id="editor_classic_editor" data-cke-controlled></div>)
     end
 
     test "does not render editor container for multiroot editor" do
       html = render_component(&Editor.render/1, id: "editor_multiroot", type: :multiroot)
-      refute html =~ ~s(<div id="editor_multiroot_editor"></div>)
+      refute html =~ ~s(<div id="editor_multiroot_editor" data-cke-controlled></div>)
     end
 
     test "does not render editor container for decoupled editor" do
       html = render_component(&Editor.render/1, id: "editor_decoupled", type: :decoupled)
-      refute html =~ ~s(<div id="editor_decoupled_editor"></div>)
+      refute html =~ ~s(<div id="editor_decoupled_editor" data-cke-controlled></div>)
     end
   end
 end

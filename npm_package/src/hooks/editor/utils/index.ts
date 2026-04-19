@@ -1,3 +1,4 @@
+export * from './cleanup-orphan-editor-elements';
 export * from './create-editor-in-context';
 export * from './is-single-root-editor';
 export * from './load-editor-constructor';

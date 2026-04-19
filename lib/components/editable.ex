@@ -76,7 +76,11 @@ defmodule CKEditor5.Components.Editable do
       data-cke-editable-required={@required}
       {@rest}
     >
-      <div data-cke-editable-content></div>
+      <div
+        data-cke-editable-content
+        data-cke-controlled
+      ></div>
+
       <%= if @name do %>
         <HiddenInput.render
           id={"#{@id}_input"}

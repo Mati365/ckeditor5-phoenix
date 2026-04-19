@@ -54,6 +54,7 @@ config :ckeditor5_phoenix,
         ],
         plugins: [
           :HelloWorldPlugin,
+          :CrashOnMagicWordPlugin,
           :AccessibilityHelp,
           :Autoformat,
           :BlockQuote,

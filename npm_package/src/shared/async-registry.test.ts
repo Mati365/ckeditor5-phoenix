@@ -234,7 +234,7 @@ describe('async registry', () => {
     });
   });
 
-  describe('getitems', () => {
+  describe('getItems', () => {
     it('should return all registered items', () => {
       const item1 = createMockItem('item1');
       const item2 = createMockItem('item2');
@@ -244,7 +244,7 @@ describe('async registry', () => {
 
       const items = registry.getItems();
 
-      expect(items).toHaveLength(3); // item1, item2, and default (which is item1)
+      expect(items).toHaveLength(3);
       expect(items).toContain(item1);
       expect(items).toContain(item2);
     });
@@ -252,16 +252,30 @@ describe('async registry', () => {
     it('should return unique items if some point to the same instance', () => {
       const item1 = createMockItem('item1');
 
-      registry.register('item1', item1); // This also registers it as default
+      registry.register('item1', item1);
 
       const items = registry.getItems();
 
-      expect(items).toHaveLength(2); // item1 and default (which is item1)
+      expect(items).toHaveLength(2);
       expect(items.filter(e => e === item1)).toHaveLength(2);
     });
   });
 
-  describe('hasitem', () => {
+  describe('getItem', () => {
+    it('should return registered item', () => {
+      const item = createMockItem('item1');
+
+      registry.register('item1', item);
+
+      expect(registry.getItem('item1')).toBe(item);
+    });
+
+    it('should return undefined if item doesn\'t exist', () => {
+      expect(registry.getItem('item1')).toBeUndefined();
+    });
+  });
+
+  describe('hasItem', () => {
     it('should return true if an item with the given ID is registered', () => {
       const item = createMockItem('item1');
 

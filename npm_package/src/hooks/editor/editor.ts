@@ -14,6 +14,7 @@ import {
   createSyncEditorWithPhoenixPlugin,
 } from './plugins';
 import {
+  cleanupOrphanEditorElements,
   createEditorInContext,
   isSingleRootEditor,
   loadAllEditorTranslations,
@@ -197,6 +198,15 @@ class EditorHookImpl extends ClassHook {
 
       ({ Constructor } = wrapped);
       wrapped.watchdog.on('restart', () => {
+        // Watchdog is not ideal. It tends to leave some orphans.
+        const prevEditor = EditorsRegistry.the.getItem(editorId);
+
+        /* v8 ignore next 3 */
+        if (prevEditor) {
+          cleanupOrphanEditorElements(prevEditor);
+        }
+
+        // Register new instance.
         const newInstance = wrapped.watchdog.editor!;
 
         this.editorPromise = Promise.resolve(newInstance);

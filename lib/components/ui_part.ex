@@ -37,6 +37,7 @@ defmodule CKEditor5.Components.UIPart do
       phx-update="ignore"
       data-cke-editor-id={@editor_id}
       data-cke-ui-part-name={@name}
+      data-cke-controlled
       {@rest}
     >
     </div>

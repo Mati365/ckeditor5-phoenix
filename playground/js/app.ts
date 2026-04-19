@@ -17,6 +17,43 @@ CustomEditorPluginsRegistry.the.register('HelloWorldPlugin', async () => {
   };
 });
 
+CustomEditorPluginsRegistry.the.register('CrashOnMagicWordPlugin', async () => {
+  const { Plugin } = await import('ckeditor5');
+  const MAGIC_WORD = 'okoń';
+
+  return class CrashOnMagicWordPlugin extends Plugin {
+    public static get pluginName() {
+      return 'CrashOnMagicWordPlugin' as const;
+    }
+
+    public init(): void {
+      const editor = this.editor;
+      let timer: ReturnType<typeof setTimeout> | null = null;
+
+      editor.model.document.on('change:data', () => {
+        const data = editor.getData();
+
+        if (!data.toLowerCase().includes(MAGIC_WORD)) {
+          return;
+        }
+
+        if (timer !== null) {
+          clearTimeout(timer);
+        }
+
+        timer = setTimeout(() => {
+          editor.model.change((writer) => {
+            const root = editor.model.document.getRoot()!;
+            const illegalNode = writer.createElement('unregisteredElement');
+
+            writer.insert(illegalNode, root, 0);
+          });
+        }, 200);
+      });
+    }
+  };
+});
+
 CustomEditorPluginsRegistry.the.register('CustomContextPlugin', async () => {
   const { ContextPlugin } = await import('ckeditor5');
 
