@@ -28,7 +28,7 @@ describe('editor hook', () => {
   });
 
   afterEach(async () => {
-    await EditorsRegistry.the.destroyAll();
+    await EditorsRegistry.the.reset();
     CustomEditorPluginsRegistry.the.unregisterAll();
   });
 
@@ -346,22 +346,6 @@ describe('editor hook', () => {
 
       EditorHook.destroyed.call({ el: hookElement });
 
-      expect(hookElement.style.display).toBe('none');
-    });
-
-    it('should not throw if destroyed editor with failed initialization', async () => {
-      const hookElement = createEditorHtmlElement({
-        preset: createEditorPreset('decoupled'),
-        initialValue: null,
-      });
-
-      document.body.appendChild(hookElement);
-      EditorHook.mounted.call({ el: hookElement });
-
-      // It'll fail, as it has no editable.
-      await waitForTestEditor().catch(() => {});
-
-      EditorHook.destroyed.call({ el: hookElement });
       expect(hookElement.style.display).toBe('none');
     });
   });
@@ -1079,6 +1063,12 @@ describe('editor hook', () => {
 
       const originalEditor = await waitForTestEditor();
       const watchdog = unwrapEditorWatchdog(originalEditor)!;
+
+      (watchdog as any)._fire('error', {
+        error: new Error('Mock'),
+        causesRestart: true,
+      });
+
       (watchdog as any)._restart();
 
       await vi.waitFor(async () => {

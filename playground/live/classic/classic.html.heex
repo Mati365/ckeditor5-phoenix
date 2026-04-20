@@ -12,18 +12,26 @@
     </button>
 
     <button
+      phx-click="increment_root_attrs"
+      class="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white transition-colors duration-200"
+    >
+      Increment Root Attr
+    </button>
+
+    <button
+      id="trigger-editor-error"
+      phx-hook="TriggerEditorError"
+      class="hover:bg-red-50 px-4 py-2 border border-red-600 text-red-600 transition-colors duration-200"
+    >
+      Trigger error
+    </button>
+
+    <button
       phx-click="preset_template"
       phx-value-type="clear"
       class="hover:bg-red-50 px-4 py-2 border border-red-600 text-red-600 transition-colors duration-200"
     >
       Clear
-    </button>
-
-    <button
-      phx-click="increment_root_attrs"
-      class="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white transition-colors duration-200"
-    >
-      Increment Root Attr
     </button>
 
     <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 border border-gray-200 rounded-none text-sm">

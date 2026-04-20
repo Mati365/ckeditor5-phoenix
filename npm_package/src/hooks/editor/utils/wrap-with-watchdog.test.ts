@@ -15,31 +15,51 @@ describe('wrap with watchdog', () => {
     element.remove();
   });
 
-  it('returns editor instance after calling Constructor.create', async () => {
-    const { Constructor } = await wrapWithWatchdog(ClassicEditor);
-    const editor = await Constructor.create(element, {
-      licenseKey: 'GPL',
-    });
+  it('returns editor instance after starting the watchdog', async () => {
+    const factory = () => ClassicEditor.create(element, { licenseKey: 'GPL' });
+    const watchdog = await wrapWithWatchdog(factory, null);
 
-    expect(editor).toBeInstanceOf(ClassicEditor);
+    await watchdog.create({});
 
-    await editor.destroy();
+    expect(watchdog.editor).toBeInstanceOf(ClassicEditor);
+
+    await watchdog.destroy();
   });
 
   it('returns instance of watchdog', async () => {
-    const { watchdog } = await wrapWithWatchdog(ClassicEditor);
+    const factory = () => ClassicEditor.create(element, { licenseKey: 'GPL' });
+    const watchdog = await wrapWithWatchdog(factory, null);
 
     expect(watchdog).toBeInstanceOf(EditorWatchdog);
   });
 
   it('should be possible to unwrap watchdog from editor instance', async () => {
-    const { Constructor } = await wrapWithWatchdog(ClassicEditor);
-    const editor = await Constructor.create(element, {
-      licenseKey: 'GPL',
-    });
+    const factory = () => ClassicEditor.create(element, { licenseKey: 'GPL' });
+    const watchdog = await wrapWithWatchdog(factory, null);
 
-    expect(unwrapEditorWatchdog(editor)).toBeInstanceOf(EditorWatchdog);
+    await watchdog.create({});
 
-    await editor.destroy();
+    expect(unwrapEditorWatchdog(watchdog.editor!)).toBeInstanceOf(EditorWatchdog);
+
+    await watchdog.destroy();
+  });
+
+  it('rebuilds config by calling factory again on restart', async () => {
+    let callCount = 0;
+    const factory = async () => {
+      callCount++;
+      return ClassicEditor.create(element, { licenseKey: 'GPL' });
+    };
+
+    const watchdog = await wrapWithWatchdog(factory, null);
+    await watchdog.create({});
+
+    expect(callCount).toBe(1);
+
+    await (watchdog as any)._restart();
+
+    expect(callCount).toBe(2);
+
+    await watchdog.destroy();
   });
 });

@@ -1,3 +1,5 @@
+import { areMapsEqual } from './are-maps-equal';
+
 /**
  * Generic async registry for objects with an async destroy method.
  * Provides a way to register, unregister, and execute callbacks on objects by ID.
@@ -22,6 +24,18 @@ export class AsyncRegistry<T extends Destructible> {
    * Set of watchers that observe changes to the registry.
    */
   private readonly watchers = new Set<RegistryWatcher<T>>();
+
+  /**
+   * Batch nesting depth. When > 0, watcher notifications are deferred.
+   */
+  private batchDepth = 0;
+
+  /**
+   * Snapshot of the last state dispatched to watchers, used for change detection.
+   */
+  private lastNotifiedItems: Map<any, any> | null = null;
+
+  private lastNotifiedErrors: Map<any, any> | null = null;
 
   /**
    * Executes a function on an item.
@@ -69,30 +83,92 @@ export class AsyncRegistry<T extends Destructible> {
   }
 
   /**
+   * Reactively binds a mount/unmount lifecycle to a single registry item.
+   *
+   * @param id The ID of the item to observe.
+   * @param onMount Function executed when the item mounts.
+   * @returns A function that stops observing and immediately runs any pending cleanup.
+   */
+  mountEffect<E extends T = T>(
+    id: RegistryId | null,
+    onMount: (item: E) => (() => void) | void,
+  ): () => void {
+    let cleanup: VoidFunction | void;
+    let mountedItem: T | undefined;
+    let unmounted = false;
+
+    const unwatch = this.watch((items) => {
+      const item = items.get(id);
+
+      if (item === mountedItem) {
+        return;
+      }
+
+      cleanup?.();
+      cleanup = undefined;
+      mountedItem = item;
+
+      if (!item) {
+        return;
+      }
+
+      try {
+        const newCleanup = onMount(item as E);
+
+        if (unmounted) {
+          newCleanup?.();
+          unwatch();
+        }
+        else {
+          cleanup = newCleanup;
+        }
+      /* v8 ignore next 5 */
+      }
+      catch (err) {
+        console.error(err);
+        throw err;
+      }
+    });
+
+    return () => {
+      unmounted = true;
+
+      if (mountedItem) {
+        unwatch();
+        cleanup?.();
+        cleanup = undefined;
+      }
+    };
+  }
+
+  /**
    * Registers an item.
    *
    * @param id The ID of the item.
    * @param item The item instance.
    */
   register(id: RegistryId | null, item: T): void {
-    if (this.items.has(id)) {
-      throw new Error(`Item with ID "${id}" is already registered.`);
-    }
+    this.batch(() => {
+      if (this.items.has(id)) {
+        throw new Error(`Item with ID "${id}" is already registered.`);
+      }
 
-    this.resetErrors(id);
-    this.items.set(id, item);
+      this.resetErrors(id);
+      this.items.set(id, item);
 
-    // Execute all pending callbacks for this item (synchronously).
-    const pending = this.pendingCallbacks.get(id);
+      // Execute all pending callbacks for this item (synchronously).
+      const pending = this.pendingCallbacks.get(id);
 
-    if (pending) {
-      pending.success.forEach(callback => callback(item));
-      this.pendingCallbacks.delete(id);
-    }
+      if (pending) {
+        pending.success.forEach(callback => callback(item));
+        this.pendingCallbacks.delete(id);
+      }
 
-    // Register the first item as the default item (null ID).
-    this.registerAsDefault(id, item);
-    this.notifyWatchers();
+      // Register the first item as the default item (null ID).
+      if (this.items.size === 1 && id !== null) {
+        this.register(null, item);
+      }
+    });
   }
 
   /**
@@ -102,24 +178,23 @@ export class AsyncRegistry<T extends Destructible> {
    * @param error The error to register.
    */
   error(id: RegistryId | null, error: any): void {
-    this.items.delete(id);
-    this.initializationErrors.set(id, error);
+    this.batch(() => {
+      this.items.delete(id);
+      this.initializationErrors.set(id, error);
 
-    // Execute all pending error callbacks for this item.
-    const pending = this.pendingCallbacks.get(id);
+      // Execute all pending error callbacks for this item.
+      const pending = this.pendingCallbacks.get(id);
 
-    if (pending) {
-      pending.error.forEach(callback => callback(error));
-      this.pendingCallbacks.delete(id);
-    }
+      if (pending) {
+        pending.error.forEach(callback => callback(error));
+        this.pendingCallbacks.delete(id);
+      }
 
-    // Set as default error if this is the first error and no items exist.
-    if (this.initializationErrors.size === 1 && !this.items.size) {
-      this.error(null, error);
-    }
-
-    // Notify watchers about the error state.
-    this.notifyWatchers();
+      // Set as default error if this is the first error and no items exist.
+      if (this.initializationErrors.size === 1 && !this.items.size) {
+        this.error(null, error);
+      }
+    });
   }
 
   /**
@@ -142,21 +217,23 @@ export class AsyncRegistry<T extends Destructible> {
    * Un-registers an item.
    *
    * @param id The ID of the item.
+   * @param resetPendingCallbacks If true resets pending callbacks.
    */
-  unregister(id: RegistryId | null): void {
-    if (!this.items.has(id)) {
-      throw new Error(`Item with ID "${id}" is not registered.`);
-    }
+  unregister(id: RegistryId | null, resetPendingCallbacks: boolean = true): void {
+    this.batch(() => {
+      // If unregistering the default item, clear it.
+      if (id && this.items.get(null) === this.items.get(id)) {
+        this.unregister(null, false);
+      }
 
-    // If unregistering the default item, clear it.
-    if (id && this.items.get(null) === this.items.get(id)) {
-      this.unregister(null);
-    }
+      this.items.delete(id);
 
-    this.items.delete(id);
-    this.pendingCallbacks.delete(id);
+      if (resetPendingCallbacks) {
+        this.pendingCallbacks.delete(id);
+      }
 
-    this.notifyWatchers();
+      this.resetErrors(id);
+    });
   }
 
   /**
@@ -216,7 +293,41 @@ export class AsyncRegistry<T extends Destructible> {
 
     await Promise.all(promises);
 
-    this.notifyWatchers();
+    this.flushWatchers();
+  }
+
+  /**
+   * Destroys all registered editors and removes all watchers.
+   */
+  async reset() {
+    await this.destroyAll();
+    this.watchers.clear();
+  }
+
+  /**
+   * Executes a callback while deferring all watcher notifications.
+   * A single notification is fired synchronously after the callback returns,
+   * but only if the registry actually changed.
+   *
+   * Batches can be nested — watchers are notified only when the outermost
+   * batch completes.
+   *
+   * @param fn The callback to execute.
+   * @returns The return value of the callback.
+   */
+  batch<R>(fn: () => R): R {
+    this.batchDepth++;
+
+    try {
+      return fn();
+    }
+    finally {
+      this.batchDepth--;
+
+      if (this.batchDepth === 0) {
+        this.flushWatchers();
+      }
+    }
   }
 
   /**
@@ -247,15 +358,23 @@ export class AsyncRegistry<T extends Destructible> {
   }
 
   /**
-   * Notifies all watchers about changes to the registry.
+   * Immediately dispatches the current state to all watchers if it changed.
    */
-  private notifyWatchers(): void {
-    this.watchers.forEach(
-      watcher => watcher(
-        new Map(this.items),
-        new Map(this.initializationErrors),
-      ),
-    );
+  private flushWatchers(): void {
+    if (
+      areMapsEqual(this.lastNotifiedItems, this.items)
+      && areMapsEqual(this.lastNotifiedErrors, this.initializationErrors)
+    ) {
+      return;
+    }
+
+    this.lastNotifiedItems = new Map(this.items);
+    this.lastNotifiedErrors = new Map(this.initializationErrors);
+
+    this.watchers.forEach(watcher => watcher(
+      new Map(this.items),
+      new Map(this.initializationErrors),
+    ));
   }
 
   /**
@@ -273,18 +392,6 @@ export class AsyncRegistry<T extends Destructible> {
     }
 
     return pending;
-  }
-
-  /**
-   * Registers an item as the default (null ID) item if it's the first one.
-   *
-   * @param id The ID of the item being registered.
-   * @param item The item instance.
-   */
-  private registerAsDefault(id: RegistryId | null, item: T): void {
-    if (this.items.size === 1 && id !== null) {
-      this.register(null, item);
-    }
   }
 }
 

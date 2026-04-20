@@ -6,9 +6,13 @@ import type { Editor } from 'ckeditor5';
  * because the watchdog does not clean up the previous editor's DOM on its own.
  */
 export function cleanupOrphanEditorElements(editor: Editor): void {
-  const uiElement = editor.ui?.element;
+  const uiElements = [
+    editor.ui?.element,
+    editor.ui?.view?.toolbar?.element,
+    editor.ui?.view?.menuBarView?.element,
+  ].filter(Boolean) as HTMLElement[];
 
-  if (uiElement?.isConnected) {
+  for (const uiElement of uiElements) {
     removeOrReset(uiElement);
   }
 

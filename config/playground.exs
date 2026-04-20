@@ -19,7 +19,7 @@ config :ckeditor5_phoenix,
         ]
       },
       watchdog: %{
-        crash_number_limit: 20
+        crashNumberLimit: 20
       }
     }
   },
@@ -99,6 +99,9 @@ config :ckeditor5_phoenix,
             :imageResize
           ]
         }
+      },
+      watchdog: %{
+        crashNumberLimit: 20
       }
     }
   }

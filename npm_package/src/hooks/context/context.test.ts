@@ -19,7 +19,7 @@ describe('context hook', () => {
   });
 
   afterEach(async () => {
-    await ContextsRegistry.the.destroyAll();
+    await ContextsRegistry.the.reset();
     CustomEditorPluginsRegistry.the.unregisterAll();
   });
 

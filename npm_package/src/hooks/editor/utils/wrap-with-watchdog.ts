@@ -1,35 +1,32 @@
-import type { Editor, EditorWatchdog } from 'ckeditor5';
+import type { Editor, EditorWatchdog, WatchdogConfig } from 'ckeditor5';
 
 const EDITOR_WATCHDOG_SYMBOL = Symbol.for('elixir-editor-watchdog');
 
 /**
- * Wraps an Editor creator with a watchdog for automatic recovery.
+ * Wraps an editor factory with a watchdog for automatic recovery.
+ * The factory is invoked on each (re)start, so configuration is rebuilt every time.
  *
- * @param Editor - The Editor creator to wrap.
- * @returns The Editor creator wrapped with a watchdog.
+ * @param factory Async function that creates and returns an Editor instance.
+ * @param watchdogConfig Configuration of the watchdog.
+ * @returns The watchdog instance.
  */
-export async function wrapWithWatchdog(Editor: EditorCreator) {
+export async function wrapWithWatchdog(factory: () => Promise<Editor>, watchdogConfig: WatchdogConfig | null) {
   const { EditorWatchdog } = await import('ckeditor5');
-  const watchdog = new EditorWatchdog(Editor);
 
-  watchdog.setCreator(async (...args: Parameters<typeof Editor['create']>) => {
-    const editor = await Editor.create(...args);
+  const watchdog = new EditorWatchdog(null, watchdogConfig ?? {
+    crashNumberLimit: 10,
+    minimumNonErrorTimePeriod: 5000,
+  });
+
+  watchdog.setCreator(async () => {
+    const editor = await factory();
 
     (editor as any)[EDITOR_WATCHDOG_SYMBOL] = watchdog;
 
     return editor;
   });
 
-  return {
-    watchdog,
-    Constructor: {
-      create: async (...args: Parameters<typeof Editor['create']>) => {
-        await watchdog.create(...args);
-
-        return watchdog.editor!;
-      },
-    },
-  };
+  return watchdog;
 }
 
 /**
@@ -42,10 +39,3 @@ export function unwrapEditorWatchdog(editor: Editor): EditorWatchdog | null {
 
   return null;
 }
-
-/**
- * Type representing an Editor creator with a create method.
- */
-export type EditorCreator = {
-  create: (...args: any) => Promise<Editor>;
-};

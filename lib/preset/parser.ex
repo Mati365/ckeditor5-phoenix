@@ -19,6 +19,7 @@ defmodule CKEditor5.Preset.Parser do
         cloud: spec(is_map() or is_nil()),
         license_key: spec(is_binary()),
         config: spec(is_map()),
+        watchdog: spec(is_map() or is_nil()),
         custom_translations: spec(is_map() or is_nil())
       })
 
@@ -106,6 +107,7 @@ defmodule CKEditor5.Preset.Parser do
     %Preset{
       type: parsed_map[:type] || :classic,
       config: parsed_map[:config] || %{},
+      watchdog: parsed_map[:watchdog],
       license: parsed_map[:license],
       cloud: parsed_map[:cloud],
       custom_translations: parsed_map[:custom_translations]

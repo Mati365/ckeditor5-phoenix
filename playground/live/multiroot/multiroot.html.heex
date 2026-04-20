@@ -24,6 +24,15 @@
     >
       Clear Roots
     </button>
+
+    <button
+      id="trigger-editor-error"
+      type="button"
+      phx-hook="TriggerEditorError"
+      class="hover:bg-red-50 px-4 py-2 border border-red-600 text-red-600 transition-colors duration-200"
+    >
+      Trigger error
+    </button>
   </form>
 
   <.ckeditor type="multiroot" change_event />

@@ -1,6 +1,7 @@
-import type { MultiRootEditor } from 'ckeditor5';
+import type { DecoupledEditor, MultiRootEditor } from 'ckeditor5';
 
 import { ClassHook, debounce, makeHook } from '../shared';
+import { isMultirootEditorInstance } from './editor';
 import { EditorsRegistry } from './editor/editors-registry';
 import { RootValueSentinel } from './root-value-sentinel';
 
@@ -8,11 +9,6 @@ import { RootValueSentinel } from './root-value-sentinel';
  * Editable hook for Phoenix LiveView. It allows you to create editables for multi-root editors.
  */
 class EditableHookImpl extends ClassHook {
-  /**
-   * The promise that resolves to the editor instance once it's registered.
-   */
-  private editorPromise: Promise<MultiRootEditor | null> | null = null;
-
   /**
    * The sentinel instance responsible for tracking and updating root values and attributes.
    */
@@ -42,27 +38,28 @@ class EditableHookImpl extends ClassHook {
   /**
    * Mounts the editable component.
    */
-  override async mounted() {
+  override mounted() {
     const { editableId, editorId, rootName, initialValue } = this.attrs;
-    const input = this.el.querySelector<HTMLInputElement>(`#${editableId}_input`);
 
-    // If the editor is not registered yet, we will wait for it to be registered.
-    this.editorPromise = EditorsRegistry.the.execute(editorId, async (editor: MultiRootEditor) => {
+    const unmountEffect = EditorsRegistry.the.mountEffect(editorId, (editor: MultiRootEditor | DecoupledEditor) => {
+      const contentElement = this.el.querySelector('[data-cke-editable-content]') as HTMLElement;
+
       /* v8 ignore next 3 */
       if (this.isBeingDestroyed()) {
-        return null;
+        return;
       }
 
-      const { ui, editing, model } = editor;
+      const input = this.el.querySelector<HTMLInputElement>(`#${editableId}_input`);
 
-      if (!model.document.getRoot(rootName)) {
+      if (isMultirootEditorInstance(editor) && !editor.model.document.getRoot(rootName)) {
+        const { ui, editing } = editor;
+
         editor.addRoot(rootName, {
           isUndoable: false,
           data: initialValue,
         });
 
-        const contentElement = this.el.querySelector('[data-cke-editable-content]') as HTMLElement | null;
-        const editable = ui.view.createEditable(rootName, contentElement!);
+        const editable = ui.view.createEditable(rootName, contentElement);
 
         ui.addEditable(editable);
         editing.view.forceRender();
@@ -70,19 +67,40 @@ class EditableHookImpl extends ClassHook {
 
       this.sentinel = new RootValueSentinel({
         el: this.el,
+        editor,
+        rootName,
         valueAttrName: 'data-cke-editable-initial-value',
         rootAttrsAttrName: 'data-cke-editable-root-attrs',
-        editorId,
-        rootName,
       });
 
-      if (input) {
-        const unmount = syncEditorRootToInput(input, editor, rootName);
+      const unsyncInput = input ? syncEditorRootToInput(input, editor, rootName) : null;
 
-        this.onBeforeDestroy(unmount);
-      }
+      return () => {
+        unsyncInput?.();
 
-      return editor;
+        this.sentinel?.destroy();
+        this.sentinel = null;
+
+        if (editor.state !== 'destroyed') {
+          const root = editor.model.document.getRoot(rootName);
+
+          if (root && isMultirootEditorInstance(editor)) {
+            if (editor.ui.view.editables[rootName]) {
+              editor.detachEditable(root);
+            }
+
+            if (root.isAttached()) {
+              editor.detachRoot(rootName, false);
+            }
+          }
+        }
+      };
+    });
+
+    // Let's hide the element during destruction to prevent flickering.
+    this.onBeforeDestroy(() => {
+      this.el.style.display = 'none';
+      unmountEffect();
     });
   }
 
@@ -91,39 +109,6 @@ class EditableHookImpl extends ClassHook {
    */
   override async updated() {
     this.sentinel?.updated();
-  }
-
-  /**
-   * Destroys the editable component. Unmounts root from the editor.
-   */
-  override async destroyed() {
-    const { rootName } = this.attrs;
-
-    // Let's hide the element during destruction to prevent flickering.
-    this.el.style.display = 'none';
-
-    // Destroy value sentinel.
-    this.sentinel?.destroy();
-    this.sentinel = null;
-
-    // Let's wait for the mounted promise to resolve before proceeding with destruction.
-    const editor = await this.editorPromise;
-    this.editorPromise = null;
-
-    // Unmount root from the editor.
-    if (editor && editor.state !== 'destroyed') {
-      const root = editor.model.document.getRoot(rootName);
-
-      if (root && 'detachEditable' in editor) {
-        if (editor.ui.view.editables[rootName]) {
-          editor.detachEditable(root);
-        }
-
-        if (root.isAttached()) {
-          editor.detachRoot(rootName, false);
-        }
-      }
-    }
   }
 }
 
@@ -140,7 +125,11 @@ export const EditableHook = makeHook(EditableHookImpl);
  * @param editor - The CKEditor instance.
  * @param rootName - The name of the root to synchronize.
  */
-function syncEditorRootToInput(input: HTMLInputElement, editor: MultiRootEditor, rootName: string) {
+function syncEditorRootToInput(
+  input: HTMLInputElement,
+  editor: MultiRootEditor | DecoupledEditor,
+  rootName: string,
+) {
   const sync = () => {
     input.value = editor.getData({ rootName });
   };

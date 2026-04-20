@@ -22,7 +22,7 @@ describe('ui part hook', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    await EditorsRegistry.the.destroyAll();
+    await EditorsRegistry.the.reset();
   });
 
   describe('mount', () => {

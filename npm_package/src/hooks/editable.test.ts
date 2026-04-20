@@ -21,7 +21,7 @@ describe('editable hook', () => {
   });
 
   afterEach(async () => {
-    await EditorsRegistry.the.destroyAll();
+    await EditorsRegistry.the.reset();
   });
 
   describe('mount', () => {

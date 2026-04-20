@@ -52,6 +52,136 @@ describe('cleanupOrphanEditorElements', () => {
     expect(() => cleanupOrphanEditorElements({ ui: {} } as Editor)).not.toThrow();
   });
 
+  it('should remove toolbar element from the DOM if it is connected', () => {
+    const toolbarElement = document.createElement('div');
+    document.body.appendChild(toolbarElement);
+
+    const mockEditor = {
+      ui: {
+        view: {
+          toolbar: { element: toolbarElement },
+        },
+      },
+    } as unknown as Editor;
+
+    expect(toolbarElement.isConnected).toBe(true);
+
+    cleanupOrphanEditorElements(mockEditor);
+
+    expect(toolbarElement.isConnected).toBe(false);
+  });
+
+  it('should clear toolbar element instead of removing it when it has data-cke-controlled', () => {
+    const toolbarElement = document.createElement('div');
+    toolbarElement.setAttribute('data-cke-controlled', '');
+    toolbarElement.innerHTML = '<button>Bold</button>';
+    document.body.appendChild(toolbarElement);
+
+    const mockEditor = {
+      ui: {
+        view: {
+          toolbar: { element: toolbarElement },
+        },
+      },
+    } as unknown as Editor;
+
+    expect(toolbarElement.isConnected).toBe(true);
+
+    cleanupOrphanEditorElements(mockEditor);
+
+    expect(toolbarElement.isConnected).toBe(true);
+    expect(toolbarElement.innerHTML).toBe('');
+  });
+
+  it('should not throw if toolbar element is absent', () => {
+    const mockEditor = {
+      ui: {
+        view: {
+          toolbar: {},
+        },
+      },
+    } as unknown as Editor;
+
+    expect(() => cleanupOrphanEditorElements(mockEditor)).not.toThrow();
+  });
+
+  it('should remove menuBarView element from the DOM if it is connected', () => {
+    const menuBarElement = document.createElement('div');
+    document.body.appendChild(menuBarElement);
+
+    const mockEditor = {
+      ui: {
+        view: {
+          menuBarView: { element: menuBarElement },
+        },
+      },
+    } as unknown as Editor;
+
+    expect(menuBarElement.isConnected).toBe(true);
+
+    cleanupOrphanEditorElements(mockEditor);
+
+    expect(menuBarElement.isConnected).toBe(false);
+  });
+
+  it('should clear menuBarView element instead of removing it when it has data-cke-controlled', () => {
+    const menuBarElement = document.createElement('div');
+    menuBarElement.setAttribute('data-cke-controlled', '');
+    menuBarElement.innerHTML = '<nav>File Edit</nav>';
+    document.body.appendChild(menuBarElement);
+
+    const mockEditor = {
+      ui: {
+        view: {
+          menuBarView: { element: menuBarElement },
+        },
+      },
+    } as unknown as Editor;
+
+    expect(menuBarElement.isConnected).toBe(true);
+
+    cleanupOrphanEditorElements(mockEditor);
+
+    expect(menuBarElement.isConnected).toBe(true);
+    expect(menuBarElement.innerHTML).toBe('');
+  });
+
+  it('should not throw if menuBarView element is absent', () => {
+    const mockEditor = {
+      ui: {
+        view: {
+          menuBarView: {},
+        },
+      },
+    } as unknown as Editor;
+
+    expect(() => cleanupOrphanEditorElements(mockEditor)).not.toThrow();
+  });
+
+  it('should remove all three ui elements when all are connected', () => {
+    const uiElement = document.createElement('div');
+    const toolbarElement = document.createElement('div');
+    const menuBarElement = document.createElement('div');
+
+    document.body.append(uiElement, toolbarElement, menuBarElement);
+
+    const mockEditor = {
+      ui: {
+        element: uiElement,
+        view: {
+          toolbar: { element: toolbarElement },
+          menuBarView: { element: menuBarElement },
+        },
+      },
+    } as unknown as Editor;
+
+    cleanupOrphanEditorElements(mockEditor);
+
+    expect(uiElement.isConnected).toBe(false);
+    expect(toolbarElement.isConnected).toBe(false);
+    expect(menuBarElement.isConnected).toBe(false);
+  });
+
   it('should remove _bodyCollectionContainer from the DOM if it is connected', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

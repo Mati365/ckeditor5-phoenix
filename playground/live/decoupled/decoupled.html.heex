@@ -2,9 +2,20 @@
   <.back_to_home />
   <h1 class="mb-6 font-bold text-3xl">Decoupled Editor Demo</h1>
 
+  <div class="flex flex-wrap gap-2 mb-4">
+    <button
+      id="trigger-editor-error"
+      phx-hook="TriggerEditorError"
+      class="hover:bg-red-50 px-4 py-2 border border-red-600 text-red-600 transition-colors duration-200"
+    >
+      Trigger error
+    </button>
+  </div>
+
   <.ckeditor
     id="decoupled"
     type="decoupled"
+    preset="custom"
     value={@editor_value}
     change_event
   >

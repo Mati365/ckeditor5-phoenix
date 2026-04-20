@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
-import { CustomEditorPluginsRegistry, Hooks } from 'ckeditor5-phoenix';
+import type { HooksOptions, ViewHook } from 'phoenix_live_view';
+
+import { CustomEditorPluginsRegistry, EditorsRegistry, Hooks } from 'ckeditor5-phoenix';
 import { Socket } from 'phoenix';
 import { LiveSocket } from 'phoenix_live_view';
 
@@ -78,11 +80,27 @@ CustomEditorPluginsRegistry.the.register('CustomContextPlugin', async () => {
   };
 });
 
+const TriggerEditorError: HooksOptions = {
+  mounted(this: ViewHook<HTMLElement>) {
+    this.el.addEventListener('click', () => {
+      setTimeout(() => {
+        const err: any = new Error('foo');
+
+        err.context = EditorsRegistry.the.getItem(null);
+        err.is = () => true;
+
+        throw err;
+      });
+    });
+  },
+};
+
 const csrfToken = document.querySelector('meta[name=\'csrf-token\']')!.getAttribute('content');
 const liveSocket = new LiveSocket('/live', Socket, {
   params: { _csrf_token: csrfToken },
   hooks: {
     ...Hooks,
+    TriggerEditorError,
   },
 });
 

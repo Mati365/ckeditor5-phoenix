@@ -1,10 +1,8 @@
 import type { Editor } from 'ckeditor5';
 
-import type { EditorId } from '../editor';
 import type { RootAttributesUpdater } from './root-attributes-updater';
 
 import { parseJsonIfPresent } from '../../shared';
-import { EditorsRegistry } from '../editor/editors-registry';
 import { skipPendingPhoenixDataChangeSync } from '../editor/plugins';
 import { createRootAttributesUpdater } from './root-attributes-updater';
 
@@ -13,11 +11,6 @@ export class RootValueSentinel {
    * The DOM element being observed for attribute changes.
    */
   private el: HTMLElement;
-
-  /**
-   * The unique identifier of the editor instance this sentinel is attached to.
-   */
-  private readonly editorId: EditorId | null;
 
   /**
    * The name of the specific root in a multi-root editor setup.
@@ -45,11 +38,9 @@ export class RootValueSentinel {
   private cleanupCallbacks: Array<() => void> = [];
 
   /**
-   * The promise that resolves to the editor instance once it's registered.
-   * It can be either a MultiRootEditor or a DecoupledEditor, depending on the type of editor being used.
-   * It will be null if the editor is not registered yet or if the hook is being destroyed before the editor is registered.
+   * The editor instance.
    */
-  private editorPromise: Promise<Editor | null> | null = null;
+  private editor: Editor;
 
   /**
    * When the editor is focused and the value attribute changes, we want to wait until it blurs to
@@ -80,14 +71,14 @@ export class RootValueSentinel {
   constructor(
     {
       el,
-      editorId,
+      editor,
       rootName,
       valueAttrName = 'data-cke-value',
       rootAttrsAttrName = 'data-cke-root-attrs',
     }: RootValueSentinelOptions,
   ) {
     this.el = el;
-    this.editorId = editorId;
+    this.editor = editor;
     this.rootName = rootName;
     this.valueAttrName = valueAttrName;
     this.rootAttrsAttrName = rootAttrsAttrName;
@@ -95,15 +86,7 @@ export class RootValueSentinel {
     const { value } = this.attrs;
 
     this.previousValue = value;
-    this.editorPromise = EditorsRegistry.the.execute(this.editorId, (editor: Editor) => {
-      /* v8 ignore next 3 */
-      if (this.isDestroyed) {
-        return null;
-      }
-
-      this.setupSyncHandlers(editor, this.rootName);
-      return editor;
-    });
+    this.setupSyncHandlers(editor, this.rootName);
   }
 
   /**
@@ -122,8 +105,8 @@ export class RootValueSentinel {
    * However, if the editor is focused, we want to wait until it blurs to avoid disrupting the user while typing.
    */
   async updated() {
+    const { editor } = this;
     const { value, rootAttributes } = this.attrs;
-    const editor = await this.editorPromise;
 
     if (!editor || editor.state === 'destroyed' || this.isDestroyed) {
       return;
@@ -214,9 +197,9 @@ export type RootValueSentinelOptions = {
   el: HTMLElement;
 
   /**
-   * The unique identifier of the editor instance this sentinel is attached to.
+   * Editor instance.
    */
-  editorId: string | null;
+  editor: Editor;
 
   /**
    * The name of the specific root in a multi-root editor setup.

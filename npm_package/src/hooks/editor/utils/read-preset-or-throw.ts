@@ -16,7 +16,7 @@ export function readPresetOrThrow(element: HTMLElement): EditorPreset {
     throw new Error('CKEditor5 hook requires a "cke-preset" attribute on the element.');
   }
 
-  const { type, config, license, ...rest } = JSON.parse(attributeValue);
+  const { type, config, license, watchdog, ...rest } = JSON.parse(attributeValue);
 
   if (!type || !config || !license) {
     throw new Error('CKEditor5 hook configuration must include "editor", "config", and "license" properties.');
@@ -29,6 +29,7 @@ export function readPresetOrThrow(element: HTMLElement): EditorPreset {
   return {
     type,
     license,
+    watchdog,
     config: deepCamelCaseKeys(config),
     customTranslations: rest.customTranslations || rest.custom_translations,
   };

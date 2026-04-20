@@ -5,10 +5,11 @@ defmodule CKEditor5.Preset do
 
   alias CKEditor5.{Cloud, CustomTranslations, License}
 
-  @derive {Jason.Encoder, only: [:type, :config, :license, :custom_translations]}
+  @derive {Jason.Encoder, only: [:type, :config, :watchdog, :license, :custom_translations]}
   @type t :: %__MODULE__{
           type: atom(),
           config: map(),
+          watchdog: map(),
           cloud: Cloud.t() | nil,
           license: License.t(),
           custom_translations: CustomTranslations.t() | nil
@@ -17,6 +18,7 @@ defmodule CKEditor5.Preset do
   defstruct config: %{},
             type: :classic,
             cloud: nil,
+            watchdog: nil,
             license: License.gpl(),
             custom_translations: nil
 
@@ -38,6 +40,7 @@ defmodule CKEditor5.Preset do
     %__MODULE__{
       type: overrides[:type] || preset.type,
       config: Map.merge(preset.config || %{}, overrides[:config] || %{}),
+      watchdog: Map.merge(preset.watchdog || %{}, overrides[:watchdog] || %{}),
       license: overrides[:license] || preset.license,
       cloud: Cloud.merge(preset.cloud, overrides[:cloud]),
       custom_translations:

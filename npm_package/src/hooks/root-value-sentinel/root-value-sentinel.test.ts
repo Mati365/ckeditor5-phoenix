@@ -23,7 +23,7 @@ describe('root value sentinel', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    await EditorsRegistry.the.destroyAll();
+    await EditorsRegistry.the.reset();
   });
 
   /**
@@ -71,7 +71,7 @@ describe('root value sentinel', () => {
     // Initialize the RootValueSentinel class
     const sentinelInstance = new RootValueSentinel({
       el: sentinel,
-      editorId,
+      editor,
       rootName,
     });
 
@@ -91,7 +91,7 @@ describe('root value sentinel', () => {
     });
 
     it('should not crash when the root does not exist', async () => {
-      await appendMultirootEditor();
+      const editor = await appendMultirootEditor();
 
       const sentinel = document.createElement('div');
       sentinel.setAttribute('data-cke-value', '<p>Value</p>');
@@ -99,40 +99,12 @@ describe('root value sentinel', () => {
 
       const instance = new RootValueSentinel({
         el: sentinel,
-        editorId: 'test-editor',
+        editor,
         rootName: 'non-existent',
       });
 
       await timeout(0);
 
-      expect(instance).to.be.instanceOf(RootValueSentinel);
-    });
-
-    it('should be possible to mount sentinel before the editor is ready', async () => {
-      const sentinel = document.createElement('div');
-      sentinel.setAttribute('data-cke-value', '<p>Sentinel value</p>');
-      document.body.appendChild(sentinel);
-
-      const instance = new RootValueSentinel({
-        el: sentinel,
-        editorId: 'test-editor',
-        rootName: 'main',
-      });
-
-      const editor = await appendMultirootEditor();
-      const editable = createEditableHtmlElement({ name: 'main', initialValue: '<p>Initial</p>' });
-
-      document.body.appendChild(editable);
-      EditableHook.mounted.call({ el: editable });
-
-      await vi.waitFor(() => {
-        expect(editor.getData({ rootName: 'main' })).toBe('<p>Initial</p>');
-      });
-
-      sentinel.setAttribute('data-cke-value', '<p>Updated value</p>');
-      await instance.updated();
-
-      expect(editor.getData({ rootName: 'main' })).toBe('<p>Updated value</p>');
       expect(instance).to.be.instanceOf(RootValueSentinel);
     });
   });
@@ -216,7 +188,7 @@ describe('root value sentinel', () => {
     it('should not crash when the editor has been destroyed before updated is called', async () => {
       const { sentinel, sentinelInstance } = await setup();
 
-      await EditorsRegistry.the.destroyAll();
+      await EditorsRegistry.the.reset();
       sentinel.setAttribute('data-cke-value', '<p>After destroy</p>');
 
       // Expect no error to be thrown

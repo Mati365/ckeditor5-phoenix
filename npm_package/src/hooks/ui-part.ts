@@ -6,11 +6,6 @@ import { EditorsRegistry } from './editor/editors-registry';
  */
 class UIPartHookImpl extends ClassHook {
   /**
-   * The name of the hook.
-   */
-  private mountedPromise: Promise<void> | null = null;
-
-  /**
    * Attributes for the editable instance.
    */
   private get attrs() {
@@ -30,13 +25,12 @@ class UIPartHookImpl extends ClassHook {
   }
 
   /**
-   * Mounts the editable component.
+   * Mounts the UI part component.
    */
-  override async mounted() {
+  override mounted() {
     const { editorId, name } = this.attrs;
 
-    // If the editor is not registered yet, we will wait for it to be registered.
-    this.mountedPromise = EditorsRegistry.the.execute(editorId, (editor) => {
+    const unmountEffect = EditorsRegistry.the.mountEffect(editorId, (editor) => {
       /* v8 ignore next 3 */
       if (this.isBeingDestroyed()) {
         return;
@@ -53,22 +47,17 @@ class UIPartHookImpl extends ClassHook {
       }
 
       this.el.appendChild(uiPart.element);
+
+      return () => {
+        this.el.innerHTML = '';
+      };
     });
-  }
 
-  /**
-   * Destroys the editable component. Unmounts root from the editor.
-   */
-  override async destroyed() {
     // Let's hide the element during destruction to prevent flickering.
-    this.el.style.display = 'none';
-
-    // Let's wait for the mounted promise to resolve before proceeding with destruction.
-    await this.mountedPromise;
-    this.mountedPromise = null;
-
-    // Unmount all UI parts from the editor.
-    this.el.innerHTML = '';
+    this.onBeforeDestroy(() => {
+      this.el.style.display = 'none';
+      unmountEffect();
+    });
   }
 }
 
