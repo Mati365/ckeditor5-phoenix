@@ -121,7 +121,29 @@ class EditorHookImpl extends ClassHook {
         };
       });
 
-      this.onBeforeDestroy(unmountEffect);
+      this.onBeforeDestroy(async () => {
+        // If for some reason editor not fired `destroy`, enforce deregistration.
+        EditorsRegistry.the.unregister(editorId);
+        unmountEffect();
+
+        const editorContext = unwrapEditorContext(editor);
+        const watchdog = unwrapEditorWatchdog(editor);
+
+        if (editorContext) {
+          // If context is present, make sure it's not in unmounting phase, as it'll kill the editors.
+          // If it's being destroyed, don't do anything, as the context will take care of it.
+          if (editorContext.state !== 'unavailable') {
+            await editorContext.context.remove(editorContext.editorContextId);
+          }
+        }
+        else if (watchdog) {
+          await watchdog.destroy();
+        }
+        else {
+          await editor.destroy();
+        }
+      });
+
       EditorsRegistry.the.register(editorId, editor);
     }
     catch (error: any) {
@@ -140,41 +162,10 @@ class EditorHookImpl extends ClassHook {
   }
 
   /**
-   * Destroys the editor instance when the component is destroyed.
-   * This is important to prevent memory leaks and ensure that the editor is properly cleaned up.
+   * Destroys editor component.
    */
   override async destroyed() {
-    const { editorId } = this.attrs;
-
-    // Let's hide the element during destruction to prevent flickering.
     this.el.style.display = 'none';
-
-    // Let's wait for the mounted promise to resolve before proceeding with destruction.
-    const editor = await EditorsRegistry.the.waitFor(editorId);
-
-    /* v8 ignore next 3 */
-    if (!editor) {
-      return;
-    }
-
-    EditorsRegistry.the.unregister(editorId);
-
-    const editorContext = unwrapEditorContext(editor);
-    const watchdog = unwrapEditorWatchdog(editor);
-
-    if (editorContext) {
-      // If context is present, make sure it's not in unmounting phase, as it'll kill the editors.
-      // If it's being destroyed, don't do anything, as the context will take care of it.
-      if (editorContext.state !== 'unavailable') {
-        await editorContext.context.remove(editorContext.editorContextId);
-      }
-    }
-    else if (watchdog) {
-      await watchdog.destroy();
-    }
-    else {
-      await editor.destroy();
-    }
   }
 
   /**
