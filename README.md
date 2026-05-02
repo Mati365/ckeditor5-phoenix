@@ -1114,7 +1114,7 @@ You can use the `mountEffect` method to run specific logic every time a particul
 Unlike a one-time promise, this callback is executed throughout the editor's lifecycle whenever it is mounted.
 
 ```javascript
-import { EditorsRegistry } from 'ckeditor5-blazor';
+import { EditorsRegistry } from 'ckeditor5_phoenix';
 
 EditorsRegistry.the.mountEffect('editor1', (editor) => {
   const watcher = () => {
