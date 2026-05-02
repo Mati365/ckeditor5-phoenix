@@ -21,7 +21,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 
 ## Table of Contents
 
-- [CKEditor 5 Phoenix Integration ✨](#ckeditor-5-phoenix-integration-)
+- [CKEditor 5 Phoenix Integration](#ckeditor-5-phoenix-integration)
   - [Table of Contents](#table-of-contents)
   - [Installation 🚀](#installation-)
     - [🏠 Self-hosted](#-self-hosted)
@@ -69,6 +69,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Custom context translations 🌐](#custom-context-translations-)
   - [Watch registered editors 👀](#watch-registered-editors-)
     - [Wait for particular editor to be registered ⏳](#wait-for-particular-editor-to-be-registered-)
+    - [Run logic on editor initialization and restarts 🔄](#run-logic-on-editor-initialization-and-restarts-)
   - [Package development 🛠️](#package-development-️)
   - [Psst... 👀](#psst-)
   - [Trademarks 📜](#trademarks-)
@@ -478,7 +479,7 @@ Flexible editor where toolbar and editing area are completely separated. Provide
     <%!-- Editable area with custom styling --%>
     <.cke_editable
       value="<p>Initial content here</p>"
-      class="border border-gray-300 p-4 rounded"
+      class="p-4 border border-gray-300 rounded"
       editable_height="300px"
     />
   </div>
@@ -1105,6 +1106,31 @@ EditorsRegistry.the.waitFor('editor1').then((editor) => {
 ```
 
 The `id` of the editor must be used to identify the editor. If the editor is already registered, the promise will resolve immediately.
+
+### Run logic on editor initialization and restarts 🔄
+
+You can use the `mountEffect` method to run specific logic every time a particular editor is initialized or restarted. This is the recommended approach for adding integrations that require a fresh setup for each new instance of the editor.
+
+Unlike a one-time promise, this callback is executed throughout the editor's lifecycle whenever it is mounted.
+
+```javascript
+import { EditorsRegistry } from 'ckeditor5-blazor';
+
+EditorsRegistry.the.mountEffect('editor1', (editor) => {
+  const watcher = () => {
+    console.info('Changed data:', editor.getData());
+  };
+
+  editor.model.document.on('change:data', watcher);
+
+  // Cleanup: This will be executed when the editor is unmounted.
+  return () => {
+    editor.model.document.off('change:data', watcher);
+  };
+});
+```
+
+The `id` is used to target the specific editor. If the editor is already initialized when `mountEffect` is called, the callback will execute immediately.
 
 ## Package development 🛠️
 
