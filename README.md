@@ -28,7 +28,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [📡 CDN Distribution](#-cdn-distribution)
   - [Basic Usage 🏁](#basic-usage-)
     - [Simple Editor ✏️](#simple-editor-️)
-    - [Watchdog prop 🐶](#watchdog-prop-)
   - [Configuration ⚙️](#configuration-️)
     - [Custom Presets 🧩](#custom-presets-)
     - [Dynamic presets 🎯](#dynamic-presets-)
@@ -40,6 +39,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Inline editor 📝](#inline-editor-)
     - [Balloon editor 🎈](#balloon-editor-)
     - [Decoupled editor 🌐](#decoupled-editor-)
+  - [Watchdog prop 🐶](#watchdog-prop-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
@@ -228,23 +228,9 @@ Create a basic editor with default toolbar and features. Perfect for simple cont
 />
 ```
 
-### Watchdog prop 🐶
-
-By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users.
-
-The watchdog is enabled by default. To disable it, set the `watchdog` prop to `false`:
-
-```heex
-<.ckeditor
-  type="classic"
-  value="<p>Initial content</p>"
-  watchdog={false}
-/>
-```
-
 ## Configuration ⚙️
 
-You can configure the editor _presets_ in your `config/config.exs` file. The default preset is `:default`, which provides a basic configuration with a toolbar and essential plugins. The preset is a map that contains the editor configuration, including the toolbar items and plugins. There can be multiple presets, and you can switch between them by passing the `preset` keyword argument to the `ckeditor` component.
+You can configure the editor _presets_ in your `config/config.exs` file. The default preset is `:default`, which provides a basic configuration with a toolbar and essential plugins — you can browse its full definition [presets.ex](lib/presets.ex). The preset is a map that contains the editor configuration, including the toolbar items and plugins. There can be multiple presets, and you can switch between them by passing the `preset` keyword argument to the `ckeditor` component.
 
 ### Custom Presets 🧩
 
@@ -485,6 +471,49 @@ Flexible editor where toolbar and editing area are completely separated. Provide
   </div>
 </.ckeditor>
 ```
+
+## Watchdog prop 🐶
+
+By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users.
+
+The watchdog is enabled by default. To disable it, set the `watchdog` prop to `false`:
+
+```heex
+<.ckeditor
+  type="classic"
+  value="<p>Initial content</p>"
+  watchdog={false}
+/>
+```
+
+You can also fine-tune the watchdog behaviour by setting its parameters in your preset configuration in `config/config.exs`:
+
+```elixir
+config :ckeditor5_phoenix,
+  presets: %{
+    default: %{
+      watchdog: %{
+        # Maximum number of crashes before the watchdog stops restarting the editor.
+        # Defaults to 3.
+        crashNumberLimit: 5,
+
+        # Minimum time (in ms) that must pass without a crash for the crash counter
+        # to be reset. Defaults to 5000 ms.
+        minimumNonErrorTimePeriod: 10_000,
+
+        # How often (in ms) the watchdog saves the editor state to restore it
+        # after a crash. Defaults to 5000 ms.
+        saveInterval: 2_000
+      },
+      config: %{
+        # ... your editor config
+      }
+    }
+  }
+```
+
+> [!NOTE]
+> These options map directly to the [CKEditor 5 Watchdog configuration](https://ckeditor.com/docs/ckeditor5/latest/api/module_watchdog_watchdog-WatchdogConfig.html). Refer to the official docs for the full list of available options.
 
 ## Localization 🌍
 
@@ -1026,7 +1055,7 @@ config :ckeditor5_phoenix,
         ]
       },
       watchdog: %{
-        crash_number_limit: 20
+        crashNumberLimit: 20
       }
     }
   },
