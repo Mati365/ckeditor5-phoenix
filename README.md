@@ -27,7 +27,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [🏠 Self-hosted](#-self-hosted)
     - [📡 CDN Distribution](#-cdn-distribution)
   - [Basic Usage 🏁](#basic-usage-)
-    - [Simple Editor ✏️](#simple-editor-️)
   - [Configuration ⚙️](#configuration-️)
     - [Custom Presets 🧩](#custom-presets-)
     - [Dynamic presets 🎯](#dynamic-presets-)
@@ -209,22 +208,29 @@ That's it! 🎉
 
 ## Basic Usage 🏁
 
-Get started with the most common usage patterns. These examples show how to render editors in your templates and handle real-time content changes.
-
-### Simple Editor ✏️
-
-Create a basic editor with default toolbar and features. Perfect for simple content editing without server synchronization.
+Render the `<.ckeditor>` component anywhere in your template. While most props are optional, setting an explicit `id` is recommended if you plan to reference the editor instance from JavaScript via the `EditorsRegistry` (e.g. to read content, attach listeners, or wait for initialization).
 
 ```heex
 <%!-- CDN only: Load assets in <head> --%>
 <.cke_cloud_assets />
 
-<%!-- Render editor with initial content --%>
 <.ckeditor
-  id="editor"
-  type="classic"
-  value="<p>Initial content</p>"
-  editable_height="300px"
+  id="editor"                        <!-- unique ID; auto-generated with "cke-" prefix if omitted -->
+  type="classic"                     <!-- classic | inline | balloon | decoupled | multiroot -->
+  preset="default"                   <!-- preset name from config, or a %CKEditor5.Preset{} struct -->
+  value="<p>Hello world!</p>"        <!-- initial HTML content -->
+  editable_height="300px"            <!-- fixed height; editor grows with content if omitted -->
+  language="pl"                      <!-- UI language (toolbar, dialogs) -->
+  content_language="pl"              <!-- lang attr on the editable area; defaults to `language` -->
+  save_debounce_ms={300}             <!-- debounce in ms for syncing content (default: 400) -->
+  upload_url="/uploads"              <!-- image upload endpoint; "base64" for inline Base64 adapter -->
+  watchdog={true}                    <!-- auto-restart on crash (default: true) -->
+  change_event={true}                <!-- push ckeditor5:change to LiveView on content change -->
+  focus_event={true}                 <!-- push ckeditor5:focus to LiveView on focus -->
+  blur_event={true}                  <!-- push ckeditor5:blur to LiveView on blur -->
+  ready_event={true}                 <!-- push ckeditor5:ready once the editor is initialized -->
+  class="my-editor"                  <!-- CSS classes on the outer container -->
+  style="border: 1px solid #ccc"    <!-- inline styles on the outer container -->
 />
 ```
 
