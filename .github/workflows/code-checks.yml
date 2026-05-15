@@ -207,8 +207,5 @@ jobs:
       - name: Setup assets
         run: mix assets.setup
 
-      - name: Build assets
-        run: mix assets.build
-
       - name: Run E2E tests
         run: mix e2e
