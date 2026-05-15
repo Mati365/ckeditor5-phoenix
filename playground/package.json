@@ -1,0 +1,8 @@
+{
+  "name": "ckeditor5-phoenix-playground",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "ckeditor5-phoenix": "workspace:../npm_package"
+  }
+}
