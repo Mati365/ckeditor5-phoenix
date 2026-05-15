@@ -281,7 +281,7 @@ class EditorHookImpl extends ClassHook {
 
       const editor = await (async () => {
         if (!context || !(sourceElements instanceof HTMLElement)) {
-          return Constructor.create(sourceElements as any, parsedConfig);
+          return (Constructor.create as any)(sourceElements, parsedConfig);
         }
 
         const result = await createEditorInContext({
