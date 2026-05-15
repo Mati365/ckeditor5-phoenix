@@ -22,17 +22,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
           elixir-version: 1.19.4
           otp-version: '26.2'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org/'
 
       - name: Set version in mix.exs
         run: |
@@ -50,15 +54,15 @@ jobs:
         run: mix deps.get
 
       - name: Install npm dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
         working-directory: ./npm_package
 
       - name: Build npm package
-        run: npm run build
+        run: pnpm run build
         working-directory: ./npm_package
 
       - name: Publish npm package
-        run: npm publish --access public --provenance
+        run: pnpm publish --access public --provenance --no-git-checks
         working-directory: ./npm_package
 
       - name: Publish Hex package

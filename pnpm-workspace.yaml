@@ -1,0 +1,12 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
+
+packages:
+  - playground
+  - npm_package
+
+allowBuilds:
+  chromedriver: true
+  esbuild: false
+  protobufjs: false
