@@ -264,17 +264,9 @@ class EditorHookImpl extends ClassHook {
         sourceElements = sourceElements['main'];
       }
 
-      let resolvedConfig = { ...config };
-
       // Do some postprocessing on received configuration.
-      resolvedConfig = resolveEditorConfigElementReferences(resolvedConfig);
-      resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
-      resolvedConfig = assignSourceElementsToEditorConfig(Constructor, sourceElements, resolvedConfig);
-      resolvedConfig = assignInitialDataToEditorConfig(initialData, resolvedConfig);
-
-      // Post-processed configuration of the editor.
-      const parsedConfig = {
-        ...resolvedConfig,
+      let resolvedConfig = {
+        ...config,
         licenseKey: license.key,
         plugins: loadedPlugins,
         language,
@@ -283,15 +275,20 @@ class EditorHookImpl extends ClassHook {
         },
       };
 
+      resolvedConfig = resolveEditorConfigElementReferences(resolvedConfig);
+      resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
+      resolvedConfig = assignSourceElementsToEditorConfig(Constructor, sourceElements, resolvedConfig);
+      resolvedConfig = assignInitialDataToEditorConfig(initialData, resolvedConfig);
+
       const editor = await (async () => {
-        if (!context || !(sourceElements instanceof HTMLElement)) {
-          return Constructor.create(parsedConfig);
+        if (!context) {
+          return Constructor.create(resolvedConfig);
         }
 
         const result = await createEditorInContext({
           context,
           creator: Constructor,
-          config: parsedConfig,
+          config: resolvedConfig,
         });
 
         return result.editor;
