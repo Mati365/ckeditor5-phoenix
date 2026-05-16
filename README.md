@@ -24,7 +24,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 - [CKEditor 5 Phoenix Integration](#ckeditor-5-phoenix-integration)
   - [Table of Contents](#table-of-contents)
   - [Installation 🚀](#installation-)
-  - [🔗 Compatibility](#-compatibility)
+    - [🔗 Compatibility](#-compatibility)
     - [🏠 Self-hosted](#-self-hosted)
     - [📡 CDN Distribution](#-cdn-distribution)
   - [Basic Usage 🏁](#basic-usage-)
@@ -79,7 +79,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
 
 Choose between two installation methods based on your needs. Both approaches provide the same functionality but differ in how CKEditor 5 assets are loaded and managed.
 
-## 🔗 Compatibility
+### 🔗 Compatibility
 
 | CKEditor 5 Version | Integration Version |
 |--------------------|---------------------|
