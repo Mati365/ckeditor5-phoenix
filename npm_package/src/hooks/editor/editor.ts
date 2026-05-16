@@ -11,6 +11,8 @@ import {
   createSyncEditorWithPhoenixPlugin,
 } from './plugins';
 import {
+  assignInitialDataToEditorConfig,
+  assignSourceElementsToEditorConfig,
   cleanupOrphanEditorElements,
   createEditorInContext,
   isSingleRootEditor,
@@ -262,15 +264,17 @@ class EditorHookImpl extends ClassHook {
         sourceElements = sourceElements['main'];
       }
 
-      // Construct parsed config. First resolve DOM element references in the provided configuration.
-      let resolvedConfig = resolveEditorConfigElementReferences(config);
+      let resolvedConfig = { ...config };
 
-      // Then resolve translation references in the provided configuration, using the mixed translations.
+      // Do some postprocessing on received configuration.
+      resolvedConfig = resolveEditorConfigElementReferences(resolvedConfig);
       resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
+      resolvedConfig = assignSourceElementsToEditorConfig(Constructor, sourceElements, resolvedConfig);
+      resolvedConfig = assignInitialDataToEditorConfig(initialData, resolvedConfig);
 
+      // Post-processed configuration of the editor.
       const parsedConfig = {
         ...resolvedConfig,
-        initialData,
         licenseKey: license.key,
         plugins: loadedPlugins,
         language,
@@ -281,12 +285,11 @@ class EditorHookImpl extends ClassHook {
 
       const editor = await (async () => {
         if (!context || !(sourceElements instanceof HTMLElement)) {
-          return (Constructor.create as any)(sourceElements, parsedConfig);
+          return Constructor.create(parsedConfig);
         }
 
         const result = await createEditorInContext({
           context,
-          element: sourceElements,
           creator: Constructor,
           config: parsedConfig,
         });
