@@ -56,7 +56,7 @@ class EditableHookImpl extends ClassHook {
 
         editor.addRoot(rootName, {
           isUndoable: false,
-          data: initialValue,
+          initialData: initialValue,
         });
 
         const editable = ui.view.createEditable(rootName, contentElement);

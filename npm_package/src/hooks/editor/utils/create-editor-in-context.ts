@@ -12,19 +12,17 @@ const CONTEXT_EDITOR_WATCHDOG_SYMBOL = Symbol.for('context-editor-watchdog');
  * Creates a CKEditor 5 editor instance within a given context watchdog.
  *
  * @param params Parameters for editor creation.
- * @param params.element The DOM element or data for the editor.
  * @param params.context The context watchdog instance.
  * @param params.creator The editor creator utility.
  * @param params.config The editor configuration object.
  * @returns The created editor instance.
  */
-export async function createEditorInContext({ element, context, creator, config }: Attrs) {
+export async function createEditorInContext({ context, creator, config }: Attrs) {
   const editorContextId = uid();
 
   await context.add({
-    creator: (_element, _config) => creator.create(_element, _config),
+    creator: creator.create.bind(creator),
     id: editorContextId,
-    sourceElementOrData: element,
     type: 'editor',
     config,
   });
@@ -74,7 +72,6 @@ export function unwrapEditorContext(editor: Editor): EditorContextDescriptor | n
 type Attrs = {
   context: ContextWatchdog<Context>;
   creator: EditorCreator;
-  element: HTMLElement;
   config: EditorConfig;
 };
 

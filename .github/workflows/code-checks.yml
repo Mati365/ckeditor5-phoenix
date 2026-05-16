@@ -191,7 +191,7 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v2
         with:
-          chrome-version: 146
+          chrome-version: 148
           install-chromedriver: true
 
       - name: Restore dependencies cache
