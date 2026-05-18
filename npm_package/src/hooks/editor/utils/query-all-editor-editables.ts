@@ -1,34 +1,5 @@
 import type { EditorId } from '../typings';
 
-import { filterObjectValues, mapObjectValues } from '../../../shared';
-
-/**
- * Gets the initial root elements for the editor based on its type.
- *
- * @param editorId The editor's ID.
- * @returns The root element(s) for the editor.
- */
-export function queryEditablesElements(editorId: EditorId) {
-  const editables = queryAllEditorEditables(editorId);
-
-  return mapObjectValues(editables, ({ content }) => content);
-}
-
-/**
- * Gets the initial data for the roots of the editor. If the editor is a single editing-like editor,
- * it retrieves the initial value from the element's attribute. Otherwise, it returns an object mapping
- * editable names to their initial values.
- *
- * @param editorId The editor's ID.
- * @returns The initial values for the editor's roots.
- */
-export function queryEditablesSnapshotContent(editorId: EditorId) {
-  const editables = queryAllEditorEditables(editorId);
-  const values = mapObjectValues(editables, ({ initialValue }) => initialValue);
-
-  return filterObjectValues(values, value => typeof value === 'string') as Record<string, string>;
-}
-
 /**
  * Queries all editable elements within a specific editor instance.
  *

@@ -1,5 +1,4 @@
-export * from './assign-initial-data-to-editor-config';
-export * from './assign-source-elements-to-editor-config';
+export * from './assign-editor-roots-to-config';
 export * from './cleanup-orphan-editor-elements';
 export * from './create-editor-in-context';
 export * from './is-multiroot-editor-instance';
