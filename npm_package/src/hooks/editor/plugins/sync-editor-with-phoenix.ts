@@ -168,7 +168,7 @@ function getEditorRootsValues(editor: Editor) {
   return roots.reduce<Record<string, string>>((acc, rootName) => {
     acc[rootName] = editor.getData({ rootName });
     return acc;
-  }, Object.create({}));
+  }, Object.create(null));
 }
 
 /**

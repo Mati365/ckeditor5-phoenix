@@ -38,7 +38,7 @@ export function assignEditorRootsToConfig<C extends EditorConfig>(
           }
         : {},
     },
-  }), Object.create(config.roots || {}));
+  }), { ...config.roots || {} });
 
   const mappedConfig: C = {
     ...config,

@@ -34,7 +34,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
             initialValue,
           },
         };
-      }, Object.create({}))
+      }, Object.create(null))
   );
 
   const rootEditorElement = document.querySelector<HTMLElement>(`[phx-hook="CKEditor5"][id="${editorId}"]`);
