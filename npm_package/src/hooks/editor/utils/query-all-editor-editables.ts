@@ -20,6 +20,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
       .from(iterator)
       .reduce<Record<string, EditableItem>>((acc, element) => {
         const name = element.getAttribute('data-cke-editable-root-name');
+        const modelElement = element.getAttribute('data-cke-editable-root-model-element-name') || null;
         const initialValue = element.getAttribute('data-cke-editable-initial-value') || '';
         const content = element.querySelector('[data-cke-editable-content]') as HTMLElement;
 
@@ -32,6 +33,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
           [name]: {
             content,
             initialValue,
+            modelElement,
           },
         };
       }, Object.create(null))
@@ -43,19 +45,21 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
     return acc;
   }
 
+  const rootEditorModelElement = rootEditorElement.getAttribute('data-cke-root-model-element-name');
   const initialRootEditableValue = rootEditorElement.getAttribute('data-cke-initial-value') || '';
-  const contentElement = rootEditorElement.querySelector<HTMLElement>(`#${editorId}_editor `);
-  const currentMain = acc['main'];
 
-  if (currentMain) {
+  if (acc['main']) {
     return {
       ...acc,
       main: {
-        ...currentMain,
-        initialValue: currentMain.initialValue || initialRootEditableValue,
+        ...acc['main'],
+        modelElement: acc['main'].modelElement || rootEditorModelElement,
+        initialValue: acc['main'].initialValue || initialRootEditableValue,
       },
     };
   }
+
+  const contentElement = rootEditorElement.querySelector<HTMLElement>(`#${editorId}_editor `);
 
   if (contentElement) {
     return {
@@ -63,6 +67,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
       main: {
         content: contentElement,
         initialValue: initialRootEditableValue,
+        modelElement: rootEditorElement.getAttribute('data-cke-root-model-element-name') || '$root',
       },
     };
   }
@@ -76,4 +81,5 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
 export type EditableItem = {
   content: HTMLElement;
   initialValue: string;
+  modelElement: string | null;
 };

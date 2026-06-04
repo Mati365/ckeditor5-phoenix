@@ -105,7 +105,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 2. **Install CKEditor 5**
 
    ```bash
-   mix ckeditor5.install # --premium --version 48.1.0
+   mix ckeditor5.install # --premium --version 48.2.0
    # ... or: npm install ckeditor5 --prefix assets
    ```
 
@@ -234,6 +234,8 @@ Render the `<.ckeditor>` component anywhere in your template. While most props a
   upload_url="/uploads"              <!-- image upload endpoint; "base64" for inline Base64 adapter -->
   watchdog={true}                    <!-- auto-restart on crash (default: true) -->
   change_event={true}                <!-- push ckeditor5:change to LiveView on content change -->
+  root_attrs={%{}}                   <!-- root element attributes -->
+  root_model_element="$root"         <!-- root element name (default: $root) -->
   focus_event={true}                 <!-- push ckeditor5:focus to LiveView on focus -->
   blur_event={true}                  <!-- push ckeditor5:blur to LiveView on blur -->
   ready_event={true}                 <!-- push ckeditor5:ready once the editor is initialized -->

@@ -51,6 +51,13 @@ defmodule CKEditor5.Components.Editable do
     default: %{},
     doc: "A map of HTML attributes to apply to the editor root element for this editable."
 
+  attr :root_model_element, :string,
+    default: nil,
+    doc: """
+    This is the name of the root element. Setting it to '$inlineRoot' enables you to
+    use the editor in paragraph-like editing mode.
+    """
+
   form_attrs()
 
   attr :rest, :global
@@ -73,6 +80,7 @@ defmodule CKEditor5.Components.Editable do
       data-cke-editable-root-name={@root}
       data-cke-editable-initial-value={@value}
       data-cke-editable-root-attrs={JSON.encode!(@root_attrs || {})}
+      data-cke-editable-root-model-element-name={@root_model_element}
       data-cke-editable-required={@required}
       {@rest}
     >

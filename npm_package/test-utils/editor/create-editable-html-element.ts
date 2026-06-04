@@ -12,12 +12,14 @@ export function createEditableHtmlElement(
     editorId,
     initialValue,
     withInput = false,
+    modelElement,
   }: {
     id?: string;
     editorId?: EditorId;
     name?: string;
     initialValue?: string;
     withInput?: boolean;
+    modelElement?: string;
   } = {},
 ) {
   return html.div(
@@ -29,6 +31,9 @@ export function createEditableHtmlElement(
       },
       ...initialValue && {
         'data-cke-editable-initial-value': initialValue,
+      },
+      ...modelElement && {
+        'data-cke-editable-root-model-element-name': modelElement,
       },
     },
     html.div({

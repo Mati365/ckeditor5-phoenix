@@ -111,6 +111,19 @@ describe('editor hook', () => {
 
         expect(isEditorShown()).toBe(true);
       });
+
+      it('should be possible to specify root element name', async () => {
+        const hookElement = createEditorHtmlElement({
+          modelElement: '$inlineRoot',
+        });
+
+        document.body.appendChild(hookElement);
+        EditorHook.mounted.call({ el: hookElement });
+
+        const editor = await waitForTestEditor();
+
+        expect(editor.model.document.getRoot()?.name).to.be.equal('$inlineRoot');
+      });
     });
 
     describe('decoupled', () => {
@@ -249,6 +262,57 @@ describe('editor hook', () => {
         expect(editor).toBeInstanceOf(DecoupledEditor);
         expect(editor.getData()).toBe('<p>XD</p>');
       });
+
+      it('should be possible to specify root element name using global config (if editable model element not specified)', async () => {
+        const hookElement = createEditorHtmlElement({
+          preset: createEditorPreset('decoupled'),
+          modelElement: '$inlineRoot',
+        });
+
+        document.body.appendChild(hookElement);
+        document.body.appendChild(createEditableHtmlElement());
+
+        EditorHook.mounted.call({ el: hookElement });
+
+        const editor = await waitForTestEditor();
+
+        expect(editor.model.document.getRoot()?.name).toEqual('$inlineRoot');
+      });
+
+      it('should be possible to specify root element name using editable config alone', async () => {
+        const hookElement = createEditorHtmlElement({
+          preset: createEditorPreset('decoupled'),
+        });
+
+        document.body.appendChild(hookElement);
+        document.body.appendChild(createEditableHtmlElement({
+          modelElement: '$inlineRoot',
+        }));
+
+        EditorHook.mounted.call({ el: hookElement });
+
+        const editor = await waitForTestEditor();
+
+        expect(editor.model.document.getRoot()?.name).toEqual('$inlineRoot');
+      });
+
+      it('should use editable root element name config if both specified', async () => {
+        const hookElement = createEditorHtmlElement({
+          preset: createEditorPreset('decoupled'),
+          modelElement: '$miamia',
+        });
+
+        document.body.appendChild(hookElement);
+        document.body.appendChild(createEditableHtmlElement({
+          modelElement: '$inlineRoot',
+        }));
+
+        EditorHook.mounted.call({ el: hookElement });
+
+        const editor = await waitForTestEditor();
+
+        expect(editor.model.document.getRoot()?.name).toEqual('$inlineRoot');
+      });
     });
 
     describe('inline', () => {
@@ -312,6 +376,36 @@ describe('editor hook', () => {
         expect(editor.getData({ rootName: 'third' })).toBe(
           '<p>Third root</p>',
         );
+      });
+
+      it('should create a multiroot editor with inline editables', async () => {
+        const hookElement = createEditorHtmlElement({
+          preset: createEditorPreset('multiroot'),
+        });
+
+        document.body.appendChild(hookElement);
+        document.body.appendChild(
+          createEditableHtmlElement({
+            name: 'second',
+            initialValue: '<p>Second root</p>',
+            modelElement: '$inlineRoot',
+          }),
+        );
+
+        document.body.appendChild(
+          createEditableHtmlElement({
+            name: 'third',
+            initialValue: '<p>Third root</p>',
+            modelElement: '$inlineRoot',
+          }),
+        );
+
+        EditorHook.mounted.call({ el: hookElement });
+
+        const editor = await waitForTestEditor();
+
+        expect(editor.model.document.getRoot('second')?.name).toEqual('$inlineRoot');
+        expect(editor.model.document.getRoot('third')?.name).toEqual('$inlineRoot');
       });
     });
   });

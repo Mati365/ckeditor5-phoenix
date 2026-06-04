@@ -105,6 +105,35 @@ describe('editable hook', () => {
 
       expect(editor.getData({ rootName: 'foo' })).toBe('<p>Foo</p>');
     });
+
+    it('should set proper root element name on initial added root', async () => {
+      const editable = createEditableHtmlElement({
+        name: 'foo',
+        initialValue: '<p>Foo</p>',
+        modelElement: '$inlineRoot',
+      });
+
+      document.body.appendChild(editable);
+
+      const editor = await appendMultirootEditor();
+      EditableHook.mounted.call({ el: editable });
+
+      expect(editor.model.document.getRoot('foo')?.name).to.be.equal('$inlineRoot');
+    });
+
+    it('should set proper root element name on lazy added root', async () => {
+      const editor = await appendMultirootEditor();
+      const editable = createEditableHtmlElement({
+        name: 'foo',
+        initialValue: '<p>Foo</p>',
+        modelElement: '$inlineRoot',
+      });
+
+      document.body.appendChild(editable);
+      EditableHook.mounted.call({ el: editable });
+
+      expect(editor.model.document.getRoot('foo')?.name).to.be.equal('$inlineRoot');
+    });
   });
 
   describe('value synchronization', () => {

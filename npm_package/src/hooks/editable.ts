@@ -22,6 +22,7 @@ class EditableHookImpl extends ClassHook {
       editableId: this.el.getAttribute('id')!,
       editorId: this.el.getAttribute('data-cke-editor-id') || null,
       rootName: this.el.getAttribute('data-cke-editable-root-name')!,
+      modelElement: this.el.getAttribute('data-cke-editable-root-model-element-name') || null,
       initialValue: this.el.getAttribute('data-cke-editable-initial-value') || '',
     };
 
@@ -39,7 +40,7 @@ class EditableHookImpl extends ClassHook {
    * Mounts the editable component.
    */
   override mounted() {
-    const { editableId, editorId, rootName, initialValue } = this.attrs;
+    const { editableId, editorId, rootName, initialValue, modelElement } = this.attrs;
 
     const unmountEffect = EditorsRegistry.the.mountEffect(editorId, (editor: MultiRootEditor | DecoupledEditor) => {
       const contentElement = this.el.querySelector('[data-cke-editable-content]') as HTMLElement;
@@ -57,6 +58,7 @@ class EditableHookImpl extends ClassHook {
         editor.addRoot(rootName, {
           isUndoable: false,
           initialData: initialValue,
+          modelElement: modelElement || '$root',
         });
 
         const editable = ui.view.createEditable(rootName, contentElement);

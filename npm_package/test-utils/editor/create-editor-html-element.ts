@@ -20,6 +20,7 @@ export function createEditorHtmlElement(
     readyEvent = false,
     watchdog = false,
     saveDebounceMs = undefined,
+    modelElement,
     language,
     hookAttrs,
   }: EditorCreatorAttrs = {},
@@ -63,6 +64,9 @@ export function createEditorHtmlElement(
       ...contextId && {
         'data-cke-context-id': contextId,
       },
+      ...modelElement && {
+        'data-cke-root-model-element-name': modelElement,
+      },
       ...hookAttrs,
     },
     !['multiroot', 'decoupled'].includes(preset.type) && html.div({ id: `${id}_editor` }),
@@ -91,5 +95,6 @@ type EditorCreatorAttrs = {
   watchdog?: boolean;
   saveDebounceMs?: number;
   hookAttrs?: Record<string, string>;
+  modelElement?: string;
   language?: { ui?: string; content?: string; };
 };
