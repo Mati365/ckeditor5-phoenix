@@ -42,7 +42,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Paragraph-like editing 📄](#paragraph-like-editing-)
       - [Classic / Balloon / Inline editor](#classic--balloon--inline-editor)
       - [Multiroot editor](#multiroot-editor)
-      - [Priority rules](#priority-rules)
   - [Watchdog prop 🐶](#watchdog-prop-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
@@ -576,24 +575,6 @@ EditorsRegistry.the.waitFor('page-editor').then((editor) => {
   console.log(editor.model.document.getRoot('title')?.name); // '$inlineRoot'
   console.log(editor.model.document.getRoot('body')?.name); // '$root'
 });
-```
-
-#### Priority rules
-
-When both `<.ckeditor root_model_element="...">` and `<.cke_editable root_model_element="...">` are specified for the same root, the **editable-level value takes priority**. This lets you set a sensible global default on the editor component and selectively override it per editable:
-
-```heex
-<%!-- Global fallback: all roots default to $inlineRoot … --%>
-<.ckeditor type="multiroot" id="form-editor" root_model_element="$inlineRoot" />
-
-<.cke_ui_part name="toolbar" />
-
-<div class="flex flex-col gap-4">
-  <%!-- … but this root overrides to normal mode --%>
-  <.cke_editable root="content" value="<p>Rich content</p>" root_model_element="$root" />
-  <%!-- This root inherits $inlineRoot from the editor --%>
-  <.cke_editable root="summary" value="<p>Short summary</p>" />
-</div>
 ```
 
 ## Watchdog prop 🐶
