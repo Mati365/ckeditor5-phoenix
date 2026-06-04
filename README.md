@@ -39,6 +39,10 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Inline editor 📝](#inline-editor-)
     - [Balloon editor 🎈](#balloon-editor-)
     - [Decoupled editor 🌐](#decoupled-editor-)
+    - [Paragraph-like editing 📄](#paragraph-like-editing-)
+      - [Classic / Balloon / Inline editor](#classic--balloon--inline-editor)
+      - [Multiroot editor](#multiroot-editor)
+      - [Priority rules](#priority-rules)
   - [Watchdog prop 🐶](#watchdog-prop-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
@@ -486,6 +490,110 @@ Flexible editor where toolbar and editing area are completely separated. Provide
     />
   </div>
 </.ckeditor>
+```
+
+### Paragraph-like editing 📄
+
+Paragraph-like editing mode restricts the editor's root to a single block element — by default a `<p>` — preventing users from inserting multiple top-level block elements (headings, lists, etc.). This is ideal for short-text fields such as article titles, captions, descriptions, or any place where you want the richness of inline formatting (bold, italic, links) but a single-paragraph constraint.
+
+The feature is enabled by setting `root_model_element="$inlineRoot"` on the editor or editable component. This maps the CKEditor model root to the `$inlineRoot` schema element, which allows only inline content.
+
+#### Classic / Balloon / Inline editor
+
+For single-root editor types, set `root_model_element` directly on `<.ckeditor>`:
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Paragraph-like classic editor — single <p>, inline formatting only --%>
+<.ckeditor
+  id="title-editor"
+  type="classic"
+  root_model_element="$inlineRoot"
+  value="<p>Article title goes here</p>"
+/>
+```
+
+The same attribute works with `balloon` and `inline` editor types:
+
+```heex
+<.ckeditor
+  id="caption-editor"
+  type="balloon"
+  root_model_element="$inlineRoot"
+  value="<p>Image caption</p>"
+/>
+```
+
+#### Multiroot editor
+
+In a multiroot setup each `<.cke_editable>` can independently decide whether it uses paragraph-like mode. Set `root_model_element="$inlineRoot"` on the specific editable roots that should be restricted, while leaving others unrestricted:
+
+```heex
+<%!-- CDN assets in <head> --%>
+<.cke_cloud_assets />
+
+<%!-- Multiroot editor container (no root_model_element here) --%>
+<.ckeditor type="multiroot" id="page-editor" />
+
+<%!-- Shared toolbar --%>
+<.cke_ui_part name="toolbar" class="mb-4" />
+
+<div class="flex flex-col gap-4">
+  <%!-- Title root: paragraph-like, only inline content allowed --%>
+  <.cke_editable
+    root="title"
+    root_model_element="$inlineRoot"
+    value="<p>Page Title</p>"
+    class="text-2xl font-bold border border-gray-300 p-2"
+  />
+
+  <%!-- Lead root: paragraph-like, only inline content allowed --%>
+  <.cke_editable
+    root="lead"
+    root_model_element="$inlineRoot"
+    value="<p>Short introductory sentence.</p>"
+    class="italic border border-gray-300 p-2"
+  />
+
+  <%!-- Body root: normal editing, full block content allowed --%>
+  <.cke_editable
+    root="body"
+    value="<p>Full article content with headings, lists, etc.</p>"
+    class="border border-gray-300 p-2"
+  />
+</div>
+```
+
+When the editor initialises, each root whose `root_model_element` is set to `"$inlineRoot"` is registered with that model element name. You can verify this at runtime:
+
+```javascript
+import { EditorsRegistry } from 'ckeditor5_phoenix';
+
+EditorsRegistry.the.waitFor('page-editor').then((editor) => {
+  // '$inlineRoot' for restricted roots, '$root' for unrestricted ones
+  console.log(editor.model.document.getRoot('title')?.name); // '$inlineRoot'
+  console.log(editor.model.document.getRoot('body')?.name); // '$root'
+});
+```
+
+#### Priority rules
+
+When both `<.ckeditor root_model_element="...">` and `<.cke_editable root_model_element="...">` are specified for the same root, the **editable-level value takes priority**. This lets you set a sensible global default on the editor component and selectively override it per editable:
+
+```heex
+<%!-- Global fallback: all roots default to $inlineRoot … --%>
+<.ckeditor type="multiroot" id="form-editor" root_model_element="$inlineRoot" />
+
+<.cke_ui_part name="toolbar" />
+
+<div class="flex flex-col gap-4">
+  <%!-- … but this root overrides to normal mode --%>
+  <.cke_editable root="content" value="<p>Rich content</p>" root_model_element="$root" />
+  <%!-- This root inherits $inlineRoot from the editor --%>
+  <.cke_editable root="summary" value="<p>Short summary</p>" />
+</div>
 ```
 
 ## Watchdog prop 🐶
