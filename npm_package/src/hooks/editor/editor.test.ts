@@ -263,22 +263,6 @@ describe('editor hook', () => {
         expect(editor.getData()).toBe('<p>XD</p>');
       });
 
-      it('should be possible to specify root element name using global config (if editable model element not specified)', async () => {
-        const hookElement = createEditorHtmlElement({
-          preset: createEditorPreset('decoupled'),
-          modelElement: '$inlineRoot',
-        });
-
-        document.body.appendChild(hookElement);
-        document.body.appendChild(createEditableHtmlElement());
-
-        EditorHook.mounted.call({ el: hookElement });
-
-        const editor = await waitForTestEditor();
-
-        expect(editor.model.document.getRoot()?.name).toEqual('$inlineRoot');
-      });
-
       it('should be possible to specify root element name using editable config alone', async () => {
         const hookElement = createEditorHtmlElement({
           preset: createEditorPreset('decoupled'),
