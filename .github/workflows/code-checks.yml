@@ -147,7 +147,7 @@ jobs:
         run: mix assets.test
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./npm_package/coverage/lcov.info
           flags: npm

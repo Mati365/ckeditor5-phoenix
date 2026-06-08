@@ -127,7 +127,7 @@ defmodule CKEditor5.Components.Editor do
       phx-update="ignore"
       data-cke-preset={Jason.encode!(@preset)}
       data-cke-root-attrs={JSON.encode!(@root_attrs || {})}
-      data-cke-root-model-element-name={@root_model_element || '$root'}
+      data-cke-root-model-element-name={@root_model_element || "$root"}
       data-cke-editable-height={@editable_height}
       data-cke-initial-value={@value || ""}
       data-cke-change-event={@change_event}
