@@ -80,7 +80,7 @@ defmodule CKEditor5.Components.Editable do
       data-cke-editable-root-name={@root}
       data-cke-editable-initial-value={@value}
       data-cke-editable-root-attrs={JSON.encode!(@root_attrs || {})}
-      data-cke-editable-root-model-element-name={@root_model_element}
+      data-cke-editable-root-model-element-name={@root_model_element || '$root'}
       data-cke-editable-required={@required}
       {@rest}
     >
