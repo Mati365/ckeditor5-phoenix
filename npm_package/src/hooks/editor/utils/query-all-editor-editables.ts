@@ -67,7 +67,7 @@ export function queryAllEditorEditables(editorId: EditorId): Record<string, Edit
       main: {
         content: contentElement,
         initialValue: initialRootEditableValue,
-        modelElement: rootEditorElement.getAttribute('data-cke-root-model-element-name') || '$root',
+        modelElement: rootEditorModelElement,
       },
     };
   }
