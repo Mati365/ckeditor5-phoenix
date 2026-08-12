@@ -26,6 +26,7 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
   - [Installation 🚀](#installation-)
     - [🔗 Compatibility](#-compatibility)
     - [🏠 Self-hosted](#-self-hosted)
+    - [🏠 Self-hosted (minimization)](#-self-hosted-mini)
     - [📡 CDN Distribution](#-cdn-distribution)
   - [Basic Usage 🏁](#basic-usage-)
   - [Configuration ⚙️](#configuration-️)
@@ -141,6 +142,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    defmodule MyAppWeb.PageHTML do
      # ... your other uses
      use CKEditor5
+  
    end
    ```
 
@@ -150,6 +152,132 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    <.ckeditor id="editor" type="classic" value="<p>Hello world!</p>" />
    ```
 
+### 🏠 Self-hosted-mini
+
+Bundle CKEditor 5 with your application for full control over assets, custom builds, and offline support. This method is recommended for advanced users or production applications with specific requirements. It's also GPL-compliant.
+this will minimize the app.js file so we dont have ~14mb file on page load
+
+**Complete setup:**
+
+1. **Add dependency** to your `mix.exs`:
+
+   ```elixir
+   def deps do
+     [
+       {:ckeditor5_phoenix, "~> 1.28.2"}
+     ]
+   end
+   ```
+
+2. **Install CKEditor 5**
+
+   ```bash
+   mix ckeditor5.install # --premium --version 48.2.0
+   # ... or: npm install ckeditor5 --prefix assets
+   ```
+
+3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`** (if using Mix installer):
+
+   ```elixir
+     "assets.setup": ["ckeditor5.install", ... ]
+   ```
+   
+4. **Create editor.js**
+   ```javascript
+    import { Hooks } from "ckeditor5_phoenix";
+    export const EditorHooks = Hooks;
+   ```
+5. **Register JavaScript hook** in your `app.js`:
+
+   ```javascript
+   let LazyEditorHook = {
+     async mounted() {
+       const EditorHooks = await import("./editor.js");
+       // Find the primary CKEditor hook dynamically from the exported object
+       const HookClass = EditorHooks.EditorHooks.CKEditor || Object.values(EditorHooks.EditorHooks)[0];
+   
+       if (HookClass) {
+         this.innerHook = Object.create(HookClass);
+         this.innerHook.el = this.el;
+         if (this.innerHook.mounted) this.innerHook.mounted.call(this);
+       }
+     },
+     updated() {
+       if (this.innerHook && this.innerHook.updated) this.innerHook.updated.call(this);
+     },
+     destroyed() {
+       if (this.innerHook && this.innerHook.destroyed) this.innerHook.destroyed.call(this);
+     }
+   };
+
+   const liveSocket = new LiveSocket('/live', Socket, {
+     CKEditor5: LazyEditorHook,
+   });
+   ```
+
+6. **Config.ex**
+    ```elixir
+    config :esbuild,
+    version: "0.25.4",
+    app: [
+      args: ~w(js/app.js
+        js/editor.js
+        --bundle
+        --target=es2022
+        --outdir=../priv/static/assets/js
+        --splitting
+        --format=esm
+        --external:ckeditor5-premium-features  ## optional
+          ),
+      cd: Path.expand("../assets", __DIR__),
+      env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
+      ]
+     ```
+
+7. **Import styles** in your `assets/css/app.css`:
+
+   ```css
+   @import "../../deps/ckeditor5/dist/ckeditor5.css";
+   /* ... or: @import "../node_modules/ckeditor5/dist/ckeditor5.css"; */
+   ```
+
+8. **Import module in LiveView (with dynamic preset)**
+
+   ```elixir
+   defmodule MyAppWeb.Page.Live do
+     # ... your other uses
+     use CKEditor5
+   
+    @defimpl true
+    def mount(_params, _session, socket) do
+
+    preset =
+      CKEditor5.Preset.Parser.parse!(%{
+        config: %{
+          toolbar: [:bold, :italic, :link],
+          plugins: [:Bold, :Italic, :Link, :Essentials, :Paragraph]
+        }
+      })
+
+    socket =
+      socket
+      |> assign(:preset, preset)
+
+    {:ok, socket}
+    end
+   end
+   ```
+
+9. **Use in templates** (no CDN assets needed): 
+
+   ```heex
+   <.ckeditor id="editor" type="classic" value="<p>Hello world!</p>" />
+   ```
+   -or-
+   ```heex
+    <.ckeditor id="editor" preset={@preset} value="<p>Hello world!</p>" />
+   ```
+   
 ### 📡 CDN Distribution
 
 Load CKEditor 5 directly from CKSource's CDN - no build configuration required. This method is ideal for most users who want quick setup and don't need custom builds.
