@@ -111,7 +111,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    mix ckeditor5.install # --premium --version 48.2.0
    # ... or: npm install ckeditor5 --prefix assets
    ```
-
+   
 3. **Add `ckeditor5.install` to `assets.setup` in `mix.exs`** (if using Mix installer):
 
    ```elixir
@@ -149,6 +149,9 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
    ```heex
    <.ckeditor id="editor" type="classic" value="<p>Hello world!</p>" />
    ```
+
+> [!NOTE]
+> Make sure you use `--splitting` and `--format=esm` options in your `esbuild` configuration. It'll allow package to lazy load CKEditor 5. 
 
 ### 📡 CDN Distribution
 
