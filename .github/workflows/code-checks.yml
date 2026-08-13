@@ -189,6 +189,7 @@ jobs:
           otp-version: '26.2'
 
       - name: Install Chrome
+        id: setup-chrome
         uses: browser-actions/setup-chrome@v2
         with:
           chrome-version: 148
@@ -209,3 +210,6 @@ jobs:
 
       - name: Run E2E tests
         run: mix e2e
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROME_WEBDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
