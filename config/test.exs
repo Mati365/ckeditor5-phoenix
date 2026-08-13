@@ -19,8 +19,8 @@ config :wallaby,
   otp_app: :playground,
   screenshot_on_failure: true,
   chromedriver: [
-    path: System.get_env("CHROME_WEBDRIVER_PATH") || "./node_modules/.bin/chromedriver",
-    binary: System.get_env("CHROME_PATH"),
+    path: System.get_env("CHROME_WEBDRIVER_PATH", "./node_modules/.bin/chromedriver"),
+    binary: System.get_env("CHROME_PATH", "/usr/bin/google-chrome"),
     headless: true
   ]
 
