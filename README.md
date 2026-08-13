@@ -1048,7 +1048,7 @@ The package includes a ready-to-use `CKEditor5.Upload.Controller` that handles l
 
    ```elixir
    scope "/api/ckeditor5" do
-     pipe_through :api # Ensure this pipeline expects JSON
+     pipe_through :api # Ensure this pipeline expects JSON and is authorized
 
      post "/upload", CKEditor5.Upload.Controller, :upload
    end
