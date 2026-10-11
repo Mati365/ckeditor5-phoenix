@@ -18,7 +18,6 @@ export function createEditorHtmlElement(
     focusEvent = false,
     blurEvent = false,
     readyEvent = false,
-    watchdog = false,
     saveDebounceMs = undefined,
     modelElement,
     language,
@@ -58,9 +57,6 @@ export function createEditorHtmlElement(
       ...language?.content && {
         'data-cke-content-language': language.content,
       },
-      ...watchdog && {
-        'data-cke-watchdog': '',
-      },
       ...contextId && {
         'data-cke-context-id': contextId,
       },
@@ -92,7 +88,6 @@ type EditorCreatorAttrs = {
   blurEvent?: boolean;
   changeEvent?: boolean;
   readyEvent?: boolean;
-  watchdog?: boolean;
   saveDebounceMs?: number;
   hookAttrs?: Record<string, string>;
   modelElement?: string;

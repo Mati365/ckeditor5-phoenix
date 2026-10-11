@@ -17,9 +17,6 @@ config :ckeditor5_phoenix,
         plugins: [
           :CustomContextPlugin
         ]
-      },
-      watchdog: %{
-        crashNumberLimit: 20
       }
     }
   },
@@ -99,9 +96,6 @@ config :ckeditor5_phoenix,
             :imageResize
           ]
         }
-      },
-      watchdog: %{
-        crashNumberLimit: 20
       }
     }
   }

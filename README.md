@@ -42,7 +42,6 @@ CKEditor 5 integration library for Phoenix (Elixir) applications. Provides web c
     - [Paragraph-like editing 📄](#paragraph-like-editing-)
       - [Classic / Balloon / Inline editor](#classic--balloon--inline-editor)
       - [Multiroot editor](#multiroot-editor)
-  - [Watchdog prop 🐶](#watchdog-prop-)
   - [Localization 🌍](#localization-)
     - [UI language and content language 🈯](#ui-language-and-content-language-)
     - [Global Translation Config 🛠️](#global-translation-config-️)
@@ -86,8 +85,9 @@ Choose between two installation methods based on your needs. Both approaches pro
 
 | CKEditor 5 Version | Integration Version |
 |--------------------|---------------------|
-| 43.x – 47.x        | `<= 1.26.0`         |
-| >= 48.0            | `>= 1.27.0`         |
+| 43.x – 47.x        | `<= 1.26.x`         |
+| 48.x               | `<= 1.28.x`         |
+| >= 49.0            | `>= 1.29.x`         |
 
 ### 🏠 Self-hosted
 
@@ -108,7 +108,7 @@ Bundle CKEditor 5 with your application for full control over assets, custom bui
 2. **Install CKEditor 5**
 
    ```bash
-   mix ckeditor5.install # --premium --version 48.2.0
+   mix ckeditor5.install # --premium --version 49.0.0
    # ... or: npm install ckeditor5 --prefix assets
    ```
 
@@ -238,7 +238,6 @@ Render the `<.ckeditor>` component anywhere in your template. While most props a
   content_language="pl"              <!-- lang attr on the editable area; defaults to `language` -->
   save_debounce_ms={300}             <!-- debounce in ms for syncing content (default: 400) -->
   upload_url="/uploads"              <!-- image upload endpoint; "base64" for inline Base64 adapter -->
-  watchdog={true}                    <!-- auto-restart on crash (default: true) -->
   change_event={true}                <!-- push ckeditor5:change to LiveView on content change -->
   root_attrs={%{}}                   <!-- root element attributes -->
   root_model_element="$root"         <!-- root element name (default: $root) -->
@@ -579,49 +578,6 @@ EditorsRegistry.the.waitFor('page-editor').then((editor) => {
   console.log(editor.model.document.getRoot('body')?.name); // '$root'
 });
 ```
-
-## Watchdog prop 🐶
-
-By default, the `<.ckeditor>` component uses a built-in watchdog mechanism to automatically restart the editor if it crashes (e.g., due to a JavaScript error). The watchdog periodically saves the editor's content and restores it after a crash, minimizing the risk of data loss for users.
-
-The watchdog is enabled by default. To disable it, set the `watchdog` prop to `false`:
-
-```heex
-<.ckeditor
-  type="classic"
-  value="<p>Initial content</p>"
-  watchdog={false}
-/>
-```
-
-You can also fine-tune the watchdog behaviour by setting its parameters in your preset configuration in `config/config.exs`:
-
-```elixir
-config :ckeditor5_phoenix,
-  presets: %{
-    default: %{
-      watchdog: %{
-        # Maximum number of crashes before the watchdog stops restarting the editor.
-        # Defaults to 3.
-        crashNumberLimit: 5,
-
-        # Minimum time (in ms) that must pass without a crash for the crash counter
-        # to be reset. Defaults to 5000 ms.
-        minimumNonErrorTimePeriod: 10_000,
-
-        # How often (in ms) the watchdog saves the editor state to restore it
-        # after a crash. Defaults to 5000 ms.
-        saveInterval: 2_000
-      },
-      config: %{
-        # ... your editor config
-      }
-    }
-  }
-```
-
-> [!NOTE]
-> These options map directly to the [CKEditor 5 Watchdog configuration](https://ckeditor.com/docs/ckeditor5/latest/api/module_watchdog_watchdog-WatchdogConfig.html). Refer to the official docs for the full list of available options.
 
 ## Localization 🌍
 
@@ -1161,9 +1117,6 @@ config :ckeditor5_phoenix,
         plugins: [
           :CustomContextPlugin
         ]
-      },
-      watchdog: %{
-        crashNumberLimit: 20
       }
     }
   },

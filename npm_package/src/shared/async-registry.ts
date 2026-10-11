@@ -26,6 +26,11 @@ export class AsyncRegistry<T extends Destructible> {
   private readonly watchers = new Set<RegistryWatcher<T>>();
 
   /**
+   * Items that are being destroyed (or are already destroyed).
+   */
+  private readonly destroying = new WeakSet<T>();
+
+  /**
    * Batch nesting depth. When > 0, watcher notifications are deferred.
    */
   private batchDepth = 0;
@@ -237,6 +242,27 @@ export class AsyncRegistry<T extends Destructible> {
   }
 
   /**
+   * Marks the item as being destroyed. Destroying is async, so whoever starts it (or knows it's about to start)
+   * should call this synchronously, to let others (for example hooks of dependent items) leave the destruction
+   * to the one who already started it.
+   *
+   * @param item The item that is being destroyed.
+   */
+  markAsDestroying(item: T): void {
+    this.destroying.add(item);
+  }
+
+  /**
+   * Checks if the item is being destroyed (or is already destroyed).
+   *
+   * @param item The item to check.
+   * @returns `true` if the item was marked as being destroyed, `false` otherwise.
+   */
+  isDestroying(item: T): boolean {
+    return this.destroying.has(item);
+  }
+
+  /**
    * Gets all registered items.
    *
    * @returns An array of all registered items.
@@ -285,7 +311,11 @@ export class AsyncRegistry<T extends Destructible> {
     const promises = (
       Array
         .from(new Set(this.items.values()))
-        .map(item => item.destroy())
+        .map((item) => {
+          this.markAsDestroying(item);
+
+          return item.destroy();
+        })
     );
 
     this.items.clear();

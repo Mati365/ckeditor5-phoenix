@@ -20,6 +20,5 @@ export function readContextConfigOrThrow(element: HTMLElement): ContextConfig {
   return {
     config: deepCamelCaseKeys(config),
     customTranslations: rest.customTranslations || rest.custom_translations,
-    watchdogConfig: rest.watchdogConfig || rest.watchdog_config,
   };
 }

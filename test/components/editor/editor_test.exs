@@ -440,35 +440,6 @@ defmodule CKEditor5.Components.EditorTest do
     end
   end
 
-  describe "watchdog attribute handling" do
-    test "enables watchdog by default" do
-      html = render_component(&Editor.render/1, id: "editor_watchdog_default", name: "content")
-      assert html =~ ~s(cke-watchdog)
-    end
-
-    test "disables watchdog when set to false" do
-      html =
-        render_component(&Editor.render/1,
-          id: "editor_watchdog_disabled",
-          name: "content",
-          watchdog: false
-        )
-
-      refute html =~ ~s(cke-watchdog)
-    end
-
-    test "enables watchdog when set to true" do
-      html =
-        render_component(&Editor.render/1,
-          id: "editor_watchdog_enabled",
-          name: "content",
-          watchdog: true
-        )
-
-      assert html =~ ~s(cke-watchdog)
-    end
-  end
-
   describe "context" do
     test "sets context ID for multi-root editors" do
       html =

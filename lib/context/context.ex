@@ -10,14 +10,12 @@ defmodule CKEditor5.Context do
   @derive Jason.Encoder
   @type t :: %__MODULE__{
           config: map(),
-          watchdog: map(),
           custom_translations: CustomTranslations.t() | nil
         }
 
   defstruct config: %{
               plugins: []
             },
-            watchdog: nil,
             custom_translations: nil
 
   @doc """
@@ -27,7 +25,6 @@ defmodule CKEditor5.Context do
     schema =
       schema(%{
         config: spec(is_map()),
-        watchdog: spec(is_map() or is_nil()),
         custom_translations: spec(is_map() or is_nil())
       })
 

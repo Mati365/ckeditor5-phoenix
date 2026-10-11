@@ -1,4 +1,5 @@
 import {
+  CKEditorError,
   ClassicEditor,
   DecoupledEditor,
   InlineEditor,
@@ -15,12 +16,13 @@ import {
   isEditorShown,
   waitForTestEditor,
 } from '~/test-utils';
+import { createContextHtmlElement, waitForTestContext } from '~/test-utils/editor';
 
 import { timeout } from '../../shared';
+import { ContextHook, ContextsRegistry } from '../context';
 import { CustomEditorPluginsRegistry } from './custom-editor-plugins';
 import { EditorHook } from './editor';
 import { EditorsRegistry } from './editors-registry';
-import { unwrapEditorWatchdog } from './utils';
 
 describe('editor hook', () => {
   beforeEach(() => {
@@ -30,6 +32,7 @@ describe('editor hook', () => {
   afterEach(async () => {
     await EditorsRegistry.the.reset();
     CustomEditorPluginsRegistry.the.unregisterAll();
+    vi.restoreAllMocks();
   });
 
   describe('mount', () => {
@@ -425,6 +428,157 @@ describe('editor hook', () => {
       EditorHook.destroyed.call({ el: hookElement });
 
       expect(hookElement.style.display).toBe('none');
+    });
+
+    it('should destroy the editor and skip registration if hook is destroyed during creation', async () => {
+      const destroySpy = vi.spyOn(ClassicEditor.prototype, 'destroy');
+      const registerSpy = vi.spyOn(EditorsRegistry.the, 'register');
+      const hookElement = createEditorHtmlElement({ id: 'short-lived-editor' });
+
+      document.body.appendChild(hookElement);
+
+      EditorHook.mounted.call({ el: hookElement });
+      EditorHook.destroyed.call({ el: hookElement });
+
+      await vi.waitFor(() => {
+        expect(destroySpy).toHaveBeenCalledTimes(1);
+      }, { timeout: 5000 });
+
+      // `register()` would be called after the `isBeingDestroyed()` check, so it'd be already called here.
+      expect(registerSpy).not.toHaveBeenCalled();
+      expect(EditorsRegistry.the.hasItem('short-lived-editor')).toBe(false);
+    });
+
+    it('should not destroy the editor again if it was already destroyed manually', async () => {
+      const hookElement = createEditorHtmlElement({ id: 'manually-destroyed-editor' });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor('manually-destroyed-editor');
+
+      await editor.destroy();
+
+      // Unregistered by the `destroy` listener, not by the hook.
+      expect(EditorsRegistry.the.hasItem('manually-destroyed-editor')).toBe(false);
+
+      const destroySpy = vi.spyOn(editor, 'destroy');
+
+      await EditorHook.destroyed.call({ el: hookElement });
+      await timeout(0);
+
+      expect(destroySpy).not.toHaveBeenCalled();
+    });
+
+    it('should log and swallow errors thrown while destroying the editor', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const hookElement = createEditorHtmlElement({ id: 'failing-destroy-editor' });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor('failing-destroy-editor');
+      const error = new Error('Destroy failed');
+
+      vi.spyOn(editor, 'destroy').mockRejectedValueOnce(error);
+
+      // `onBeforeDestroy` callbacks are not awaited, so a rejection here would be unhandled (and fail the run).
+      EditorHook.destroyed.call({ el: hookElement });
+
+      await vi.waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to destroy editor "failing-destroy-editor".', error);
+      });
+
+      // The editor is not registered anymore, so `reset()` won't destroy it. Next call uses the real `destroy()`.
+      await editor.destroy();
+    });
+  });
+
+  describe('errors of the running editor', () => {
+    /**
+     * Reports an error attributed to the given editor the same way the browser does for an uncaught error.
+     */
+    const reportEditorError = (editor: object) => {
+      const error = new CKEditorError('test-editor-error', editor);
+
+      window.dispatchEvent(new ErrorEvent('error', { error }));
+
+      return error;
+    };
+
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    it('should log the error and switch the editor to read-only mode', async () => {
+      const hookElement = createEditorHtmlElement({ id: 'failing-editor' });
+
+      document.body.appendChild(hookElement);
+      EditorHook.mounted.call({ el: hookElement });
+
+      const editor = await waitForTestEditor('failing-editor');
+
+      expect(editor.isReadOnly).toBe(false);
+
+      const error = reportEditorError(editor);
+
+      expect(console.error).toHaveBeenCalledWith('Editor "failing-editor" failed.', error);
+      expect(editor.isReadOnly).toBe(true);
+    });
+
+    it('should ignore errors attributed to other editors', async () => {
+      const healthyHookElement = createEditorHtmlElement({ id: 'healthy-editor' });
+      const failingHookElement = createEditorHtmlElement({ id: 'other-failing-editor' });
+
+      document.body.appendChild(healthyHookElement);
+      document.body.appendChild(failingHookElement);
+
+      EditorHook.mounted.call({ el: healthyHookElement });
+      EditorHook.mounted.call({ el: failingHookElement });
+
+      const healthyEditor = await waitForTestEditor('healthy-editor');
+      const failingEditor = await waitForTestEditor('other-failing-editor');
+
+      reportEditorError(failingEditor);
+
+      expect(console.error).toHaveBeenCalledWith('Editor "other-failing-editor" failed.', expect.anything());
+      expect(console.error).not.toHaveBeenCalledWith('Editor "healthy-editor" failed.', expect.anything());
+      expect(healthyEditor.isReadOnly).toBe(false);
+      expect(failingEditor.isReadOnly).toBe(true);
+    });
+  });
+
+  describe('within context', () => {
+    afterEach(async () => {
+      await ContextsRegistry.the.reset();
+    });
+
+    it('should leave destroying of the editor to the context if both are being destroyed', async () => {
+      const contextHookElement = createContextHtmlElement({ id: 'editor-test-context' });
+      const editorHookElement = createEditorHtmlElement({ id: 'editor-in-destroyed-context' });
+
+      contextHookElement.appendChild(editorHookElement);
+      document.body.appendChild(contextHookElement);
+
+      ContextHook.mounted.call({ el: contextHookElement });
+      EditorHook.mounted.call({ el: editorHookElement });
+
+      const context = await waitForTestContext('editor-test-context');
+      const editor = await waitForTestEditor('editor-in-destroyed-context');
+      const destroySpy = vi.spyOn(editor, 'destroy');
+
+      // The same order as in LiveView: the parent (context) hook is destroyed first.
+      ContextHook.destroyed.call({ el: contextHookElement });
+      EditorHook.destroyed.call({ el: editorHookElement });
+
+      await vi.waitFor(() => {
+        expect(context.editors.first).toBeNull();
+      });
+
+      // Only the context destroyed the editor. The editor hook runs synchronously before the context starts
+      // destroying, so without the `isDestroying()` check it'd be called twice.
+      expect(destroySpy).toHaveBeenCalledTimes(1);
+      expect(EditorsRegistry.the.hasItem('editor-in-destroyed-context')).toBe(false);
     });
   });
 
@@ -1127,68 +1281,6 @@ describe('editor hook', () => {
       const translation = editor.config.get('customPlugin');
 
       expect(translation).toBe('Custom Pogrubienie');
-    });
-  });
-
-  describe('`cke-watchdog` option', () => {
-    it('should resurrect editor after crashing and broadcast new editor', async () => {
-      const hookElement = createEditorHtmlElement({
-        watchdog: true,
-      });
-
-      document.body.appendChild(hookElement);
-      EditorHook.mounted.call({ el: hookElement });
-
-      const originalEditor = await waitForTestEditor();
-      const watchdog = unwrapEditorWatchdog(originalEditor)!;
-
-      (watchdog as any)._fire('error', {
-        error: new Error('Mock'),
-        causesRestart: true,
-      });
-
-      (watchdog as any)._restart();
-
-      await vi.waitFor(async () => {
-        const newEditor = await waitForTestEditor();
-
-        expect(newEditor).not.equals(originalEditor);
-      });
-    });
-
-    it('should not create watchdog instance if disabled', async () => {
-      const hookElement = createEditorHtmlElement({
-        watchdog: false,
-      });
-
-      document.body.appendChild(hookElement);
-      EditorHook.mounted.call({ el: hookElement });
-
-      const editor = await waitForTestEditor();
-      const watchdog = unwrapEditorWatchdog(editor);
-
-      expect(watchdog).to.equal(null);
-    });
-
-    it('destroying of hook destroys watchdog', async () => {
-      const hookElement = createEditorHtmlElement({
-        watchdog: true,
-      });
-
-      document.body.appendChild(hookElement);
-      EditorHook.mounted.call({ el: hookElement });
-
-      const editor = await waitForTestEditor();
-      const watchdog = unwrapEditorWatchdog(editor)!;
-
-      expect(watchdog).to.be.an('object');
-
-      EditorHook.destroyed.call({ el: hookElement });
-
-      await vi.waitFor(async () => {
-        expect(watchdog.state).toEqual('destroyed');
-        expect(editor.state).toEqual('destroyed');
-      });
     });
   });
 

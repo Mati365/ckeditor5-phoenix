@@ -1,4 +1,4 @@
-import type { Context, ContextWatchdog } from 'ckeditor5';
+import type { Context } from 'ckeditor5';
 
 import { ClassHook, isEmptyObject, makeHook } from '../../shared';
 import {
@@ -18,7 +18,7 @@ class ContextHookImpl extends ClassHook {
   /**
    * The promise that resolves to the context instance.
    */
-  private contextPromise: Promise<ContextWatchdog<Context>> | null = null;
+  private contextPromise: Promise<Context> | null = null;
 
   /**
    * Attributes for the context instance.
@@ -48,8 +48,74 @@ class ContextHookImpl extends ClassHook {
    * Mounts the context component.
    */
   override async mounted() {
-    const { id, language } = this.attrs;
-    const { customTranslations, watchdogConfig, config: { plugins, ...config } } = this.attrs.config;
+    // Read ID directly, because `this.attrs` getter may throw (invalid config) and it must be handled below.
+    const id = this.el.id;
+
+    ContextsRegistry.the.resetErrors(id);
+
+    // Assign the promise synchronously, so `destroyed()` always has something to destroy,
+    // even if the hook is destroyed while plugins or translations are still loading.
+    this.contextPromise = this.createContext();
+
+    try {
+      const context = await this.contextPromise;
+      const { onEditorError } = await import('ckeditor5');
+
+      if (this.isBeingDestroyed()) {
+        return;
+      }
+
+      const offEditorError = onEditorError(({ error, source }) => {
+        if (source !== context) {
+          return;
+        }
+
+        console.error(`Context "${id}" failed.`, error);
+
+        for (const editor of context.editors) {
+          editor.enableReadOnlyMode('error-handling');
+        }
+      });
+
+      this.onBeforeDestroy(() => {
+        offEditorError();
+        ContextsRegistry.the.markAsDestroying(context);
+        ContextsRegistry.the.unregister(id);
+      });
+
+      ContextsRegistry.the.register(id, context);
+    }
+    catch (error: any) {
+      // Without this, editors waiting for this context would hang forever.
+      console.error(error);
+      ContextsRegistry.the.error(id, error);
+    }
+  }
+
+  /**
+   * Destroys the context component.
+   */
+  override async destroyed() {
+    // Let's hide the element during destruction to prevent flickering.
+    this.el.style.display = 'none';
+
+    try {
+      // Wait for the creation to finish before destroying. Creation errors are already reported in `mounted()`.
+      const context = await this.contextPromise?.catch(() => null);
+
+      await context?.destroy();
+    }
+    finally {
+      this.contextPromise = null;
+    }
+  }
+
+  /**
+   * Loads plugins and translations and creates the context instance.
+   */
+  private async createContext(): Promise<Context> {
+    const { language } = this.attrs;
+    const { customTranslations, config: { plugins, ...config } } = this.attrs.config;
     const { loadedPlugins, hasPremium } = await loadEditorPlugins(plugins ?? []);
 
     // Mix custom translations with loaded translations.
@@ -66,59 +132,16 @@ class ContextHookImpl extends ClassHook {
     // Then resolve translation references in the provided configuration, using the mixed translations.
     resolvedConfig = resolveEditorConfigTranslations([...mixedTranslations].reverse(), language.ui, resolvedConfig);
 
-    // Initialize context.
-    this.contextPromise = (async () => {
-      const { ContextWatchdog, Context } = await import('ckeditor5');
-      const instance = new ContextWatchdog(Context, {
-        crashNumberLimit: 10,
-        ...watchdogConfig,
-      });
+    const { Context } = await import('ckeditor5');
 
-      await instance.create({
-        ...resolvedConfig,
-        language,
-        plugins: loadedPlugins,
-        ...mixedTranslations.length && {
-          translations: mixedTranslations,
-        },
-      });
-
-      instance.on('itemError', (...args) => {
-        console.error('Context item error:', ...args);
-      });
-
-      return instance;
-    })();
-
-    const context = await this.contextPromise;
-
-    if (!this.isBeingDestroyed()) {
-      ContextsRegistry.the.register(id, context);
-    }
-  }
-
-  /**
-   * Destroys the context component. Unmounts root from the editor.
-   */
-  override async destroyed() {
-    const { id } = this.attrs;
-
-    // Let's hide the element during destruction to prevent flickering.
-    this.el.style.display = 'none';
-
-    // Let's wait for the mounted promise to resolve before proceeding with destruction.
-    try {
-      const context = await this.contextPromise;
-
-      await context?.destroy();
-    }
-    finally {
-      this.contextPromise = null;
-
-      if (ContextsRegistry.the.hasItem(id)) {
-        ContextsRegistry.the.unregister(id);
-      }
-    }
+    return Context.create({
+      ...resolvedConfig,
+      language,
+      plugins: loadedPlugins,
+      ...mixedTranslations.length && {
+        translations: mixedTranslations,
+      },
+    });
   }
 }
 
@@ -149,7 +172,7 @@ function getNearestContextParent(el: HTMLElement) {
 /**
  * Gets the nearest context parent element as a promise.
  */
-export async function getNearestContextParentPromise(el: HTMLElement): Promise<ContextWatchdog<Context> | null> {
+export async function getNearestContextParentPromise(el: HTMLElement): Promise<Context | null> {
   const parent = getNearestContextParent(el);
 
   if (!parent) {

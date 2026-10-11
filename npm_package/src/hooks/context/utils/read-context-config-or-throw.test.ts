@@ -17,7 +17,6 @@ describe('readContextConfigOrThrow', () => {
     const config: any = {
       config: { foo_bar: 1, nested_key: { bar_baz: 2 } },
       customTranslations: { hello: 'world' },
-      watchdogConfig: { baz: 3 },
     };
 
     const el = createContextHtmlElement({ config });
@@ -25,14 +24,12 @@ describe('readContextConfigOrThrow', () => {
 
     expect(result.config).toEqual({ fooBar: 1, nestedKey: { barBaz: 2 } });
     expect(result.customTranslations).toEqual({ hello: 'world' });
-    expect(result.watchdogConfig).toEqual({ baz: 3 });
   });
 
   it('parses config and custom_translations (snake_case)', () => {
     const config: any = {
       config: { foo_bar: 1, nested_key: { bar_baz: 2 } },
       custom_translations: { hello: 'świat' },
-      watchdog_config: { baz: 4 },
     };
 
     const el = createContextHtmlElement({ config });
@@ -40,16 +37,14 @@ describe('readContextConfigOrThrow', () => {
 
     expect(result.config).toEqual({ fooBar: 1, nestedKey: { barBaz: 2 } });
     expect(result.customTranslations).toEqual({ hello: 'świat' });
-    expect(result.watchdogConfig).toEqual({ baz: 4 });
   });
 
-  it('returns undefined for missing customTranslations and watchdogConfig', () => {
+  it('returns undefined for missing customTranslations', () => {
     const config: any = { config: { foo: 1 } };
     const el = createContextHtmlElement({ config });
     const result = readContextConfigOrThrow(el);
 
     expect(result.config).toEqual({ foo: 1 });
     expect(result.customTranslations).toBeUndefined();
-    expect(result.watchdogConfig).toBeUndefined();
   });
 });

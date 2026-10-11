@@ -52,21 +52,6 @@ defmodule CKEditor5.Components.ContextTest do
     assert html =~ ~s(class="custom-class")
   end
 
-  test "passes watchdog config if present" do
-    put_contexts_env(%{
-      "with-watchdog" => %{
-        config: %{},
-        watchdog: %{foo: "bar"}
-      }
-    })
-
-    html = render_component(&Context.render/1, context: "with-watchdog", id: "ctx-5")
-    assert html =~ ~s(id="ctx-5")
-    assert html =~ ~s(phx-hook="CKContext")
-    assert html =~ "foo"
-    assert html =~ "bar"
-  end
-
   test "it is possible to pass CSS styles to component" do
     html =
       render_component(&Context.render/1, context: "default", id: "ctx-4", style: "color: red;")

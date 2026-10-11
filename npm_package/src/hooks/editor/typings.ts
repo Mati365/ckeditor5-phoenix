@@ -1,5 +1,3 @@
-import type { WatchdogConfig } from 'ckeditor5';
-
 /**
  * List of supported CKEditor5 editor types.
  */
@@ -59,11 +57,6 @@ export type EditorPreset = {
    * This should match the configuration expected by CKEditor5.
    */
   config: EditorConfig;
-
-  /**
-   * Editor watchdog configuration.
-   */
-  watchdog: WatchdogConfig | null;
 
   /**
    * The license key for CKEditor5.

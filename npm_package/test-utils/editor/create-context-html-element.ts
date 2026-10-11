@@ -16,7 +16,6 @@ export function createContextHtmlElement(
   {
     id = 'test-context',
     config = {
-      watchdogConfig: {},
       config: {},
       customTranslations: null,
     },
