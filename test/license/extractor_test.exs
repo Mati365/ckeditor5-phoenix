@@ -53,9 +53,9 @@ defmodule CKEditor5.License.ExtractorTest do
       assert Extractor.distribution_channel(key) == {:ok, "sh"}
     end
 
-    test "prefers 'cloud' when the list contains both channels" do
-      key = build_key(%{"distributionChannel" => ["sh", "cloud"]})
-      assert Extractor.distribution_channel(key) == {:ok, "cloud"}
+    test "returns nil (every distribution allowed) when the list contains both channels" do
+      key = build_key(%{"distributionChannel" => ["sh", "drupal", "cloud"]})
+      assert Extractor.distribution_channel(key) == {:ok, nil}
     end
 
     test "ignores unknown and non-string entries" do

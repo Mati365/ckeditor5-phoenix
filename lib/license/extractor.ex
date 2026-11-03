@@ -7,9 +7,11 @@ defmodule CKEditor5.License.Extractor do
   Extracts distribution channel from license key.
 
   The `distributionChannel` claim can be `nil`, a single string or a list of strings.
-  For a list, `"cloud"` is returned if present, otherwise `"sh"`; unknown entries are ignored.
-  A list without any known channel is rejected, because a `nil` channel would make
-  the license compatible with every distribution.
+  For a list, unknown entries are ignored and:
+
+    * if both `"cloud"` and `"sh"` are listed, `nil` is returned, meaning every distribution is allowed,
+    * if only one of them is listed, that channel is returned,
+    * if none of them is listed, the key is rejected.
   """
   def distribution_channel("GPL"), do: {:ok, "sh"}
 
@@ -29,10 +31,11 @@ defmodule CKEditor5.License.Extractor do
   defp parse_distribution_channel(channel) when is_binary(channel), do: {:ok, channel}
 
   defp parse_distribution_channel(channels) when is_list(channels) do
-    cond do
-      "cloud" in channels -> {:ok, "cloud"}
-      "sh" in channels -> {:ok, "sh"}
-      true -> :error
+    case {"cloud" in channels, "sh" in channels} do
+      {true, true} -> {:ok, nil}
+      {true, false} -> {:ok, "cloud"}
+      {false, true} -> {:ok, "sh"}
+      {false, false} -> :error
     end
   end
 
